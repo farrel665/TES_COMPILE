@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Hexagon background — red/active variant
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="36dp"
+    android:viewportWidth="48"
+    android:viewportHeight="36">
+    <path
+        android:fillColor="#C4172B"
+        android:pathData="M10,0 L38,0 L48,18 L38,36 L10,36 L0,18 Z" />
+</vector>

@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:background="@android:color/transparent">
 
+    <!-- ── Bubble (minimized) ────────────────────────────────── -->
     <ImageView
         android:id="@+id/bubble"
         android:layout_width="30dp"
@@ -16,127 +17,243 @@
         android:visibility="gone"
         android:elevation="8dp" />
 
+    <!-- ── Panel ─────────────────────────────────────────────── -->
     <LinearLayout
         android:id="@+id/panel"
-        android:layout_width="280dp"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@drawable/bg_panel"
-        android:padding="12dp"
+        android:padding="14dp"
         android:elevation="12dp">
 
-        <!-- Header -->
+        <!-- ══ HEADER: Magic Manager ══════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
-            <TextView
+            <!-- Title block -->
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:text="rizxbyte injection"
-                android:textColor="#EAEBEF"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Magic Manager"
+                    android:textColor="#EAEBEF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Free Fire · com.dts.freefireth"
+                    android:textColor="#55585F"
+                    android:textSize="9sp"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+
+            <!-- Hide button -->
             <TextView
                 android:id="@+id/btn_hide"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
                 android:gravity="center"
                 android:text="–"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:background="@drawable/bg_btn_dark" />
+                android:textSize="15sp"
+                android:background="@drawable/bg_hexagon_dark" />
 
+            <!-- Close button -->
             <TextView
                 android:id="@+id/btn_close"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_marginStart="4dp"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_marginStart="5dp"
                 android:gravity="center"
                 android:text="×"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:background="@drawable/bg_btn_dark" />
+                android:textSize="13sp"
+                android:background="@drawable/bg_hexagon_dark" />
         </LinearLayout>
 
-        <!-- Area -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Sensitivity Area"
-            android:textColor="#B0B3BA"
-            android:textSize="11sp" />
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="8dp"
+            android:background="#1A1C24" />
 
+        <!-- ══ MAGIC TOUCH ════════════════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="4dp">
+            android:gravity="center_vertical">
+
+            <!-- Text block -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Magic Touch"
+                    android:textColor="#EAEBEF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Intercept and remap touchscreen input via privileged injector"
+                    android:textColor="#55585F"
+                    android:textSize="9sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+
+            <!-- Magic Touch toggle switch -->
+            <Switch
+                android:id="@+id/switch_magic_touch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:thumbTint="#E61F33"
+                android:trackTint="#38000A"
+                android:checked="false" />
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="8dp"
+            android:background="#1A1C24" />
+
+        <!-- ══ SENSITIVITY AREA ═══════════════════════════════ -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sensitivity Area"
+            android:textColor="#55585F"
+            android:textSize="10sp"
+            android:layout_marginBottom="6dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/area_left"
                 android:layout_width="0dp"
-                android:layout_height="32dp"
+                android:layout_height="34dp"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="Left"
                 android:textColor="#B0B3BA"
-                android:textSize="12sp"
-                android:background="@drawable/bg_btn_dark" />
+                android:textSize="11sp"
+                android:background="@drawable/bg_hexagon_dark" />
 
             <TextView
                 android:id="@+id/area_all"
                 android:layout_width="0dp"
-                android:layout_height="32dp"
+                android:layout_height="34dp"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
                 android:gravity="center"
                 android:text="All"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:background="@drawable/bg_btn_red" />
+                android:textSize="11sp"
+                android:background="@drawable/bg_hexagon_red" />
 
             <TextView
                 android:id="@+id/area_right"
                 android:layout_width="0dp"
-                android:layout_height="32dp"
+                android:layout_height="34dp"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="Right"
                 android:textColor="#B0B3BA"
-                android:textSize="12sp"
-                android:background="@drawable/bg_btn_dark" />
+                android:textSize="11sp"
+                android:background="@drawable/bg_hexagon_dark" />
         </LinearLayout>
 
-        <!-- Sens X: [-] seek [+]  value -->
+        <!-- ══ SENSITIVITY CURVE ══════════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp">
+
+            <TextView
+                android:id="@+id/curve_linear"
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Linear"
+                android:textColor="#B0B3BA"
+                android:textSize="11sp"
+                android:background="@drawable/bg_hexagon_dark" />
+
+            <TextView
+                android:id="@+id/curve_accel"
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_weight="1"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:gravity="center"
+                android:text="Accel"
+                android:textColor="#B0B3BA"
+                android:textSize="11sp"
+                android:background="@drawable/bg_hexagon_dark" />
+
+            <TextView
+                android:id="@+id/curve_decel"
+                android:layout_width="0dp"
+                android:layout_height="34dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Decel"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:background="@drawable/bg_hexagon_red" />
+        </LinearLayout>
+
+        <!-- ══ SENSITIVITY X ══════════════════════════════════ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
             android:gravity="center_vertical">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sensitivity X"
-                android:textColor="#B0B3BA"
-                android:textSize="11sp" />
-
-            <TextView
-                android:id="@+id/val_sens_x"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:gravity="end"
-                android:text="2.00x"
+                android:text="Sensitivity X (Horizontal)"
+                android:textColor="#55585F"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/val_sens_x"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1.00x"
                 android:textColor="#F23A48"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -147,7 +264,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="2dp">
+            android:layout_marginTop="4dp">
 
             <TextView
                 android:id="@+id/btn_sens_x_minus"
@@ -157,20 +274,20 @@
                 android:text="−"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
-                android:background="@drawable/bg_btn_dark" />
+                android:background="@drawable/bg_hexagon_dark" />
 
             <SeekBar
                 android:id="@+id/seek_sens_x"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:max="900"
-                android:progress="100"
+                android:progress="0"
                 android:progressTint="#E61F33"
                 android:thumbTint="#E61F33"
-                android:progressBackgroundTint="#2A2A2E" />
+                android:progressBackgroundTint="#252530" />
 
             <TextView
                 android:id="@+id/btn_sens_x_plus"
@@ -180,31 +297,30 @@
                 android:text="+"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
-                android:background="@drawable/bg_btn_dark" />
+                android:background="@drawable/bg_hexagon_dark" />
         </LinearLayout>
 
-        <!-- Sens Y -->
+        <!-- ══ SENSITIVITY Y ══════════════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:gravity="center_vertical">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sensitivity Y"
-                android:textColor="#B0B3BA"
-                android:textSize="11sp" />
-
-            <TextView
-                android:id="@+id/val_sens_y"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:gravity="end"
-                android:text="2.00x"
+                android:text="Sensitivity Y (Vertical)"
+                android:textColor="#55585F"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/val_sens_y"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1.00x"
                 android:textColor="#F23A48"
                 android:textSize="11sp"
                 android:textStyle="bold" />
@@ -215,7 +331,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginTop="2dp">
+            android:layout_marginTop="4dp">
 
             <TextView
                 android:id="@+id/btn_sens_y_minus"
@@ -225,20 +341,20 @@
                 android:text="−"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
-                android:background="@drawable/bg_btn_dark" />
+                android:background="@drawable/bg_hexagon_dark" />
 
             <SeekBar
                 android:id="@+id/seek_sens_y"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:max="900"
-                android:progress="100"
+                android:progress="0"
                 android:progressTint="#E61F33"
                 android:thumbTint="#E61F33"
-                android:progressBackgroundTint="#2A2A2E" />
+                android:progressBackgroundTint="#252530" />
 
             <TextView
                 android:id="@+id/btn_sens_y_plus"
@@ -248,15 +364,22 @@
                 android:text="+"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
-                android:background="@drawable/bg_btn_dark" />
+                android:background="@drawable/bg_hexagon_dark" />
         </LinearLayout>
 
-        <!-- TactiX row compact -->
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="6dp"
+            android:background="#1A1C24" />
+
+        <!-- ══ TACTIX FOOTER ROW ══════════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="8dp"
             android:gravity="center_vertical">
 
             <TextView
@@ -265,8 +388,10 @@
                 android:layout_weight="1"
                 android:text="TactiX"
                 android:textColor="#EAEBEF"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
+            <!-- Keep check_tactix (invisible compat shim if needed by future code) -->
             <CheckBox
                 android:id="@+id/check_tactix"
                 android:layout_width="wrap_content"
@@ -276,41 +401,16 @@
                 android:minHeight="0dp" />
         </LinearLayout>
 
-        <!-- START / STOP -->
-        <TextView
-            android:id="@+id/btn_start"
-            android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="START"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:textSize="13sp"
-            android:background="@drawable/bg_btn_red" />
-
-        <TextView
-            android:id="@+id/btn_stop"
-            android:layout_width="match_parent"
-            android:layout_height="36dp"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="STOP"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold"
-            android:textSize="13sp"
-            android:background="@drawable/bg_btn_dark"
-            android:visibility="gone" />
-
         <TextView
             android:id="@+id/status_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Standing"
-            android:textColor="#8A8E96"
-            android:textSize="10sp"
+            android:textColor="#3E414A"
+            android:textSize="9sp"
             android:maxLines="1"
             android:ellipsize="end" />
+
     </LinearLayout>
 </FrameLayout>

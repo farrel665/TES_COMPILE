@@ -21,47 +21,69 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CheckBox;
-import android.widget.FrameLayout;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 /**
  * System overlay floating panel — lives outside the app Activity.
- * - START from Bootstrap launches this service
- * - Hide → shrinks to bubble (still on screen)
- * - Close / STOP → removes overlay + stops worker
- * - Drag bubble or panel freely
+ *
+ * Panel layout (overlay_panel.xml):
+ *   ┌─ Magic Manager ─────────────── [–] [×] ─┐
+ *   │  Magic Touch  [switch]                   │
+ *   │  ─────────────────────────────────────── │
+ *   │  Sensitivity Area: [Left] [All] [Right]  │
+ *   │  Curve:        [Linear] [Accel] [Decel]  │
+ *   │  Sens X  1.00x  [−] ══════════════ [+]  │
+ *   │  Sens Y  1.00x  [−] ══════════════ [+]  │
+ *   │  ─────────────────────────────────────── │
+ *   │  TactiX  □                               │
+ *   │  [         START        ]                │
+ *   └──────────────────────────────────────────┘
  */
 public class OverlayService extends Service {
-    private static final String TAG = "rizxbyte_overlay";
+
+    private static final String TAG   = "rizxbyte_overlay";
     private static final String CH_ID = "rizxbyte_overlay";
+
     public static final String ACTION_SHOW = "com.rizxbyte.inject.OVERLAY_SHOW";
     public static final String ACTION_HIDE = "com.rizxbyte.inject.OVERLAY_HIDE";
     public static final String ACTION_STOP = "com.rizxbyte.inject.OVERLAY_STOP";
 
+    // ── Window ────────────────────────────────────────────────────────
     private WindowManager wm;
-    private View root;
-    private View panel;
-    private View bubble;
+    private View root, panel, bubble;
     private WindowManager.LayoutParams lp;
     private final Handler main = new Handler(Looper.getMainLooper());
 
-    private int sensArea = 1;   // 0 Left 1 All 2 Right
-    private float sensX = 2.00f;
-    private float sensY = 2.00f;
-    private boolean tactix = false;
+    // ── State ─────────────────────────────────────────────────────────
+    /** 0=Left  1=All  2=Right */
+    private int sensArea   = 1;
+    /** 0=Linear  1=Accel  2=Decel — passed as presetIdx to native */
+    private int curveMode  = 2;
+    /** Default sensitivity = 1.00x (was 2.00f) */
+    private float sensX    = 1.00f;
+    private float sensY    = 1.00f;
+    /** Magic Touch toggle (Switch in UI) */
+    private boolean tactix        = false;
     private boolean workerRunning = false;
-    private boolean panelVisible = true;
+    private boolean panelVisible  = true;
 
-    private TextView statusTv;
-    private TextView btnStart, btnStop;
+    // ── View references ───────────────────────────────────────────────
+    private TextView  statusTv;
     private TextView[] areaBtns;
-    private TextView valX, valY;
+    private TextView[] curveBtns;
+    private TextView  valX, valY;
+    private Switch    switchMagicTouch;
 
-    // drag state
+    // ── Drag state ────────────────────────────────────────────────────
     private int startX, startY, startTouchX, startTouchY;
     private boolean dragging;
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Lifecycle
+    // ═════════════════════════════════════════════════════════════════
 
     @Override
     public void onCreate() {
@@ -80,18 +102,10 @@ public class OverlayService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && intent.getAction() != null) {
             switch (intent.getAction()) {
-                case ACTION_SHOW:
-                    showPanel();
-                    break;
-                case ACTION_HIDE:
-                    hideToBubble();
-                    break;
-                case ACTION_STOP:
-                    stopWorkerAndSelf();
-                    break;
-                default:
-                    showPanel();
-                    break;
+                case ACTION_SHOW: showPanel();         break;
+                case ACTION_HIDE: hideToBubble();      break;
+                case ACTION_STOP: stopWorkerAndSelf(); break;
+                default:          showPanel();         break;
             }
         } else {
             showPanel();
@@ -99,16 +113,17 @@ public class OverlayService extends Service {
         return START_STICKY;
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+    @Override public IBinder onBind(Intent intent) { return null; }
 
     @Override
     public void onDestroy() {
         removeOverlay();
         super.onDestroy();
     }
+
+    // ═════════════════════════════════════════════════════════════════
+    //  Notification
+    // ═════════════════════════════════════════════════════════════════
 
     private void startForegroundNotif() {
         if (Build.VERSION.SDK_INT >= 26) {
@@ -133,26 +148,35 @@ public class OverlayService extends Service {
         startForeground(42, n);
     }
 
+    // ═════════════════════════════════════════════════════════════════
+    //  Inflate overlay
+    // ═════════════════════════════════════════════════════════════════
+
     private void inflateOverlay() {
         LayoutInflater inf = LayoutInflater.from(this);
-        root = inf.inflate(R.layout.overlay_panel, null);
-        panel = root.findViewById(R.id.panel);
+        root   = inf.inflate(R.layout.overlay_panel, null);
+        panel  = root.findViewById(R.id.panel);
         bubble = root.findViewById(R.id.bubble);
 
         statusTv = root.findViewById(R.id.status_text);
-        btnStart = root.findViewById(R.id.btn_start);
-        btnStop = root.findViewById(R.id.btn_stop);
-        valX = root.findViewById(R.id.val_sens_x);
-        valY = root.findViewById(R.id.val_sens_y);
+        valX     = root.findViewById(R.id.val_sens_x);
+        valY     = root.findViewById(R.id.val_sens_y);
 
+        // ── Magic Touch switch → langsung start / stop worker ─────
+        switchMagicTouch = root.findViewById(R.id.switch_magic_touch);
+        switchMagicTouch.setOnCheckedChangeListener((btn, checked) -> {
+            tactix = checked;
+            if (checked) doStart();
+            else         doStop();
+        });
+
+        // ── Sensitivity Area buttons ───────────────────────────────
         areaBtns = new TextView[]{
                 root.findViewById(R.id.area_left),
                 root.findViewById(R.id.area_all),
                 root.findViewById(R.id.area_right)
         };
-
-        // Area toggles
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < areaBtns.length; i++) {
             final int idx = i;
             areaBtns[i].setOnClickListener(v -> {
                 sensArea = idx;
@@ -161,9 +185,26 @@ public class OverlayService extends Service {
             });
         }
 
+        // ── Sensitivity Curve buttons ──────────────────────────────
+        // curveMode is passed as presetIdx to ShizukuHelper.startWorker()
+        curveBtns = new TextView[]{
+                root.findViewById(R.id.curve_linear),   // 0 = Linear
+                root.findViewById(R.id.curve_accel),    // 1 = Accel
+                root.findViewById(R.id.curve_decel)     // 2 = Decel
+        };
+        for (int i = 0; i < curveBtns.length; i++) {
+            final int idx = i;
+            curveBtns[i].setOnClickListener(v -> {
+                curveMode = idx;
+                refreshCurveUi();
+                if (workerRunning) doStart();
+            });
+        }
+
+        // ── SeekBars — range 0..900 → 1.00x..10.00x ──────────────
         SeekBar sx = root.findViewById(R.id.seek_sens_x);
         SeekBar sy = root.findViewById(R.id.seek_sens_y);
-        // progress 0..900 → 1.00 .. 10.00
+
         sx.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
                 if (!fromUser) return;
@@ -172,9 +213,10 @@ public class OverlayService extends Service {
             }
             @Override public void onStartTrackingTouch(SeekBar s) {}
             @Override public void onStopTrackingTouch(SeekBar s) {
-                if (workerRunning) doStart(); // re-apply live
+                if (workerRunning) doStart();
             }
         });
+
         sy.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
                 if (!fromUser) return;
@@ -187,32 +229,35 @@ public class OverlayService extends Service {
             }
         });
 
-        // Sens step buttons (− / +)
+        // ── Sens step − / + ────────────────────────────────────────
         root.findViewById(R.id.btn_sens_x_minus).setOnClickListener(v -> stepSens(sx, valX, -10, true));
-        root.findViewById(R.id.btn_sens_x_plus).setOnClickListener(v -> stepSens(sx, valX, +10, true));
+        root.findViewById(R.id.btn_sens_x_plus) .setOnClickListener(v -> stepSens(sx, valX, +10, true));
         root.findViewById(R.id.btn_sens_y_minus).setOnClickListener(v -> stepSens(sy, valY, -10, false));
-        root.findViewById(R.id.btn_sens_y_plus).setOnClickListener(v -> stepSens(sy, valY, +10, false));
+        root.findViewById(R.id.btn_sens_y_plus) .setOnClickListener(v -> stepSens(sy, valY, +10, false));
 
+        // ── TactiX checkbox (footer) ───────────────────────────────
         CheckBox tact = root.findViewById(R.id.check_tactix);
         tact.setOnCheckedChangeListener((b, checked) -> {
             tactix = checked;
+            if (switchMagicTouch != null) switchMagicTouch.setChecked(checked);
             if (workerRunning) doStart();
         });
 
-        root.findViewById(R.id.btn_hide).setOnClickListener(v -> hideToBubble());
+        // ── Hide / Close ───────────────────────────────────────────
+        root.findViewById(R.id.btn_hide) .setOnClickListener(v -> hideToBubble());
         root.findViewById(R.id.btn_close).setOnClickListener(v -> stopWorkerAndSelf());
 
-        btnStart.setOnClickListener(v -> doStart());
-        btnStop.setOnClickListener(v -> doStop());
-
-        // drag on panel header / bubble
+        // ── Drag: header (panel) + bubble ──────────────────────────
         View.OnTouchListener drag = this::onDrag;
-        panel.setOnTouchListener(drag);
+        panel .setOnTouchListener(drag);
         bubble.setOnTouchListener(drag);
 
-        int type = Build.VERSION.SDK_INT >= 26
-                ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                : WindowManager.LayoutParams.TYPE_PHONE;
+        // ── Initial UI state ───────────────────────────────────────
+        refreshAreaUi();
+        refreshCurveUi();
+
+        // ── Window params ──────────────────────────────────────────
+        int type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
 
         lp = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -226,7 +271,7 @@ public class OverlayService extends Service {
 
         DisplayMetrics dm = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics(dm);
-        lp.x = (dm.widthPixels - dp(320)) / 2;
+        lp.x = (dm.widthPixels - dp(300)) / 2;
         lp.y = dm.heightPixels / 5;
 
         try {
@@ -240,12 +285,16 @@ public class OverlayService extends Service {
         }
     }
 
+    // ═════════════════════════════════════════════════════════════════
+    //  Panel visibility
+    // ═════════════════════════════════════════════════════════════════
+
     private void showPanel() {
         panelVisible = true;
-        if (panel != null) panel.setVisibility(View.VISIBLE);
+        if (panel  != null) panel .setVisibility(View.VISIBLE);
         if (bubble != null) bubble.setVisibility(View.GONE);
         if (lp != null) {
-            lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
+            lp.width  = WindowManager.LayoutParams.WRAP_CONTENT;
             lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
             try { wm.updateViewLayout(root, lp); } catch (Throwable ignored) {}
         }
@@ -253,21 +302,25 @@ public class OverlayService extends Service {
 
     private void hideToBubble() {
         panelVisible = false;
-        if (panel != null) panel.setVisibility(View.GONE);
+        if (panel  != null) panel .setVisibility(View.GONE);
         if (bubble != null) bubble.setVisibility(View.VISIBLE);
         if (lp != null) {
-            lp.width = dp(52);
+            lp.width  = dp(52);
             lp.height = dp(52);
             try { wm.updateViewLayout(root, lp); } catch (Throwable ignored) {}
         }
     }
 
+    // ═════════════════════════════════════════════════════════════════
+    //  Drag
+    // ═════════════════════════════════════════════════════════════════
+
     private boolean onDrag(View v, MotionEvent e) {
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                dragging = false;
-                startX = lp.x;
-                startY = lp.y;
+                dragging    = false;
+                startX      = lp.x;
+                startY      = lp.y;
                 startTouchX = (int) e.getRawX();
                 startTouchY = (int) e.getRawY();
                 return true;
@@ -280,46 +333,57 @@ public class OverlayService extends Service {
                 try { wm.updateViewLayout(root, lp); } catch (Throwable ignored) {}
                 return true;
             case MotionEvent.ACTION_UP:
-                if (!dragging && v == bubble) {
-                    // tap bubble → expand panel
-                    showPanel();
-                }
+                if (!dragging && v == bubble) showPanel();
                 return true;
         }
         return false;
     }
 
+    // ═════════════════════════════════════════════════════════════════
+    //  Worker control
+    // ═════════════════════════════════════════════════════════════════
+
     private void doStart() {
         statusTv.setText("Starting…");
         main.post(() -> {
             try {
-                // ensure Shizuku bound
-                if (!ShizukuHelper.isReady()) {
-                    ShizukuHelper.init();
-                }
-                // Prefer APK-native lib, UserService will stage it to /data/local/tmp
-                String bin = getApplicationInfo().nativeLibraryDir
-                        + "/librizxbyteengine.so";
-                java.io.File f = new java.io.File(bin);
-                if (!f.exists()) {
-                    bin = "/data/local/tmp/rizxbyte_engine";
-                }
-                Log.i(TAG, "start bin=" + bin + " X=" + sensX + " Y=" + sensY
-                        + " area=" + sensArea + " tactix=" + tactix);
-                // preset fixed 0 — curve removed
-                boolean ok = ShizukuHelper.startWorker(bin, 0, sensX, sensY,
-                        sensArea, tactix ? 1 : 0);
+                if (!ShizukuHelper.isReady()) ShizukuHelper.init();
+
+                String bin = getApplicationInfo().nativeLibraryDir + "/librizxbyteengine.so";
+                if (!new java.io.File(bin).exists()) bin = "/data/local/tmp/rizxbyte_engine";
+
+                Log.i(TAG, "start bin=" + bin
+                        + "  X=" + sensX + "  Y=" + sensY
+                        + "  area=" + sensArea
+                        + "  curve=" + curveMode
+                        + "  tactix=" + tactix);
+
+                // curveMode (0=Linear/1=Accel/2=Decel) → presetIdx
+                boolean ok = ShizukuHelper.startWorker(
+                        bin, curveMode, sensX, sensY, sensArea, tactix ? 1 : 0);
+
                 workerRunning = ok;
                 if (ok) {
-                    String[] areas = {"LEFT", "ALL", "RIGHT"};
-                    statusTv.setText("Engaged  X=" + String.format("%.2f", sensX)
-                            + " Y=" + String.format("%.2f", sensY)
+                    String[] areas  = {"LEFT",  "ALL",  "RIGHT"};
+                    String[] curves = {"LIN",   "ACC",  "DEC"};
+                    statusTv.setText("Engaged"
+                            + "  X=" + String.format("%.2f", sensX)
+                            + "  Y=" + String.format("%.2f", sensY)
                             + "  " + areas[sensArea]
-                            + (tactix ? " TX" : ""));
-                    btnStart.setVisibility(View.GONE);
-                    btnStop.setVisibility(View.VISIBLE);
+                            + "  " + curves[curveMode]
+                            + (tactix ? "  TX" : ""));
                     Toast.makeText(this, "Worker started", Toast.LENGTH_SHORT).show();
                 } else {
+                    // Kembalikan switch ke OFF jika start gagal
+                    if (switchMagicTouch != null) {
+                        switchMagicTouch.setOnCheckedChangeListener(null);
+                        switchMagicTouch.setChecked(false);
+                        switchMagicTouch.setOnCheckedChangeListener((btn, checked) -> {
+                            tactix = checked;
+                            if (checked) doStart();
+                            else         doStop();
+                        });
+                    }
                     statusTv.setText("Start failed — check Shizuku / binary");
                     Toast.makeText(this, "Start failed", Toast.LENGTH_SHORT).show();
                 }
@@ -331,14 +395,8 @@ public class OverlayService extends Service {
     }
 
     private void doStop() {
-        try {
-            ShizukuHelper.stopWorker();
-        } catch (Throwable t) {
-            Log.e(TAG, "stopWorker", t);
-        }
+        try { ShizukuHelper.stopWorker(); } catch (Throwable t) { Log.e(TAG, "stopWorker", t); }
         workerRunning = false;
-        btnStart.setVisibility(View.VISIBLE);
-        btnStop.setVisibility(View.GONE);
         statusTv.setText("Disengaged");
     }
 
@@ -356,17 +414,38 @@ public class OverlayService extends Service {
         }
     }
 
+    // ═════════════════════════════════════════════════════════════════
+    //  UI Refresh helpers
+    // ═════════════════════════════════════════════════════════════════
+
+    /** Highlights active area button with hexagon-red, others hexagon-dark. */
     private void refreshAreaUi() {
-        for (int i = 0; i < 3; i++) {
-            areaBtns[i].setBackgroundResource(i == sensArea
-                    ? R.drawable.bg_btn_red : R.drawable.bg_btn_dark);
-            areaBtns[i].setTextColor(i == sensArea ? 0xFFFFFFFF : 0xFFB0B3BA);
+        for (int i = 0; i < areaBtns.length; i++) {
+            boolean active = (i == sensArea);
+            areaBtns[i].setBackgroundResource(
+                    active ? R.drawable.bg_hexagon_red : R.drawable.bg_hexagon_dark);
+            areaBtns[i].setTextColor(active ? 0xFFFFFFFF : 0xFFB0B3BA);
         }
     }
 
+    /** Highlights active curve button with hexagon-red, others hexagon-dark. */
+    private void refreshCurveUi() {
+        for (int i = 0; i < curveBtns.length; i++) {
+            boolean active = (i == curveMode);
+            curveBtns[i].setBackgroundResource(
+                    active ? R.drawable.bg_hexagon_red : R.drawable.bg_hexagon_dark);
+            curveBtns[i].setTextColor(active ? 0xFFFFFFFF : 0xFFB0B3BA);
+        }
+    }
 
+    // ═════════════════════════════════════════════════════════════════
+    //  Helpers
+    // ═════════════════════════════════════════════════════════════════
 
-    /** step = progress units (10 ≈ 0.10x)  range 1.00..10.00 */
+    /**
+     * Step the seekbar by {@code delta} progress units (10 ≈ 0.10x).
+     * Range: progress 0..900 → 1.00x..10.00x
+     */
     private void stepSens(SeekBar bar, TextView label, int delta, boolean isX) {
         if (bar == null) return;
         int p = Math.max(0, Math.min(bar.getMax(), bar.getProgress() + delta));
@@ -377,32 +456,14 @@ public class OverlayService extends Service {
         if (workerRunning) doStart();
     }
 
-    private interface IntConsumer { void accept(int v); }
-
-    private SeekBar.OnSeekBarChangeListener simpleSeek(IntConsumer c) {
-        return new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
-                if (fromUser) c.accept(p);
-            }
-            @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) {}
-        };
-    }
-
     private int dp(int v) {
-        float d = getResources().getDisplayMetrics().density;
-        return (int) (v * d + 0.5f);
+        return (int) (v * getResources().getDisplayMetrics().density + 0.5f);
     }
 
     /** Helper for Bootstrap / others */
     public static void launch(Context ctx) {
-        Intent i = new Intent(ctx, OverlayService.class);
-        i.setAction(ACTION_SHOW);
-        if (Build.VERSION.SDK_INT >= 26) {
-            ctx.startForegroundService(i);
-        } else {
-            ctx.startService(i);
-        }
+        Intent i = new Intent(ctx, OverlayService.class).setAction(ACTION_SHOW);
+        if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i);
+        else ctx.startService(i);
     }
 }
-
