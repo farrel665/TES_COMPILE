@@ -74,7 +74,7 @@ public class GamingSeekBar extends View {
         float trackRight = width - padding;
         float trackWidth = trackRight - trackLeft;
         float centerY = height / 2f;
-        float trackHeight = dpToPx(3);
+        float trackHeight = dpToPx(6);
 
         // 1. Draw Track Background
         trackRect.set(trackLeft, centerY - (trackHeight / 2f), trackRight, centerY + (trackHeight / 2f));
