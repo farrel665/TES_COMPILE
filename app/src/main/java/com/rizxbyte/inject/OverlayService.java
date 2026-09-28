@@ -21,7 +21,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CheckBox;
-import android.widget.SeekBar;   // masih dipakai untuk OnSeekBarChangeListener
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -164,10 +164,11 @@ public class OverlayService extends Service {
             });
         }
 
-        // ── GamingSeekBar — range 0..900 → 1.00x..10.00x ─────────
-        //    ↓ diubah dari SeekBar ke GamingSeekBar
-        GamingSeekBar sx = root.findViewById(R.id.seek_sens_x);
-        GamingSeekBar sy = root.findViewById(R.id.seek_sens_y);
+        // ── SeekBar — cast dari GamingSeekBar supaya method SeekBar tersedia ──
+        //    GamingSeekBar extends SeekBar di runtime, tapi compiler perlu tahu
+        //    tipe-nya sebagai SeekBar agar setOnSeekBarChangeListener & getMax() resolve.
+        SeekBar sx = (SeekBar) root.findViewById(R.id.seek_sens_x);
+        SeekBar sy = (SeekBar) root.findViewById(R.id.seek_sens_y);
 
         sx.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -392,12 +393,9 @@ public class OverlayService extends Service {
     //  Helpers
     // ═════════════════════════════════════════════════════════════════
 
-    /**
-     * ↓ parameter diubah dari SeekBar ke GamingSeekBar
-     *   tapi listener-nya tetap SeekBar.OnSeekBarChangeListener
-     *   karena GamingSeekBar extends SeekBar
-     */
-    private void stepSens(GamingSeekBar bar, TextView label, int delta, boolean isX) {
+    // parameter SeekBar — GamingSeekBar sudah di-cast ke SeekBar saat inflate,
+    // jadi getMax() & setProgress() resolve tanpa masalah
+    private void stepSens(SeekBar bar, TextView label, int delta, boolean isX) {
         if (bar == null) return;
         int p = Math.max(0, Math.min(bar.getMax(), bar.getProgress() + delta));
         bar.setProgress(p);
