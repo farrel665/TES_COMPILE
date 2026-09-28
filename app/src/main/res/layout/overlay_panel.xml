@@ -233,7 +233,7 @@
                 android:textSize="16sp"
                 android:background="@drawable/bg_hexagon_dark" />
 
-            <SeekBar
+            <com.rizxbyte.inject.GamingSeekBar
                 android:id="@+id/seek_sens_x"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -300,7 +300,7 @@
                 android:textSize="16sp"
                 android:background="@drawable/bg_hexagon_dark" />
 
-            <SeekBar
+            <com.rizxbyte.inject.GamingSeekBar
                 android:id="@+id/seek_sens_y"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
