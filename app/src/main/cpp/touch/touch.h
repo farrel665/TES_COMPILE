@@ -1,3 +1,4 @@
+// touch.h
 #ifndef TOUCH_H
 #define TOUCH_H
 
@@ -35,14 +36,12 @@ typedef struct {
     float   sens_x;
     float   sens_y;
 
-    
     int     area;           
     float   screen_w;
     float   screen_h;
     float   abs_x_min;
     float   abs_y_min;
 
-    
     int     tactix;
     float   deadzone;       
     float   flick_speed;    
@@ -171,7 +170,6 @@ static void touch_slot(TouchEngine *s, int slot,
     float ny = in_y / s->dpi_scale;
 
     if (!sl->active) {
-        
         sl->in_region = touch_in_region(s, in_x, in_y);
         sl->x = nx;
         sl->y = ny;
@@ -185,7 +183,6 @@ static void touch_slot(TouchEngine *s, int slot,
         return;
     }
 
-    
     if (!sl->in_region) {
         sl->x = nx;
         sl->y = ny;
@@ -210,7 +207,6 @@ static void touch_slot(TouchEngine *s, int slot,
     float rawDy = ny - sl->last_raw_y;
     float speed = sqrtf(rawDx * rawDx + rawDy * rawDy);
 
-    
     if (s->tactix && speed < s->deadzone) {
         sl->last_raw_x = nx;
         sl->last_raw_y = ny;
@@ -223,7 +219,6 @@ static void touch_slot(TouchEngine *s, int slot,
     float sx = s->sens_x;
     float sy = s->sens_y;
 
-    
     if (s->tactix && speed >= s->flick_speed) {
         float t = ts_clamp_float((speed - s->flick_speed) / s->flick_speed, 0.0f, 1.0f);
         float boost = 1.0f + (s->flick_boost - 1.0f) * t;
@@ -231,7 +226,6 @@ static void touch_slot(TouchEngine *s, int slot,
         sy *= boost;
     }
 
-    
     float finalDx = rawDx * sx;
     float finalDy = rawDy * sy;
 
@@ -244,7 +238,6 @@ static void touch_slot(TouchEngine *s, int slot,
     float targetX = lastSmoothedX + finalDx;
     float targetY = lastSmoothedY + finalDy;
 
-    
     float smoothedX = lastSmoothedX + (targetX - lastSmoothedX) * smoothingFactor;
     float smoothedY = lastSmoothedY + (targetY - lastSmoothedY) * smoothingFactor;
 
@@ -268,4 +261,4 @@ static int touch_slot_active(const TouchEngine *s, int slot) {
     return s->slots[slot].active;
 }
 
-#endif 
+#endif

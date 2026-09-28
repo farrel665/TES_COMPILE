@@ -1,3 +1,4 @@
+// touch_io.h
 #ifndef TOUCH_IO_H
 #define TOUCH_IO_H
 
@@ -8,7 +9,7 @@ typedef struct {
     int tracking_id;
     int x, y;
     int active;
-} RizxbyteCaptureSlot;
+} AncoreCaptureSlot;
 
 typedef struct {
     int  fd;
@@ -16,7 +17,7 @@ typedef struct {
     int  abs_x_min, abs_x_max;
     int  abs_y_min, abs_y_max;
     int  cur_slot;   
-    RizxbyteCaptureSlot slots[TS_MAX_SLOTS];
+    AncoreCaptureSlot slots[TS_MAX_SLOTS];
 } TouchCapture;
 
 typedef struct {
@@ -32,18 +33,18 @@ typedef struct {
     int any_active;
 } TouchInject;
 
-int  rizxbyte_capture_open(TouchCapture *tc);
-void rizxbyte_capture_close(TouchCapture *tc);
-int  rizxbyte_capture_grab(TouchCapture *tc);
-void rizxbyte_capture_ungrab(TouchCapture *tc);
-bool rizxbyte_capture_poll(TouchCapture *tc);
+int  ancore_capture_open(TouchCapture *tc);
+void ancore_capture_close(TouchCapture *tc);
+int  ancore_capture_grab(TouchCapture *tc);
+void ancore_capture_ungrab(TouchCapture *tc);
+bool ancore_capture_poll(TouchCapture *tc);
 
-int  rizxbyte_inject_open(TouchInject *ti, int abs_x_min, int abs_x_max,
-                          int abs_y_min, int abs_y_max);
-void rizxbyte_inject_close(TouchInject *ti);
+int  ancore_inject_open(TouchInject *ti, int abs_x_min, int abs_x_max,
+                        int abs_y_min, int abs_y_max);
+void ancore_inject_close(TouchInject *ti);
 
-void rizxbyte_inject_slot(TouchInject *ti, int slot, int x, int y, int down);
-void rizxbyte_inject_slot_release(TouchInject *ti, int slot);
-void rizxbyte_inject_flush(TouchInject *ti);
+void ancore_inject_slot(TouchInject *ti, int slot, int x, int y, int down);
+void ancore_inject_slot_release(TouchInject *ti, int slot);
+void ancore_inject_flush(TouchInject *ti);
 
 #endif

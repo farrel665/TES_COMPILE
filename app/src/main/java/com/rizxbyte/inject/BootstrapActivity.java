@@ -1,4 +1,4 @@
-package com.rizxbyte.inject;
+package com.ancore;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -12,7 +12,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 public class BootstrapActivity extends Activity {
-    private static final String TAG = "rizxbyte_boot";
+    private static final String TAG = "ancore_boot";
     private static final int REQ_OVERLAY = 1001;
 
     @Override

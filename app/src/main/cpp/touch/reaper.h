@@ -1,3 +1,4 @@
+// reaper.h
 #ifndef REAPER_H
 #define REAPER_H
 
@@ -7,18 +8,18 @@
 typedef struct {
     TouchCapture   *capture;
     TouchInject    *inject;
-    TouchEngine  *engine;
+    TouchEngine    *engine;
     pthread_mutex_t lock;
     pthread_t       thread;
     volatile int    running;
-} RizxbyteReaper;
+} AncoreReaper;
 
-int  rizxbyte_reaper_start(RizxbyteReaper *rp,
-                           TouchCapture *tc,
-                           TouchInject *ti,
-                           TouchEngine *ts);
-void rizxbyte_reaper_stop(RizxbyteReaper *rp);
-void rizxbyte_reaper_lock(RizxbyteReaper *rp);
-void rizxbyte_reaper_unlock(RizxbyteReaper *rp);
+int  ancore_reaper_start(AncoreReaper *rp,
+                         TouchCapture *tc,
+                         TouchInject *ti,
+                         TouchEngine *ts);
+void ancore_reaper_stop(AncoreReaper *rp);
+void ancore_reaper_lock(AncoreReaper *rp);
+void ancore_reaper_unlock(AncoreReaper *rp);
 
 #endif

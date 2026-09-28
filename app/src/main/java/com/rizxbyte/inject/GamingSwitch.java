@@ -1,4 +1,4 @@
-package com.rizxbyte.inject;
+package com.ancore;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -27,8 +27,8 @@ public class GamingSwitch extends View {
     private Path thumbPath;
 
     // Warna UI sesuai dengan contoh gambar
-    private int colorTrackOn = Color.parseColor("#E51010");   // Merah menyala[span_2](start_span)[span_2](end_span)[span_3](start_span)[span_3](end_span)
-    private int colorThumbOn = Color.parseColor("#1A0505");   // Gelap / Hitam[span_4](start_span)[span_4](end_span)[span_5](start_span)[span_5](end_span)
+    private int colorTrackOn = Color.parseColor("#E51010");   // Merah menyala
+    private int colorThumbOn = Color.parseColor("#1A0505");   // Gelap / Hitam
     private int colorTrackOff = Color.parseColor("#2B2B2B");  // Abu-abu gelap
     private int colorThumbOff = Color.parseColor("#777777");  // Abu-abu sedang
 
@@ -82,7 +82,7 @@ public class GamingSwitch extends View {
         float cutSize = height * 0.25f; // Ukuran potongan sudut (chamfer)
 
         // 1. Gambar Track (Background)
-        trackPaint.setColor(isChecked ? colorTrackOn : colorTrackOff); //[span_6](start_span)[span_6](end_span)[span_7](start_span)[span_7](end_span)
+        trackPaint.setColor(isChecked ? colorTrackOn : colorTrackOff);
         createChamferedPath(trackPath, 0, 0, width, height, cutSize);
         canvas.drawPath(trackPath, trackPaint);
 
@@ -93,7 +93,7 @@ public class GamingSwitch extends View {
         float currentX = minX + (maxX - minX) * animatedValue;
 
         // 3. Gambar Thumb
-        thumbPaint.setColor(isChecked ? colorThumbOn : colorThumbOff); //[span_8](start_span)[span_8](end_span)[span_9](start_span)[span_9](end_span)
+        thumbPaint.setColor(isChecked ? colorThumbOn : colorThumbOff);
         float thumbCut = thumbSize * 0.25f;
         createChamferedPath(thumbPath, currentX, padding, currentX + thumbSize, padding + thumbSize, thumbCut);
         canvas.drawPath(thumbPath, thumbPaint);

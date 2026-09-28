@@ -1,10 +1,11 @@
+// reaper.c
 #include "reaper.h"
 #include <stdio.h>
 #include <unistd.h>
 
-#define RIZXBYTE_REAPER_INTERVAL_MS 250
+#define ANCORE_REAPER_INTERVAL_MS 250
 
-static void rizxbyte_reaper_sync(RizxbyteReaper *rp) {
+static void ancore_reaper_sync(AncoreReaper *rp) {
     int hw_active[TS_MAX_SLOTS];
     int purged = 0;
 
@@ -16,47 +17,47 @@ static void rizxbyte_reaper_sync(RizxbyteReaper *rp) {
         int virtual_alive = rp->inject->virtual_active[slot];
 
         if (virtual_alive && !hw_active[slot]) {
-            rizxbyte_inject_slot_release(rp->inject, slot);
+            ancore_inject_slot_release(rp->inject, slot);
             touch_force_release(rp->engine, slot);
-            fprintf(stderr, "[rizxbyte_reaper] ghost purged slot %d\n", slot);
+            fprintf(stderr, "[ancore_reaper] ghost purged slot %d\n", slot);
             purged = 1;
         }
     }
 
     if (purged) {
-        rizxbyte_inject_flush(rp->inject);
+        ancore_inject_flush(rp->inject);
     }
 }
 
-static void *rizxbyte_reaper_thread(void *arg) {
-    RizxbyteReaper *rp = (RizxbyteReaper *)arg;
+static void *ancore_reaper_thread(void *arg) {
+    AncoreReaper *rp = (AncoreReaper *)arg;
 
     while (rp->running) {
-        usleep(RIZXBYTE_REAPER_INTERVAL_MS * 1000);
+        usleep(ANCORE_REAPER_INTERVAL_MS * 1000);
         if (!rp->running) break;
 
         pthread_mutex_lock(&rp->lock);
-        rizxbyte_reaper_sync(rp);
+        ancore_reaper_sync(rp);
         pthread_mutex_unlock(&rp->lock);
     }
 
     return NULL;
 }
 
-int rizxbyte_reaper_start(RizxbyteReaper *rp,
-                          TouchCapture *tc,
-                          TouchInject *ti,
-                          TouchEngine *ts) {
+int ancore_reaper_start(AncoreReaper *rp,
+                        TouchCapture *tc,
+                        TouchInject *ti,
+                        TouchEngine *ts) {
     if (rp == NULL || tc == NULL || ti == NULL || ts == NULL) return -1;
 
     rp->capture  = tc;
     rp->inject   = ti;
-    rp->engine = ts;
+    rp->engine   = ts;
     rp->running  = 1;
 
     if (pthread_mutex_init(&rp->lock, NULL) != 0) return -1;
 
-    if (pthread_create(&rp->thread, NULL, rizxbyte_reaper_thread, rp) != 0) {
+    if (pthread_create(&rp->thread, NULL, ancore_reaper_thread, rp) != 0) {
         pthread_mutex_destroy(&rp->lock);
         return -1;
     }
@@ -64,17 +65,17 @@ int rizxbyte_reaper_start(RizxbyteReaper *rp,
     return 0;
 }
 
-void rizxbyte_reaper_stop(RizxbyteReaper *rp) {
+void ancore_reaper_stop(AncoreReaper *rp) {
     if (rp == NULL || !rp->running) return;
     rp->running = 0;
     pthread_join(rp->thread, NULL);
     pthread_mutex_destroy(&rp->lock);
 }
 
-void rizxbyte_reaper_lock(RizxbyteReaper *rp) {
+void ancore_reaper_lock(AncoreReaper *rp) {
     if (rp != NULL) pthread_mutex_lock(&rp->lock);
 }
 
-void rizxbyte_reaper_unlock(RizxbyteReaper *rp) {
+void ancore_reaper_unlock(AncoreReaper *rp) {
     if (rp != NULL) pthread_mutex_unlock(&rp->lock);
 }

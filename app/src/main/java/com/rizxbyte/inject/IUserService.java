@@ -1,10 +1,10 @@
-package com.rizxbyte.inject;
+package com.ancore;
 
 import android.os.IInterface;
 import android.os.RemoteException;
 
 public interface IUserService extends IInterface {
-    String DESCRIPTOR = "com.rizxbyte.inject.IUserService";
+    String DESCRIPTOR = "com.ancore.IUserService";
 
     /**
      * Stage + exec worker.

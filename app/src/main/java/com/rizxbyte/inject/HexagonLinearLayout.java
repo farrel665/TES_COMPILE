@@ -1,4 +1,4 @@
-package com.rizxbyte.inject;
+package com.ancore;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -152,4 +152,3 @@ public class HexagonLinearLayout extends LinearLayout {
         );
     }
 }
-

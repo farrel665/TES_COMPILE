@@ -1,4 +1,4 @@
-package com.rizxbyte.inject;
+package com.ancore;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -32,12 +32,12 @@ import java.util.Locale;
  */
 public class OverlayService extends Service {
 
-    private static final String TAG   = "rizxbyte_overlay";
-    private static final String CH_ID = "rizxbyte_overlay";
+    private static final String TAG   = "ancore_overlay";
+    private static final String CH_ID = "ancore_overlay";
 
-    public static final String ACTION_SHOW = "com.rizxbyte.inject.OVERLAY_SHOW";
-    public static final String ACTION_HIDE = "com.rizxbyte.inject.OVERLAY_HIDE";
-    public static final String ACTION_STOP = "com.rizxbyte.inject.OVERLAY_STOP";
+    public static final String ACTION_SHOW = "com.ancore.OVERLAY_SHOW";
+    public static final String ACTION_HIDE = "com.ancore.OVERLAY_HIDE";
+    public static final String ACTION_STOP = "com.ancore.OVERLAY_STOP";
 
     // ── Window ────────────────────────────────────────────────────────
     private WindowManager wm;
@@ -116,7 +116,7 @@ public class OverlayService extends Service {
     private void startForegroundNotif() {
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationChannel ch = new NotificationChannel(
-                    CH_ID, "rizxbyte overlay", NotificationManager.IMPORTANCE_LOW);
+                    CH_ID, "ancore overlay", NotificationManager.IMPORTANCE_LOW);
             ch.setShowBadge(false);
             NotificationManager nm = getSystemService(NotificationManager.class);
             if (nm != null) nm.createNotificationChannel(ch);
@@ -127,7 +127,7 @@ public class OverlayService extends Service {
         Notification.Builder b = Build.VERSION.SDK_INT >= 26
                 ? new Notification.Builder(this, CH_ID)
                 : new Notification.Builder(this);
-        Notification n = b.setContentTitle("rizxbyte inject")
+        Notification n = b.setContentTitle("ancore inject")
                 .setContentText("Floating panel active — tap to show")
                 .setSmallIcon(android.R.drawable.ic_menu_manage)
                 .setContentIntent(pi)
@@ -318,8 +318,8 @@ public class OverlayService extends Service {
             try {
                 if (!ShizukuHelper.isReady()) ShizukuHelper.init();
 
-                String bin = getApplicationInfo().nativeLibraryDir + "/librizxbyteengine.so";
-                if (!new java.io.File(bin).exists()) bin = "/data/local/tmp/rizxbyte_engine";
+                String bin = getApplicationInfo().nativeLibraryDir + "/libancoreengine.so";
+                if (!new java.io.File(bin).exists()) bin = "/data/local/tmp/ancore_engine";
 
                 Log.i(TAG, "start bin=" + bin
                         + "  X=" + sensX + "  Y=" + sensY

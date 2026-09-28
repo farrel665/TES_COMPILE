@@ -1,3 +1,4 @@
+// process_watcher.c
 #include "process_watcher.h"
 #include <stdio.h>
 #include <string.h>
@@ -18,7 +19,7 @@ static int read_cmdline(pid_t pid, char *buf, size_t buflen) {
     return (int)n;
 }
 
-pid_t rizxbyte_pw_find_pid(const char *process_name) {
+pid_t ancore_pw_find_pid(const char *process_name) {
     DIR *proc = opendir("/proc");
     if (!proc) return -1;
     struct dirent *entry;
@@ -37,38 +38,38 @@ pid_t rizxbyte_pw_find_pid(const char *process_name) {
     return found;
 }
 
-pid_t rizxbyte_pw_find_freefire(const char **out_name) {
-    pid_t pid = rizxbyte_pw_find_pid(RIZXBYTE_FF_PACKAGE_GLOBAL);
+pid_t ancore_pw_find_freefire(const char **out_name) {
+    pid_t pid = ancore_pw_find_pid(ANCORE_FF_PACKAGE_GLOBAL);
     if (pid > 0) {
-        if (out_name) *out_name = RIZXBYTE_FF_PACKAGE_GLOBAL;
+        if (out_name) *out_name = ANCORE_FF_PACKAGE_GLOBAL;
         return pid;
     }
-    pid = rizxbyte_pw_find_pid(RIZXBYTE_FF_PACKAGE_MAX);
+    pid = ancore_pw_find_pid(ANCORE_FF_PACKAGE_MAX);
     if (pid > 0) {
-        if (out_name) *out_name = RIZXBYTE_FF_PACKAGE_MAX;
+        if (out_name) *out_name = ANCORE_FF_PACKAGE_MAX;
         return pid;
     }
     if (out_name) *out_name = NULL;
     return -1;
 }
 
-pid_t rizxbyte_pw_wait_for_freefire(int interval_ms, const char **out_name) {
+pid_t ancore_pw_wait_for_freefire(int interval_ms, const char **out_name) {
     for (;;) {
-        pid_t pid = rizxbyte_pw_find_freefire(out_name);
+        pid_t pid = ancore_pw_find_freefire(out_name);
         if (pid > 0) return pid;
         usleep(interval_ms * 1000);
     }
 }
 
-pid_t rizxbyte_pw_wait_for_process(const char *process_name, int interval_ms) {
+pid_t ancore_pw_wait_for_process(const char *process_name, int interval_ms) {
     for (;;) {
-        pid_t pid = rizxbyte_pw_find_pid(process_name);
+        pid_t pid = ancore_pw_find_pid(process_name);
         if (pid > 0) return pid;
         usleep(interval_ms * 1000);
     }
 }
 
-bool rizxbyte_pw_is_alive(pid_t pid) {
+bool ancore_pw_is_alive(pid_t pid) {
     if (pid <= 0) return false;
     return kill(pid, 0) == 0;
 }

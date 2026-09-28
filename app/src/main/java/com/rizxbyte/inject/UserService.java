@@ -1,4 +1,4 @@
-package com.rizxbyte.inject;
+package com.ancore;
 
 import android.os.Binder;
 import android.os.IBinder;
@@ -19,9 +19,9 @@ import java.util.concurrent.TimeUnit;
  * Has permission to open /dev/input/*, /dev/uinput and to write /data/local/tmp.
  */
 public class UserService extends Binder implements IUserService {
-    private static final String TAG = "rizxbyte_usersvc";
-    private static final String TMP_BIN = "/data/local/tmp/rizxbyte_engine";
-    private static final String TMP_LOG = "/data/local/tmp/rizxbyte_engine.log";
+    private static final String TAG = "ancore_usersvc";
+    private static final String TMP_BIN = "/data/local/tmp/ancore_engine";
+    private static final String TMP_LOG = "/data/local/tmp/ancore_engine.log";
 
     public UserService() {
         attachInterface(this, DESCRIPTOR);
@@ -71,7 +71,7 @@ public class UserService extends Binder implements IUserService {
                 + " area=" + area + " tactix=" + tactix);
         try {
             // Kill any previous instance
-            killByName("rizxbyte_engine");
+            killByName("ancore_engine");
 
             // 2. Stage binary — always refresh from APK so new flags take effect
             File src = new File(srcPath);
@@ -103,7 +103,7 @@ public class UserService extends Binder implements IUserService {
             int rc = execShell(cmd);
             Log.i(TAG, "execShell rc=" + rc);
 
-            boolean alive = isProcessAlive("rizxbyte_engine");
+            boolean alive = isProcessAlive("ancore_engine");
             Log.i(TAG, "worker alive=" + alive);
             return alive || rc == 0;
         } catch (Throwable t) {
@@ -115,7 +115,7 @@ public class UserService extends Binder implements IUserService {
     @Override
     public void stopWorker() {
         Log.i(TAG, "stopWorker");
-        killByName("rizxbyte_engine");
+        killByName("ancore_engine");
     }
 
     @Override

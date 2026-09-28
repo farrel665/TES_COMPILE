@@ -1,4 +1,4 @@
-
+// worker_main.c
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -19,17 +19,17 @@
 #include "touch_io.h"
 #include "reaper.h"
 
-#define RIZXBYTE_POLL_INTERVAL_MS  500
-#define RIZXBYTE_WARMUP_SECONDS    0
-#define RIZXBYTE_FRAME_DT          (1.0f / 120.0f)
-#define RIZXBYTE_WATCHDOG_SECONDS  8
+#define ANCORE_POLL_INTERVAL_MS  500
+#define ANCORE_WARMUP_SECONDS    0
+#define ANCORE_FRAME_DT          (1.0f / 120.0f)
+#define ANCORE_WATCHDOG_SECONDS  8
 
-static void rizxbyte_panic(int sig) { (void)sig; _exit(0); }
+static void ancore_panic(int sig) { (void)sig; _exit(0); }
 
-static void rizxbyte_install_signals(void) {
+static void ancore_install_signals(void) {
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = rizxbyte_panic;
+    sa.sa_handler = ancore_panic;
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGHUP, &sa, NULL);
@@ -49,7 +49,7 @@ static void force_release_grabs(void) {
     }
 }
 
-static void rizxbyte_kill_stale(void) {
+static void ancore_kill_stale(void) {
     DIR *proc = opendir("/proc");
     if (!proc) return;
     pid_t self = getpid();
@@ -71,8 +71,8 @@ static void rizxbyte_kill_stale(void) {
         if (n == 0) continue;
         buf[n] = '\0';
 
-        if (strstr(buf, "rizxbyte_engine") != NULL) {
-            fprintf(stderr, "[rizxbyte] kill stale pid=%d\n", (int)pid);
+        if (strstr(buf, "ancore_engine") != NULL || strstr(buf, "input_ancore") != NULL) {
+            fprintf(stderr, "[ancore] kill stale pid=%d\n", (int)pid);
             kill(pid, SIGKILL);
             killed++;
             usleep(10000);
@@ -81,21 +81,21 @@ static void rizxbyte_kill_stale(void) {
     closedir(proc);
     if (killed) {
         usleep(30000);
-        fprintf(stderr, "[rizxbyte] purged %d stale\n", killed);
+        fprintf(stderr, "[ancore] purged %d stale\n", killed);
     }
 }
 
 static void disengage(TouchCapture *c, TouchInject *inj, TouchEngine *s) {
     for (int slot = 0; slot < TS_MAX_SLOTS; slot++) {
         if (inj->virtual_active[slot] || inj->last_active[slot])
-            rizxbyte_inject_slot_release(inj, slot);
+            ancore_inject_slot_release(inj, slot);
         touch_force_release(s, slot);
         c->slots[slot].active = 0;
         c->slots[slot].tracking_id = -1;
     }
     inj->dirty = 1;
-    rizxbyte_inject_flush(inj);
-    rizxbyte_capture_ungrab(c);
+    ancore_inject_flush(inj);
+    ancore_capture_ungrab(c);
     c->cur_slot = 0;
 }
 
@@ -131,7 +131,6 @@ int main(int argc, char **argv) {
     if (cli_area < 0) cli_area = 0;
     if (cli_area > 2) cli_area = 2;
 
-    
     static const char *k_area[3]   = { "LEFT", "ALL", "RIGHT" };
     float factor = 0.90f;
     float sens_x = (cli_sens_x > 0.f) ? cli_sens_x : 2.0f;
@@ -141,76 +140,76 @@ int main(int argc, char **argv) {
     setvbuf(stderr, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
 
-    fprintf(stderr, "[rizxbyte] boot pid=%d ppid=%d curve=%s\n",
+    fprintf(stderr, "[ancore] boot pid=%d ppid=%d curve=%s\n",
             (int)getpid(), (int)getppid(), name);
-    fprintf(stderr, "[rizxbyte] argv:");
+    fprintf(stderr, "[ancore] argv:");
     for (int a = 0; a < argc; a++) fprintf(stderr, " %s", argv[a]);
     fprintf(stderr, "\n");
-    fprintf(stderr, "[rizxbyte] applied sensX=%.3f sensY=%.3f factor=%.3f\n",
+    fprintf(stderr, "[ancore] applied sensX=%.3f sensY=%.3f factor=%.3f\n",
             sens_x, sens_y, factor);
 
-    rizxbyte_kill_stale();
+    ancore_kill_stale();
     force_release_grabs();
-    rizxbyte_install_signals();
+    ancore_install_signals();
 
     TouchEngine engine;
     TouchCapture capture;
     TouchInject inject;
-    RizxbyteReaper reaper;
+    AncoreReaper reaper;
 
-    fprintf(stderr, "[rizxbyte] worker %s factor=%.2f sensX=%.2f sensY=%.2f area=%s tactix=%d\n",
+    fprintf(stderr, "[ancore] worker %s factor=%.2f sensX=%.2f sensY=%.2f area=%s tactix=%d\n",
             name, factor, sens_x, sens_y, k_area[cli_area], cli_tactix);
 
-    if (rizxbyte_capture_open(&capture) < 0) {
-        fprintf(stderr, "[rizxbyte] capture open failed (need root /dev/input)\n");
+    if (ancore_capture_open(&capture) < 0) {
+        fprintf(stderr, "[ancore] capture open failed (need root /dev/input)\n");
         return 1;
     }
-    fprintf(stderr, "[rizxbyte] capture ready x=[%d..%d] y=[%d..%d]\n",
+    fprintf(stderr, "[ancore] capture ready x=[%d..%d] y=[%d..%d]\n",
             capture.abs_x_min, capture.abs_x_max,
             capture.abs_y_min, capture.abs_y_max);
 
-    if (rizxbyte_inject_open(&inject, capture.abs_x_min, capture.abs_x_max,
+    if (ancore_inject_open(&inject, capture.abs_x_min, capture.abs_x_max,
                              capture.abs_y_min, capture.abs_y_max) < 0) {
-        fprintf(stderr, "[rizxbyte] uinput open failed\n");
-        rizxbyte_capture_close(&capture);
+        fprintf(stderr, "[ancore] uinput open failed\n");
+        ancore_capture_close(&capture);
         return 1;
     }
-    fprintf(stderr, "[rizxbyte] uinput ready\n");
+    fprintf(stderr, "[ancore] uinput ready\n");
 
-    if (rizxbyte_reaper_start(&reaper, &capture, &inject, &engine) < 0) {
-        fprintf(stderr, "[rizxbyte] reaper failed\n");
-        rizxbyte_inject_close(&inject);
-        rizxbyte_capture_close(&capture);
+    if (ancore_reaper_start(&reaper, &capture, &inject, &engine) < 0) {
+        fprintf(stderr, "[ancore] reaper failed\n");
+        ancore_inject_close(&inject);
+        ancore_capture_close(&capture);
         return 1;
     }
 
     for (;;) {
         alarm(0);
-        fprintf(stderr, "[rizxbyte] waiting Free Fire...\n");
+        fprintf(stderr, "[ancore] waiting Free Fire...\n");
         const char *ff_name = NULL;
-        pid_t ff_pid = rizxbyte_pw_wait_for_freefire(RIZXBYTE_POLL_INTERVAL_MS, &ff_name);
-        fprintf(stderr, "[rizxbyte] got %s pid=%d\n",
+        pid_t ff_pid = ancore_pw_wait_for_freefire(ANCORE_POLL_INTERVAL_MS, &ff_name);
+        fprintf(stderr, "[ancore] got %s pid=%d\n",
                 ff_name ? ff_name : "ff", (int)ff_pid);
 
         int died = 0;
-        for (int e = 0; e < RIZXBYTE_WARMUP_SECONDS; e++) {
-            alarm(RIZXBYTE_WATCHDOG_SECONDS);
-            if (!rizxbyte_pw_is_alive(ff_pid)) { died = 1; break; }
+        for (int e = 0; e < ANCORE_WARMUP_SECONDS; e++) {
+            alarm(ANCORE_WATCHDOG_SECONDS);
+            if (!ancore_pw_is_alive(ff_pid)) { died = 1; break; }
             sleep(1);
         }
         if (died) {
-            fprintf(stderr, "[rizxbyte] died in warmup, retry\n");
+            fprintf(stderr, "[ancore] died in warmup, retry\n");
             continue;
         }
 
-        if (rizxbyte_capture_grab(&capture) < 0) {
-            fprintf(stderr, "[rizxbyte] grab busy — stop other modules\n");
+        if (ancore_capture_grab(&capture) < 0) {
+            fprintf(stderr, "[ancore] grab busy — stop other modules\n");
             force_release_grabs();
-            if (rizxbyte_capture_grab(&capture) < 0) {
+            if (ancore_capture_grab(&capture) < 0) {
                 continue;
             }
         }
-        while (rizxbyte_capture_poll(&capture)) {}
+        while (ancore_capture_poll(&capture)) {}
         for (int i = 0; i < TS_MAX_SLOTS; i++) {
             capture.slots[i].active = 0;
             capture.slots[i].tracking_id = -1;
@@ -224,33 +223,33 @@ int main(int argc, char **argv) {
             (float)capture.abs_y_min, (float)capture.abs_y_max);
         touch_set_tactix(&engine, cli_tactix,
             cli_deadzone, cli_flick_speed, cli_flick_boost);
-        fprintf(stderr, "[rizxbyte] ENGAGED %s sensX=%.2f sensY=%.2f area=%s tactix=%d dz=%.1f\n",
+        fprintf(stderr, "[ancore] ENGAGED %s sensX=%.2f sensY=%.2f area=%s tactix=%d dz=%.1f\n",
                 name, sens_x, sens_y, k_area[cli_area], cli_tactix, cli_deadzone);
 
-        while (rizxbyte_pw_is_alive(ff_pid)) {
-            alarm(RIZXBYTE_WATCHDOG_SECONDS);
-            rizxbyte_reaper_lock(&reaper);
-            rizxbyte_capture_poll(&capture);
+        while (ancore_pw_is_alive(ff_pid)) {
+            alarm(ANCORE_WATCHDOG_SECONDS);
+            ancore_reaper_lock(&reaper);
+            ancore_capture_poll(&capture);
             for (int slot = 0; slot < TS_MAX_SLOTS; slot++) {
                 float ox = 0, oy = 0;
                 int od = 0;
                 int hw = capture.slots[slot].active;
                 touch_slot(&engine, slot,
                     (float)capture.slots[slot].x, (float)capture.slots[slot].y,
-                    hw, RIZXBYTE_FRAME_DT, &ox, &oy, &od);
-                if (hw) rizxbyte_inject_slot(&inject, slot, (int)ox, (int)oy, 1);
+                    hw, ANCORE_FRAME_DT, &ox, &oy, &od);
+                if (hw) ancore_inject_slot(&inject, slot, (int)ox, (int)oy, 1);
                 else if (inject.virtual_active[slot])
-                    rizxbyte_inject_slot_release(&inject, slot);
+                    ancore_inject_slot_release(&inject, slot);
             }
-            rizxbyte_inject_flush(&inject);
-            rizxbyte_reaper_unlock(&reaper);
-            usleep((useconds_t)(RIZXBYTE_FRAME_DT * 1000000.0f));
+            ancore_inject_flush(&inject);
+            ancore_reaper_unlock(&reaper);
+            usleep((useconds_t)(ANCORE_FRAME_DT * 1000000.0f));
         }
 
-        fprintf(stderr, "[rizxbyte] FF closed, disengage\n");
-        rizxbyte_reaper_lock(&reaper);
+        fprintf(stderr, "[ancore] FF closed, disengage\n");
+        ancore_reaper_lock(&reaper);
         disengage(&capture, &inject, &engine);
-        rizxbyte_reaper_unlock(&reaper);
+        ancore_reaper_unlock(&reaper);
     }
     return 0;
 }

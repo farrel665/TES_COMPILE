@@ -11,7 +11,7 @@
 		android:layout_height="wrap_content"
 		android:src="@drawable/default_image"
 		android:scaleType="center" />
-	<com.rizxbyte.inject.HexagonLinearLayout
+	<com.ancore.HexagonLinearLayout
 		android:id="@+id/Panel"
 		android:layout_width="325dp"
 		android:layout_height="507dp"
@@ -97,7 +97,7 @@
 							android:textSize="12sp"
 							android:textColor="#796061" />
 					</LinearLayout>
-					<com.rizxbyte.inject.GamingSwitch
+					<com.ancore.GamingSwitch
 						android:id="@+id/switch_magic_touch"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
@@ -122,7 +122,7 @@
 					android:layout_height="wrap_content"
 					android:layout_marginTop="10dp"
 					android:orientation="horizontal">
-					<com.rizxbyte.inject.HexagonLinearLayout
+					<com.ancore.HexagonLinearLayout
 						android:id="@+id/area_left"
 						android:layout_width="0dp"
 						android:layout_height="wrap_content"
@@ -146,8 +146,8 @@
 							android:text="Left"
 							android:textSize="12sp"
 							android:textColor="#E0E0E0" />
-					</com.rizxbyte.inject.HexagonLinearLayout>
-					<com.rizxbyte.inject.HexagonLinearLayout
+					</com.ancore.HexagonLinearLayout>
+					<com.ancore.HexagonLinearLayout
 						android:id="@+id/area_all"
 						android:layout_width="0dp"
 						android:layout_height="wrap_content"
@@ -173,8 +173,8 @@
 							android:text="All"
 							android:textSize="13sp"
 							android:textColor="#221D19" />
-					</com.rizxbyte.inject.HexagonLinearLayout>
-					<com.rizxbyte.inject.HexagonLinearLayout
+					</com.ancore.HexagonLinearLayout>
+					<com.ancore.HexagonLinearLayout
 						android:id="@+id/area_right"
 						android:layout_width="0dp"
 						android:layout_height="wrap_content"
@@ -198,7 +198,7 @@
 							android:text="Right"
 							android:textSize="12sp"
 							android:textColor="#E0E0E0" />
-					</com.rizxbyte.inject.HexagonLinearLayout>
+					</com.ancore.HexagonLinearLayout>
 				</LinearLayout>
 				<LinearLayout
 					android:id="@+id/linear22"
@@ -231,7 +231,7 @@
 					android:layout_marginTop="9dp"
 					android:gravity="center_vertical"
 					android:orientation="horizontal">
-					<com.rizxbyte.inject.HexagonLinearLayout
+					<com.ancore.HexagonLinearLayout
 						android:id="@+id/btn_sens_x_minus"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
@@ -246,8 +246,8 @@
 							android:layout_height="17dp"
 							android:src="@drawable/min"
 							android:scaleType="centerCrop" />
-					</com.rizxbyte.inject.HexagonLinearLayout>
-					<com.rizxbyte.inject.GamingSeekBar
+					</com.ancore.HexagonLinearLayout>
+					<com.ancore.GamingSeekBar
 						android:id="@+id/seek_sens_x"
 						android:layout_width="0dp"
 						android:layout_height="wrap_content"
@@ -259,7 +259,7 @@
 						android:progressTint="#E61F33"
 						android:thumbTint="#E61F33"
 						android:progressBackgroundTint="#252530" />
-					<com.rizxbyte.inject.HexagonLinearLayout
+					<com.ancore.HexagonLinearLayout
 						android:id="@+id/btn_sens_x_plus"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
@@ -275,7 +275,7 @@
 							android:layout_height="17dp"
 							android:src="@drawable/add"
 							android:scaleType="centerCrop" />
-					</com.rizxbyte.inject.HexagonLinearLayout>
+					</com.ancore.HexagonLinearLayout>
 					<ImageView
 						android:id="@+id/btn_reset_x"
 						android:layout_width="28dp"
@@ -331,7 +331,7 @@
 							android:src="@drawable/min"
 							android:scaleType="centerCrop" />
 					</LinearLayout>
-					<com.rizxbyte.inject.GamingSeekBar
+					<com.ancore.GamingSeekBar
 						android:id="@+id/seek_sens_y"
 						android:layout_width="0dp"
 						android:layout_height="wrap_content"
@@ -440,7 +440,7 @@
 						android:layout_marginTop="9dp"
 						android:gravity="center_vertical"
 						android:orientation="horizontal">
-						<com.rizxbyte.inject.HexagonLinearLayout
+						<com.ancore.HexagonLinearLayout
 							android:id="@+id/btn_strength_minus"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
@@ -455,8 +455,8 @@
 								android:layout_height="17dp"
 								android:src="@drawable/min"
 								android:scaleType="centerCrop" />
-						</com.rizxbyte.inject.HexagonLinearLayout>
-						<com.rizxbyte.inject.GamingSeekBar
+						</com.ancore.HexagonLinearLayout>
+						<com.ancore.GamingSeekBar
 							android:id="@+id/linear40"
 							android:layout_width="0dp"
 							android:layout_height="wrap_content"
@@ -468,7 +468,7 @@
 							android:progressTint="#E61F33"
 							android:thumbTint="#E61F33"
 							android:progressBackgroundTint="#252530" />
-						<com.rizxbyte.inject.HexagonLinearLayout
+						<com.ancore.HexagonLinearLayout
 							android:id="@+id/btn_strength_plus"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
@@ -483,7 +483,7 @@
 								android:layout_height="17dp"
 								android:src="@drawable/add"
 								android:scaleType="centerCrop" />
-						</com.rizxbyte.inject.HexagonLinearLayout>
+						</com.ancore.HexagonLinearLayout>
 					</LinearLayout>
 					<LinearLayout
 						android:id="@+id/linear42"
@@ -516,7 +516,7 @@
 						android:layout_marginTop="9dp"
 						android:gravity="center_vertical"
 						android:orientation="horizontal">
-						<com.rizxbyte.inject.HexagonLinearLayout
+						<com.ancore.HexagonLinearLayout
 							android:id="@+id/btn_responsive_minus"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
@@ -531,8 +531,8 @@
 								android:layout_height="17dp"
 								android:src="@drawable/min"
 								android:scaleType="centerCrop" />
-						</com.rizxbyte.inject.HexagonLinearLayout>
-						<com.rizxbyte.inject.GamingSeekBar
+						</com.ancore.HexagonLinearLayout>
+						<com.ancore.GamingSeekBar
 							android:id="@+id/linear45"
 							android:layout_width="0dp"
 							android:layout_height="wrap_content"
@@ -544,7 +544,7 @@
 							android:progressTint="#E61F33"
 							android:thumbTint="#E61F33"
 							android:progressBackgroundTint="#252530" />
-						<com.rizxbyte.inject.HexagonLinearLayout
+						<com.ancore.HexagonLinearLayout
 							android:id="@+id/btn_responsive_plus"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
@@ -559,7 +559,7 @@
 								android:layout_height="17dp"
 								android:src="@drawable/add"
 								android:scaleType="centerCrop" />
-						</com.rizxbyte.inject.HexagonLinearLayout>
+						</com.ancore.HexagonLinearLayout>
 					</LinearLayout>
 					<LinearLayout
 						android:id="@+id/linear47"
@@ -588,5 +588,5 @@
 				</LinearLayout>
 			</LinearLayout>
 		</ScrollView>
-	</com.rizxbyte.inject.HexagonLinearLayout>
+	</com.ancore.HexagonLinearLayout>
 </FrameLayout>

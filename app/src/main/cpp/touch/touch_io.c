@@ -1,3 +1,4 @@
+// touch_io.c
 #include "touch_io.h"
 
 #include <stdio.h>
@@ -21,15 +22,15 @@
 
 static char g_capture_path[64];
 
-static int rizxbyte_is_skip_name(const char *name) {
+static int ancore_is_skip_name(const char *name) {
     if (!name) return 1;
-    if (strstr(name, "rizxbyte") != NULL) return 1;
+    if (strstr(name, "ancore") != NULL) return 1;
     if (strstr(name, "uinput") != NULL) return 1;
     if (strstr(name, "Virtual") != NULL) return 1;
     return 0;
 }
 
-static int rizxbyte_device_is_touch(int fd, int require_slot) {
+static int ancore_device_is_touch(int fd, int require_slot) {
     unsigned char absbits[(ABS_MAX + 7) / 8];
     memset(absbits, 0, sizeof(absbits));
     if (ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits) < 0)
@@ -44,7 +45,7 @@ static int rizxbyte_device_is_touch(int fd, int require_slot) {
     return 1;
 }
 
-static int rizxbyte_score_name(const char *name) {
+static int ancore_score_name(const char *name) {
     if (!name) return 0;
     int s = 0;
     if (strstr(name, "touch") || strstr(name, "ts") ||
@@ -57,7 +58,7 @@ static int rizxbyte_score_name(const char *name) {
     return s;
 }
 
-static int rizxbyte_find_touch_capture(void) {
+static int ancore_find_touch_capture(void) {
     char path[64];
     char name[256];
     int best_fd = -1;
@@ -73,16 +74,16 @@ static int rizxbyte_find_touch_capture(void) {
 
             memset(name, 0, sizeof(name));
             ioctl(fd, EVIOCGNAME(sizeof(name) - 1), name);
-            if (rizxbyte_is_skip_name(name)) {
+            if (ancore_is_skip_name(name)) {
                 close(fd);
                 continue;
             }
-            if (!rizxbyte_device_is_touch(fd, require_slot)) {
+            if (!ancore_device_is_touch(fd, require_slot)) {
                 close(fd);
                 continue;
             }
 
-            int score = rizxbyte_score_name(name) + (require_slot ? 20 : 0);
+            int score = ancore_score_name(name) + (require_slot ? 20 : 0);
             if (score > best_score) {
                 if (best_fd >= 0) close(best_fd);
                 best_fd = fd;
@@ -97,18 +98,18 @@ static int rizxbyte_find_touch_capture(void) {
 
     if (best_fd >= 0) {
         snprintf(g_capture_path, sizeof(g_capture_path), "%s", best_path);
-        fprintf(stderr, "[rizxbyte] capture device %s\n", g_capture_path);
+        fprintf(stderr, "[ancore] capture device %s\n", g_capture_path);
     }
     return best_fd;
 }
 
-int rizxbyte_capture_open(TouchCapture *tc) {
+int ancore_capture_open(TouchCapture *tc) {
     if (tc == NULL) return -1;
     memset(tc, 0, sizeof(*tc));
     tc->fd = -1;
     g_capture_path[0] = '\0';
 
-    tc->fd = rizxbyte_find_touch_capture();
+    tc->fd = ancore_find_touch_capture();
     if (tc->fd < 0) return -1;
     tc->grabbed = 0;
     tc->cur_slot = 0;
@@ -138,7 +139,7 @@ int rizxbyte_capture_open(TouchCapture *tc) {
     return 0;
 }
 
-static int rizxbyte_try_grab_fd(int fd) {
+static int ancore_try_grab_fd(int fd) {
     if (fd < 0) return -1;
     ioctl(fd, EVIOCGRAB, 0);
     usleep(20 * 1000);
@@ -146,30 +147,28 @@ static int rizxbyte_try_grab_fd(int fd) {
     return -1;
 }
 
-int rizxbyte_capture_grab(TouchCapture *tc) {
+int ancore_capture_grab(TouchCapture *tc) {
     if (tc == NULL || tc->fd < 0) return -1;
     if (tc->grabbed) return 0;
 
     for (int attempt = 0; attempt < 6; attempt++) {
-        if (rizxbyte_try_grab_fd(tc->fd) == 0) {
+        if (ancore_try_grab_fd(tc->fd) == 0) {
             tc->grabbed = 1;
             return 0;
         }
 
-        
         if (g_capture_path[0]) {
             int nfd = open(g_capture_path, O_RDWR | O_NONBLOCK);
             if (nfd >= 0) {
                 close(tc->fd);
                 tc->fd = nfd;
-                if (rizxbyte_try_grab_fd(tc->fd) == 0) {
+                if (ancore_try_grab_fd(tc->fd) == 0) {
                     tc->grabbed = 1;
                     return 0;
                 }
             }
         }
 
-        
         char path[64], name[256];
         for (int i = 0; i < 32; i++) {
             snprintf(path, sizeof(path), "/dev/input/event%d", i);
@@ -179,12 +178,11 @@ int rizxbyte_capture_grab(TouchCapture *tc) {
             if (fd < 0) continue;
             memset(name, 0, sizeof(name));
             ioctl(fd, EVIOCGNAME(sizeof(name) - 1), name);
-            if (rizxbyte_is_skip_name(name) || !rizxbyte_device_is_touch(fd, 0)) {
+            if (ancore_is_skip_name(name) || !ancore_device_is_touch(fd, 0)) {
                 close(fd);
                 continue;
             }
-            if (rizxbyte_try_grab_fd(fd) == 0) {
-                
+            if (ancore_try_grab_fd(fd) == 0) {
                 if (tc->fd >= 0) close(tc->fd);
                 tc->fd = fd;
                 snprintf(g_capture_path, sizeof(g_capture_path), "%s", path);
@@ -199,7 +197,7 @@ int rizxbyte_capture_grab(TouchCapture *tc) {
                     tc->abs_y_max = info.maximum;
                 }
                 tc->grabbed = 1;
-                fprintf(stderr, "[rizxbyte] grab on %s\n", path);
+                fprintf(stderr, "[ancore] grab on %s\n", path);
                 return 0;
             }
             close(fd);
@@ -207,17 +205,17 @@ int rizxbyte_capture_grab(TouchCapture *tc) {
         usleep(150 * 1000);
     }
 
-    fprintf(stderr, "[rizxbyte] grab busy — close other touch modules\n");
+    fprintf(stderr, "[ancore] grab busy — close other touch modules\n");
     return -1;
 }
 
-void rizxbyte_capture_ungrab(TouchCapture *tc) {
+void ancore_capture_ungrab(TouchCapture *tc) {
     if (tc == NULL || tc->fd < 0 || !tc->grabbed) return;
     ioctl(tc->fd, EVIOCGRAB, 0);
     tc->grabbed = 0;
 }
 
-void rizxbyte_capture_close(TouchCapture *tc) {
+void ancore_capture_close(TouchCapture *tc) {
     if (tc == NULL) return;
     if (tc->fd >= 0) {
         if (tc->grabbed) {
@@ -229,7 +227,7 @@ void rizxbyte_capture_close(TouchCapture *tc) {
     tc->grabbed = 0;
 }
 
-bool rizxbyte_capture_poll(TouchCapture *tc) {
+bool ancore_capture_poll(TouchCapture *tc) {
     if (tc == NULL || tc->fd < 0) return false;
 
     int have_update = 0;
@@ -276,7 +274,6 @@ bool rizxbyte_capture_poll(TouchCapture *tc) {
             if (ev.code == SYN_REPORT) {
                 if (have_update) return true;
             } else if (ev.code == SYN_DROPPED) {
-                
                 for (int i = 0; i < TS_MAX_SLOTS; i++) {
                     tc->slots[i].active = 0;
                     tc->slots[i].tracking_id = -1;
@@ -288,7 +285,7 @@ bool rizxbyte_capture_poll(TouchCapture *tc) {
     return have_update != 0;
 }
 
-static void rizxbyte_emit(int fd, int type, int code, int val) {
+static void ancore_emit(int fd, int type, int code, int val) {
     struct input_event ev;
     memset(&ev, 0, sizeof(ev));
     ev.type  = type;
@@ -297,8 +294,8 @@ static void rizxbyte_emit(int fd, int type, int code, int val) {
     write(fd, &ev, sizeof(ev));
 }
 
-int rizxbyte_inject_open(TouchInject *ti, int abs_x_min, int abs_x_max,
-                         int abs_y_min, int abs_y_max) {
+int ancore_inject_open(TouchInject *ti, int abs_x_min, int abs_x_max,
+                       int abs_y_min, int abs_y_max) {
     if (ti == NULL) return -1;
 
     ti->fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
@@ -320,7 +317,7 @@ int rizxbyte_inject_open(TouchInject *ti, int abs_x_min, int abs_x_max,
 
     struct uinput_user_dev udev;
     memset(&udev, 0, sizeof(udev));
-    snprintf(udev.name, UINPUT_MAX_NAME_SIZE, "rizxbyte_touch");
+    snprintf(udev.name, UINPUT_MAX_NAME_SIZE, "ancore_touch");
     udev.id.bustype = BUS_VIRTUAL;
     udev.id.vendor  = 0x1;
     udev.id.product = 0x1;
@@ -361,20 +358,20 @@ int rizxbyte_inject_open(TouchInject *ti, int abs_x_min, int abs_x_max,
     return 0;
 }
 
-void rizxbyte_inject_close(TouchInject *ti) {
+void ancore_inject_close(TouchInject *ti) {
     if (ti == NULL) return;
     if (ti->fd >= 0) {
         for (int i = 0; i < TS_MAX_SLOTS; i++) {
             if (ti->last_active[i]) {
-                rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_SLOT, i);
-                rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
+                ancore_emit(ti->fd, EV_ABS, ABS_MT_SLOT, i);
+                ancore_emit(ti->fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
             }
         }
         if (ti->last_btn) {
-            rizxbyte_emit(ti->fd, EV_KEY, BTN_TOUCH, 0);
-            rizxbyte_emit(ti->fd, EV_KEY, BTN_TOOL_FINGER, 0);
+            ancore_emit(ti->fd, EV_KEY, BTN_TOUCH, 0);
+            ancore_emit(ti->fd, EV_KEY, BTN_TOOL_FINGER, 0);
         }
-        rizxbyte_emit(ti->fd, EV_SYN, SYN_REPORT, 0);
+        ancore_emit(ti->fd, EV_SYN, SYN_REPORT, 0);
 
         ioctl(ti->fd, UI_DEV_DESTROY);
         close(ti->fd);
@@ -382,7 +379,7 @@ void rizxbyte_inject_close(TouchInject *ti) {
     ti->fd = -1;
 }
 
-void rizxbyte_inject_slot(TouchInject *ti, int slot, int x, int y, int down) {
+void ancore_inject_slot(TouchInject *ti, int slot, int x, int y, int down) {
     if (ti == NULL || ti->fd < 0) return;
     if (slot < 0 || slot >= TS_MAX_SLOTS) return;
 
@@ -405,11 +402,11 @@ void rizxbyte_inject_slot(TouchInject *ti, int slot, int x, int y, int down) {
     }
 }
 
-void rizxbyte_inject_slot_release(TouchInject *ti, int slot) {
-    rizxbyte_inject_slot(ti, slot, 0, 0, 0);
+void ancore_inject_slot_release(TouchInject *ti, int slot) {
+    ancore_inject_slot(ti, slot, 0, 0, 0);
 }
 
-void rizxbyte_inject_flush(TouchInject *ti) {
+void ancore_inject_flush(TouchInject *ti) {
     if (ti == NULL || ti->fd < 0 || !ti->dirty) return;
 
     int count = 0;
@@ -417,23 +414,22 @@ void rizxbyte_inject_flush(TouchInject *ti) {
         if (ti->virtual_active[i]) count++;
     }
 
-    
     for (int slot = 0; slot < TS_MAX_SLOTS; slot++) {
         int was = ti->last_active[slot];
         int now = ti->virtual_active[slot];
 
         if (now && !was) {
-            rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_SLOT, slot);
-            rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_TRACKING_ID, ti->tracking_id[slot]);
-            rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_POSITION_X, ti->virtual_x[slot]);
-            rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_POSITION_Y, ti->virtual_y[slot]);
+            ancore_emit(ti->fd, EV_ABS, ABS_MT_SLOT, slot);
+            ancore_emit(ti->fd, EV_ABS, ABS_MT_TRACKING_ID, ti->tracking_id[slot]);
+            ancore_emit(ti->fd, EV_ABS, ABS_MT_POSITION_X, ti->virtual_x[slot]);
+            ancore_emit(ti->fd, EV_ABS, ABS_MT_POSITION_Y, ti->virtual_y[slot]);
         } else if (now && was) {
-            rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_SLOT, slot);
-            rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_POSITION_X, ti->virtual_x[slot]);
-            rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_POSITION_Y, ti->virtual_y[slot]);
+            ancore_emit(ti->fd, EV_ABS, ABS_MT_SLOT, slot);
+            ancore_emit(ti->fd, EV_ABS, ABS_MT_POSITION_X, ti->virtual_x[slot]);
+            ancore_emit(ti->fd, EV_ABS, ABS_MT_POSITION_Y, ti->virtual_y[slot]);
         } else if (!now && was) {
-            rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_SLOT, slot);
-            rizxbyte_emit(ti->fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
+            ancore_emit(ti->fd, EV_ABS, ABS_MT_SLOT, slot);
+            ancore_emit(ti->fd, EV_ABS, ABS_MT_TRACKING_ID, -1);
         }
 
         ti->last_active[slot] = now;
@@ -441,12 +437,12 @@ void rizxbyte_inject_flush(TouchInject *ti) {
 
     int btn = (count > 0) ? 1 : 0;
     if (btn != ti->last_btn) {
-        rizxbyte_emit(ti->fd, EV_KEY, BTN_TOUCH, btn);
-        rizxbyte_emit(ti->fd, EV_KEY, BTN_TOOL_FINGER, btn);
+        ancore_emit(ti->fd, EV_KEY, BTN_TOUCH, btn);
+        ancore_emit(ti->fd, EV_KEY, BTN_TOOL_FINGER, btn);
         ti->last_btn = btn;
     }
 
-    rizxbyte_emit(ti->fd, EV_SYN, SYN_REPORT, 0);
+    ancore_emit(ti->fd, EV_SYN, SYN_REPORT, 0);
     ti->dirty = 0;
     ti->any_active = count;
 }

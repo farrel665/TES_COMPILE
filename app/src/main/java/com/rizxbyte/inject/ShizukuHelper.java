@@ -1,4 +1,4 @@
-package com.rizxbyte.inject;
+package com.ancore;
 
 import android.content.ComponentName;
 import android.content.ServiceConnection;
@@ -17,7 +17,7 @@ import rikka.shizuku.Shizuku;
  * and then launches the NativeActivity.
  */
 public final class ShizukuHelper {
-    private static final String TAG = "rizxbyte_shizuku";
+    private static final String TAG = "ancore_shizuku";
 
     private static IUserService sService;
     private static boolean sBound;
@@ -47,9 +47,9 @@ public final class ShizukuHelper {
 
     private static final Shizuku.UserServiceArgs ARGS =
             new Shizuku.UserServiceArgs(
-                    new ComponentName("com.rizxbyte.inject", UserService.class.getName()))
+                    new ComponentName("com.ancore", UserService.class.getName()))
                     .daemon(false)
-                    .processNameSuffix("rizxbyte_svc")
+                    .processNameSuffix("ancore_svc")
                     .debuggable(false)
                     .version(1);
 
