@@ -11,22 +11,17 @@ import android.view.View;
 
 public class GamingSeekBar extends View {
 
-    private int max = 100;
+    private int max = 900;
     private int min = 0;
-    private int progress = 50;
-    private int step = 1;
+    private int progress = 0;
 
-    // Skema warna disesuaikan dengan tema UI Gaming (ROG/Game Space)
-    private int buttonBgColor = Color.parseColor("#3B1E16");
-    private int buttonTextColor = Color.parseColor("#E5A880");
-    private int trackBgColor = Color.parseColor("#2A1210");
-    private int progressColor = Color.parseColor("#FF0015");
-    private int thumbColor = Color.parseColor("#FF0015");
+    // Warna disesuaikan dengan tema UI overlay merah/hitam
+    private int trackBgColor  = Color.parseColor("#252530");
+    private int progressColor = Color.parseColor("#E61F33");
+    private int thumbColor    = Color.parseColor("#E61F33");
 
     private Paint paint;
-    private RectF minusBtnRect = new RectF();
-    private RectF plusBtnRect = new RectF();
-    private RectF trackRect = new RectF();
+    private RectF trackRect    = new RectF();
     private RectF progressRect = new RectF();
 
     private OnProgressChangeListener listener;
@@ -56,10 +51,10 @@ public class GamingSeekBar extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int defaultHeight = (int) dpToPx(40);
-        int defaultWidth = (int) dpToPx(200);
+        int defaultHeight = (int) dpToPx(28);
+        int defaultWidth  = (int) dpToPx(150);
 
-        int width = resolveSize(defaultWidth, widthMeasureSpec);
+        int width  = resolveSize(defaultWidth, widthMeasureSpec);
         int height = resolveSize(defaultHeight, heightMeasureSpec);
 
         setMeasuredDimension(width, height);
@@ -74,57 +69,31 @@ public class GamingSeekBar extends View {
 
         if (width == 0 || height == 0) return;
 
-        float btnSize = height;
-        float btnRadius = dpToPx(6);
-        float padding = dpToPx(12);
-
-        // 1. Gambar Tombol Minus (-)
-        minusBtnRect.set(0, 0, btnSize, btnSize);
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(buttonBgColor);
-        canvas.drawRoundRect(minusBtnRect, btnRadius, btnRadius, paint);
-
-        paint.setColor(buttonTextColor);
-        paint.setStrokeWidth(dpToPx(3));
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        canvas.drawLine(btnSize * 0.3f, btnSize * 0.5f, btnSize * 0.7f, btnSize * 0.5f, paint);
-
-        // 2. Gambar Tombol Plus (+)
-        plusBtnRect.set(width - btnSize, 0, width, btnSize);
-        paint.setColor(buttonBgColor);
-        paint.setStyle(Paint.Style.FILL);
-        canvas.drawRoundRect(plusBtnRect, btnRadius, btnRadius, paint);
-
-        paint.setColor(buttonTextColor);
-        paint.setStrokeWidth(dpToPx(3));
-        // Garis Horizontal
-        canvas.drawLine(width - btnSize + (btnSize * 0.3f), btnSize * 0.5f, width - (btnSize * 0.3f), btnSize * 0.5f, paint);
-        // Garis Vertikal
-        canvas.drawLine(width - (btnSize * 0.5f), btnSize * 0.3f, width - (btnSize * 0.5f), btnSize * 0.7f, paint);
-
-        // 3. Gambar Track Background
-        float trackLeft = btnSize + padding;
-        float trackRight = width - btnSize - padding;
+        float padding = dpToPx(4);
+        float trackLeft = padding;
+        float trackRight = width - padding;
         float trackWidth = trackRight - trackLeft;
         float centerY = height / 2f;
-        float trackHeight = dpToPx(4);
+        float trackHeight = dpToPx(3);
 
+        // 1. Draw Track Background
         trackRect.set(trackLeft, centerY - (trackHeight / 2f), trackRight, centerY + (trackHeight / 2f));
         paint.setColor(trackBgColor);
         paint.setStyle(Paint.Style.FILL);
         canvas.drawRoundRect(trackRect, trackHeight / 2f, trackHeight / 2f, paint);
 
-        // 4. Gambar Progress Aktif (Merah)
-        float progressPercent = (float) (progress - min) / (max - min);
+        // 2. Calculate Thumb Position
+        float progressPercent = (float) (progress - min) / (float) Math.max(1, (max - min));
         float currentThumbX = trackLeft + (trackWidth * progressPercent);
 
+        // 3. Draw Active Progress
         progressRect.set(trackLeft, centerY - (trackHeight / 2f), currentThumbX, centerY + (trackHeight / 2f));
         paint.setColor(progressColor);
         canvas.drawRoundRect(progressRect, trackHeight / 2f, trackHeight / 2f, paint);
 
-        // 5. Gambar Thumb (Batang Tegak Vertikal)
-        float thumbWidth = dpToPx(8);
-        float thumbHeight = dpToPx(20);
+        // 4. Draw Thumb Vertical Bar
+        float thumbWidth = dpToPx(6);
+        float thumbHeight = dpToPx(16);
         RectF thumbRect = new RectF(
                 currentThumbX - (thumbWidth / 2f),
                 centerY - (thumbHeight / 2f),
@@ -140,28 +109,16 @@ public class GamingSeekBar extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         float x = event.getX();
-        float y = event.getY();
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                if (minusBtnRect.contains(x, y)) {
-                    setProgress(progress - step, true);
-                    return true;
-                } else if (plusBtnRect.contains(x, y)) {
-                    setProgress(progress + step, true);
-                    return true;
-                } else {
-                    isDragging = true;
-                    updateProgressFromTouch(x);
-                    return true;
-                }
-
             case MotionEvent.ACTION_MOVE:
-                if (isDragging) {
-                    updateProgressFromTouch(x);
-                    return true;
+                isDragging = true;
+                if (getParent() != null) {
+                    getParent().requestDisallowInterceptTouchEvent(true);
                 }
-                break;
+                updateProgressFromTouch(x);
+                return true;
 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
@@ -172,10 +129,9 @@ public class GamingSeekBar extends View {
     }
 
     private void updateProgressFromTouch(float x) {
-        float btnSize = getHeight();
-        float padding = dpToPx(12);
-        float trackLeft = btnSize + padding;
-        float trackRight = getWidth() - btnSize - padding;
+        float padding = dpToPx(4);
+        float trackLeft = padding;
+        float trackRight = getWidth() - padding;
         float trackWidth = trackRight - trackLeft;
 
         if (trackWidth <= 0) return;
@@ -211,13 +167,13 @@ public class GamingSeekBar extends View {
         invalidate();
     }
 
+    public int getMax() {
+        return max;
+    }
+
     public void setMin(int min) {
         this.min = min;
         invalidate();
-    }
-
-    public void setStep(int step) {
-        this.step = step;
     }
 
     public void setOnProgressChangeListener(OnProgressChangeListener listener) {

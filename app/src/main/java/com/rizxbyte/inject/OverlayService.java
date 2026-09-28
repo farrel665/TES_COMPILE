@@ -21,11 +21,15 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.CheckBox;
-import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Locale;
+
+/**
+ * System overlay floating panel — lives outside the app Activity.
+ */
 public class OverlayService extends Service {
 
     private static final String TAG   = "rizxbyte_overlay";
@@ -42,19 +46,24 @@ public class OverlayService extends Service {
     private final Handler main = new Handler(Looper.getMainLooper());
 
     // ── State ─────────────────────────────────────────────────────────
+    /** 0=Left  1=All  2=Right */
     private int sensArea = 1;
+    /** Curve fixed to Decel (2) — UI removed */
     private static final int CURVE_MODE = 2;
+    /** Default sensitivity = 1.00x */
     private float sensX = 1.00f;
     private float sensY = 1.00f;
+    /** Magic Touch toggle (Switch in UI) */
     private boolean tactix        = false;
     private boolean workerRunning = false;
     private boolean panelVisible  = true;
 
     // ── View references ───────────────────────────────────────────────
-    private TextView   statusTv;
-    private TextView[] areaBtns;
-    private TextView   valX, valY;
-    private Switch     switchMagicTouch;
+    private TextView      statusTv;
+    private TextView[]    areaBtns;
+    private TextView      valX, valY;
+    private Switch        switchMagicTouch;
+    private GamingSeekBar sx, sy;
 
     // ── Drag state ────────────────────────────────────────────────────
     private int startX, startY, startTouchX, startTouchY;
@@ -141,7 +150,7 @@ public class OverlayService extends Service {
         valX     = root.findViewById(R.id.val_sens_x);
         valY     = root.findViewById(R.id.val_sens_y);
 
-        // ── Magic Touch switch ─────────────────────────────────────
+        // ── Magic Touch switch → langsung start / stop worker ─────
         switchMagicTouch = root.findViewById(R.id.switch_magic_touch);
         switchMagicTouch.setOnCheckedChangeListener((btn, checked) -> {
             tactix = checked;
@@ -164,37 +173,31 @@ public class OverlayService extends Service {
             });
         }
 
-        // ── SeekBar — cast dari GamingSeekBar supaya method SeekBar tersedia ──
-        //    GamingSeekBar extends SeekBar di runtime, tapi compiler perlu tahu
-        //    tipe-nya sebagai SeekBar agar setOnSeekBarChangeListener & getMax() resolve.
-        SeekBar sx = (SeekBar) root.findViewById(R.id.seek_sens_x);
-        SeekBar sy = (SeekBar) root.findViewById(R.id.seek_sens_y);
+        // ── Custom GamingSeekBars — range 0..900 → 1.00x..10.00x ───
+        sx = root.findViewById(R.id.seek_sens_x);
+        sy = root.findViewById(R.id.seek_sens_y);
 
-        sx.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
-                if (!fromUser) return;
-                sensX = 1.0f + p / 100.f;
-                valX.setText(String.format("%.2fx", sensX));
-            }
-            @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) {
-                if (workerRunning) doStart();
-            }
-        });
+        if (sx != null) {
+            sx.setMin(0);
+            sx.setMax(900);
+            sx.setProgress(0);
+            sx.setOnProgressChangeListener((seekBar, progress, fromUser) -> {
+                sensX = 1.0f + progress / 100.f;
+                valX.setText(String.format(Locale.US, "%.2fx", sensX));
+                if (fromUser && workerRunning) doStart();
+            });
+        }
 
-        sy.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar s, int p, boolean fromUser) {
-                if (!fromUser) return;
-                sensY = 1.0f + p / 100.f;
-                valY.setText(String.format("%.2fx", sensY));
-            }
-            @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) {
-                if (workerRunning) doStart();
-            }
-        });
+        if (sy != null) {
+            sy.setMin(0);
+            sy.setMax(900);
+            sy.setProgress(0);
+            sy.setOnProgressChangeListener((seekBar, progress, fromUser) -> {
+                sensY = 1.0f + progress / 100.f;
+                valY.setText(String.format(Locale.US, "%.2fx", sensY));
+                if (fromUser && workerRunning) doStart();
+            });
+        }
 
         // ── Sens step − / + ────────────────────────────────────────
         root.findViewById(R.id.btn_sens_x_minus).setOnClickListener(v -> stepSens(sx, valX, -10, true));
@@ -214,7 +217,7 @@ public class OverlayService extends Service {
         root.findViewById(R.id.btn_hide) .setOnClickListener(v -> hideToBubble());
         root.findViewById(R.id.btn_close).setOnClickListener(v -> stopWorkerAndSelf());
 
-        // ── Drag ───────────────────────────────────────────────────
+        // ── Drag: header (panel) + bubble ──────────────────────────
         View.OnTouchListener drag = this::onDrag;
         panel .setOnTouchListener(drag);
         bubble.setOnTouchListener(drag);
@@ -330,11 +333,8 @@ public class OverlayService extends Service {
                 workerRunning = ok;
                 if (ok) {
                     String[] areas = {"LEFT", "ALL", "RIGHT"};
-                    statusTv.setText("Engaged"
-                            + "  X=" + String.format("%.2f", sensX)
-                            + "  Y=" + String.format("%.2f", sensY)
-                            + "  " + areas[sensArea]
-                            + (tactix ? "  TX" : ""));
+                    statusTv.setText(String.format(Locale.US, "Engaged  X=%.2f  Y=%.2f  %s%s",
+                            sensX, sensY, areas[sensArea], (tactix ? "  TX" : "")));
                     Toast.makeText(this, "Worker started", Toast.LENGTH_SHORT).show();
                 } else {
                     if (switchMagicTouch != null) {
@@ -393,15 +393,13 @@ public class OverlayService extends Service {
     //  Helpers
     // ═════════════════════════════════════════════════════════════════
 
-    // parameter SeekBar — GamingSeekBar sudah di-cast ke SeekBar saat inflate,
-    // jadi getMax() & setProgress() resolve tanpa masalah
-    private void stepSens(SeekBar bar, TextView label, int delta, boolean isX) {
+    private void stepSens(GamingSeekBar bar, TextView label, int delta, boolean isX) {
         if (bar == null) return;
         int p = Math.max(0, Math.min(bar.getMax(), bar.getProgress() + delta));
         bar.setProgress(p);
         float v = 1.0f + p / 100.f;
         if (isX) sensX = v; else sensY = v;
-        if (label != null) label.setText(String.format("%.2fx", v));
+        if (label != null) label.setText(String.format(Locale.US, "%.2fx", v));
         if (workerRunning) doStart();
     }
 
