@@ -34,7 +34,6 @@ import android.widget.Toast;
  *   │  Magic Touch  [switch]                   │
  *   │  ─────────────────────────────────────── │
  *   │  Sensitivity Area: [Left] [All] [Right]  │
- *   │  Curve:        [Linear] [Accel] [Decel]  │
  *   │  Sens X  1.00x  [−] ══════════════ [+]  │
  *   │  Sens Y  1.00x  [−] ══════════════ [+]  │
  *   │  ─────────────────────────────────────── │
@@ -59,12 +58,12 @@ public class OverlayService extends Service {
 
     // ── State ─────────────────────────────────────────────────────────
     /** 0=Left  1=All  2=Right */
-    private int sensArea   = 1;
-    /** 0=Linear  1=Accel  2=Decel — passed as presetIdx to native */
-    private int curveMode  = 2;
-    /** Default sensitivity = 1.00x (was 2.00f) */
-    private float sensX    = 1.00f;
-    private float sensY    = 1.00f;
+    private int sensArea = 1;
+    /** Curve fixed to Decel (2) — UI removed */
+    private static final int CURVE_MODE = 2;
+    /** Default sensitivity = 1.00x */
+    private float sensX = 1.00f;
+    private float sensY = 1.00f;
     /** Magic Touch toggle (Switch in UI) */
     private boolean tactix        = false;
     private boolean workerRunning = false;
@@ -73,7 +72,6 @@ public class OverlayService extends Service {
     // ── View references ───────────────────────────────────────────────
     private TextView  statusTv;
     private TextView[] areaBtns;
-    private TextView[] curveBtns;
     private TextView  valX, valY;
     private Switch    switchMagicTouch;
 
@@ -185,22 +183,6 @@ public class OverlayService extends Service {
             });
         }
 
-        // ── Sensitivity Curve buttons ──────────────────────────────
-        // curveMode is passed as presetIdx to ShizukuHelper.startWorker()
-        curveBtns = new TextView[]{
-                root.findViewById(R.id.curve_linear),   // 0 = Linear
-                root.findViewById(R.id.curve_accel),    // 1 = Accel
-                root.findViewById(R.id.curve_decel)     // 2 = Decel
-        };
-        for (int i = 0; i < curveBtns.length; i++) {
-            final int idx = i;
-            curveBtns[i].setOnClickListener(v -> {
-                curveMode = idx;
-                refreshCurveUi();
-                if (workerRunning) doStart();
-            });
-        }
-
         // ── SeekBars — range 0..900 → 1.00x..10.00x ──────────────
         SeekBar sx = root.findViewById(R.id.seek_sens_x);
         SeekBar sy = root.findViewById(R.id.seek_sens_y);
@@ -254,7 +236,6 @@ public class OverlayService extends Service {
 
         // ── Initial UI state ───────────────────────────────────────
         refreshAreaUi();
-        refreshCurveUi();
 
         // ── Window params ──────────────────────────────────────────
         int type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
@@ -355,22 +336,20 @@ public class OverlayService extends Service {
                 Log.i(TAG, "start bin=" + bin
                         + "  X=" + sensX + "  Y=" + sensY
                         + "  area=" + sensArea
-                        + "  curve=" + curveMode
+                        + "  curve=" + CURVE_MODE
                         + "  tactix=" + tactix);
 
-                // curveMode (0=Linear/1=Accel/2=Decel) → presetIdx
+                // CURVE_MODE fixed = 2 (Decel)
                 boolean ok = ShizukuHelper.startWorker(
-                        bin, curveMode, sensX, sensY, sensArea, tactix ? 1 : 0);
+                        bin, CURVE_MODE, sensX, sensY, sensArea, tactix ? 1 : 0);
 
                 workerRunning = ok;
                 if (ok) {
-                    String[] areas  = {"LEFT",  "ALL",  "RIGHT"};
-                    String[] curves = {"LIN",   "ACC",  "DEC"};
+                    String[] areas = {"LEFT", "ALL", "RIGHT"};
                     statusTv.setText("Engaged"
                             + "  X=" + String.format("%.2f", sensX)
                             + "  Y=" + String.format("%.2f", sensY)
                             + "  " + areas[sensArea]
-                            + "  " + curves[curveMode]
                             + (tactix ? "  TX" : ""));
                     Toast.makeText(this, "Worker started", Toast.LENGTH_SHORT).show();
                 } else {
@@ -425,16 +404,6 @@ public class OverlayService extends Service {
             areaBtns[i].setBackgroundResource(
                     active ? R.drawable.bg_hexagon_red : R.drawable.bg_hexagon_dark);
             areaBtns[i].setTextColor(active ? 0xFFFFFFFF : 0xFFB0B3BA);
-        }
-    }
-
-    /** Highlights active curve button with hexagon-red, others hexagon-dark. */
-    private void refreshCurveUi() {
-        for (int i = 0; i < curveBtns.length; i++) {
-            boolean active = (i == curveMode);
-            curveBtns[i].setBackgroundResource(
-                    active ? R.drawable.bg_hexagon_red : R.drawable.bg_hexagon_dark);
-            curveBtns[i].setTextColor(active ? 0xFFFFFFFF : 0xFFB0B3BA);
         }
     }
 

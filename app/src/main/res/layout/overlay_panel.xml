@@ -190,49 +190,6 @@
                 android:background="@drawable/bg_hexagon_dark" />
         </LinearLayout>
 
-        <!-- ══ SENSITIVITY CURVE ══════════════════════════════ -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="6dp">
-
-            <TextView
-                android:id="@+id/curve_linear"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Linear"
-                android:textColor="#B0B3BA"
-                android:textSize="11sp"
-                android:background="@drawable/bg_hexagon_dark" />
-
-            <TextView
-                android:id="@+id/curve_accel"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                android:gravity="center"
-                android:text="Accel"
-                android:textColor="#B0B3BA"
-                android:textSize="11sp"
-                android:background="@drawable/bg_hexagon_dark" />
-
-            <TextView
-                android:id="@+id/curve_decel"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Decel"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:background="@drawable/bg_hexagon_red" />
-        </LinearLayout>
-
         <!-- ══ SENSITIVITY X ══════════════════════════════════ -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -391,7 +348,6 @@
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
-            <!-- Keep check_tactix (invisible compat shim if needed by future code) -->
             <CheckBox
                 android:id="@+id/check_tactix"
                 android:layout_width="wrap_content"
