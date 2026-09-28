@@ -92,8 +92,8 @@ public class GamingSeekBar extends View {
         canvas.drawRoundRect(progressRect, trackHeight / 2f, trackHeight / 2f, paint);
 
         // 4. Draw Thumb Vertical Bar
-        float thumbWidth = dpToPx(6);
-        float thumbHeight = dpToPx(16);
+        float thumbWidth = dpToPx(8);
+        float thumbHeight = dpToPx(18);
         RectF thumbRect = new RectF(
                 currentThumbX - (thumbWidth / 2f),
                 centerY - (thumbHeight / 2f),
