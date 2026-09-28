@@ -1,372 +1,592 @@
-<?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/overlay_root"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:background="@android:color/transparent">
-
-    <!-- ── Bubble (minimized) ────────────────────────────────── -->
-    <ImageView
-        android:id="@+id/bubble"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_gravity="center"
-        android:src="@drawable/ic_rizxbyte"
-        android:scaleType="fitCenter"
-        android:background="@android:color/transparent"
-        android:visibility="gone"
-        android:elevation="8dp" />
-
-    <!-- ── Panel ─────────────────────────────────────────────── -->
-    <LinearLayout
-        android:id="@+id/panel"
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@drawable/bg_panel"
-        android:padding="14dp"
-        android:elevation="12dp">
-
-        <!-- ══ HEADER: Magic Manager ══════════════════════════ -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <!-- Title block -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Magic Manager"
-                    android:textColor="#EAEBEF"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Free Fire · com.dts.freefireth"
-                    android:textColor="#55585F"
-                    android:textSize="9sp"
-                    android:layout_marginTop="1dp" />
-            </LinearLayout>
-
-            <!-- Hide button -->
-            <TextView
-                android:id="@+id/btn_hide"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:gravity="center"
-                android:text="–"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:background="@drawable/bg_hexagon_dark" />
-
-            <!-- Close button -->
-            <TextView
-                android:id="@+id/btn_close"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:layout_marginStart="5dp"
-                android:gravity="center"
-                android:text="×"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:background="@drawable/bg_hexagon_dark" />
-        </LinearLayout>
-
-        <!-- Divider -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="8dp"
-            android:background="#1A1C24" />
-
-        <!-- ══ MAGIC TOUCH ════════════════════════════════════ -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <!-- Text block -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Magic Touch"
-                    android:textColor="#EAEBEF"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Intercept and remap touchscreen input via privileged injector"
-                    android:textColor="#55585F"
-                    android:textSize="9sp"
-                    android:layout_marginTop="2dp" />
-            </LinearLayout>
-
-            <!-- Magic Touch toggle switch -->
-            <Switch
-                android:id="@+id/switch_magic_touch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:thumbTint="#E61F33"
-                android:trackTint="#38000A"
-                android:checked="false" />
-        </LinearLayout>
-
-        <!-- Divider -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="8dp"
-            android:background="#1A1C24" />
-
-        <!-- ══ SENSITIVITY AREA ═══════════════════════════════ -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sensitivity Area"
-            android:textColor="#55585F"
-            android:textSize="10sp"
-            android:layout_marginBottom="6dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/area_left"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Left"
-                android:textColor="#B0B3BA"
-                android:textSize="11sp"
-                android:background="@drawable/bg_hexagon_dark" />
-
-            <TextView
-                android:id="@+id/area_all"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                android:gravity="center"
-                android:text="All"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:background="@drawable/bg_hexagon_red" />
-
-            <TextView
-                android:id="@+id/area_right"
-                android:layout_width="0dp"
-                android:layout_height="34dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Right"
-                android:textColor="#B0B3BA"
-                android:textSize="11sp"
-                android:background="@drawable/bg_hexagon_dark" />
-        </LinearLayout>
-
-        <!-- ══ SENSITIVITY X ══════════════════════════════════ -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="12dp"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Sensitivity X (Horizontal)"
-                android:textColor="#55585F"
-                android:textSize="10sp" />
-
-            <TextView
-                android:id="@+id/val_sens_x"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1.00x"
-                android:textColor="#F23A48"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="4dp">
-
-            <TextView
-                android:id="@+id/btn_sens_x_minus"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:gravity="center"
-                android:text="−"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:background="@drawable/bg_hexagon_dark" />
-
-            <com.rizxbyte.inject.GamingSeekBar
-                android:id="@+id/seek_sens_x"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="6dp"
-                android:max="900"
-                android:progress="0"
-                android:progressTint="#E61F33"
-                android:thumbTint="#E61F33"
-                android:progressBackgroundTint="#252530" />
-
-            <TextView
-                android:id="@+id/btn_sens_x_plus"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:gravity="center"
-                android:text="+"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:background="@drawable/bg_hexagon_dark" />
-        </LinearLayout>
-
-        <!-- ══ SENSITIVITY Y ══════════════════════════════════ -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Sensitivity Y (Vertical)"
-                android:textColor="#55585F"
-                android:textSize="10sp" />
-
-            <TextView
-                android:id="@+id/val_sens_y"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1.00x"
-                android:textColor="#F23A48"
-                android:textSize="11sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="4dp">
-
-            <TextView
-                android:id="@+id/btn_sens_y_minus"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:gravity="center"
-                android:text="−"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:background="@drawable/bg_hexagon_dark" />
-
-            <com.rizxbyte.inject.GamingSeekBar
-                android:id="@+id/seek_sens_y"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="6dp"
-                android:max="900"
-                android:progress="0"
-                android:progressTint="#E61F33"
-                android:thumbTint="#E61F33"
-                android:progressBackgroundTint="#252530" />
-
-            <TextView
-                android:id="@+id/btn_sens_y_plus"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:gravity="center"
-                android:text="+"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:background="@drawable/bg_hexagon_dark" />
-        </LinearLayout>
-
-        <!-- Divider -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="6dp"
-            android:background="#1A1C24" />
-
-        <!-- ══ TACTIX FOOTER ROW ══════════════════════════════ -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="TactiX"
-                android:textColor="#EAEBEF"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <CheckBox
-                android:id="@+id/check_tactix"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:buttonTint="#E61F33"
-                android:minWidth="0dp"
-                android:minHeight="0dp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/status_text"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Standing"
-            android:textColor="#3E414A"
-            android:textSize="9sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
-
-    </LinearLayout>
+<FrameLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="@android:color/transparent">
+	<ImageView
+		android:id="@+id/bubble"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:src="@drawable/default_image"
+		android:scaleType="center" />
+	<com.rizxbyte.inject.HexagonLinearLayout
+		android:id="@+id/Panel"
+		android:layout_width="325dp"
+		android:layout_height="507dp"
+		android:padding="16dp"
+		android:background="#221D19"
+		android:orientation="vertical">
+		<ScrollView
+			android:id="@+id/vscroll1"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent">
+			<LinearLayout
+				android:id="@+id/linear32"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="vertical">
+				<LinearLayout
+					android:id="@+id/linear19"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:orientation="vertical">
+					<TextView
+						android:id="@+id/textview9"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="Sensitivity Manager"
+						android:textSize="20sp"
+						android:textStyle="bold"
+						android:textColor="#E0E0E0"
+						android:alpha="0.9" />
+					<LinearLayout
+						android:id="@+id/linear20"
+						android:layout_width="match_parent"
+						android:layout_height="25dp"
+						android:gravity="center_vertical"
+						android:orientation="horizontal">
+						<TextView
+							android:id="@+id/textview13"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="Free Fire"
+							android:textSize="14sp"
+							android:textStyle="bold"
+							android:textColor="#E0E0E0"
+							android:alpha="0.9" />
+						<TextView
+							android:id="@+id/textview14"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginLeft="6dp"
+							android:text="• com.dts.freefireth"
+							android:textSize="11sp"
+							android:textColor="#796061" />
+					</LinearLayout>
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/linear17"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="16dp"
+					android:gravity="center_vertical"
+					android:orientation="horizontal">
+					<LinearLayout
+						android:id="@+id/linear18"
+						android:layout_width="0dp"
+						android:layout_height="wrap_content"
+						android:orientation="vertical"
+						android:layout_weight="1">
+						<TextView
+							android:id="@+id/textview11"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="Magic Touch"
+							android:textSize="17sp"
+							android:textStyle="bold"
+							android:textColor="#EAEBEF"
+							android:alpha="0.9" />
+						<TextView
+							android:id="@+id/textview12"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginTop="2dp"
+							android:text="Intercept and remap touchscreen input via privileged injector"
+							android:textSize="12sp"
+							android:textColor="#796061" />
+					</LinearLayout>
+					<com.rizxbyte.inject.GamingSwitch
+						android:id="@+id/switch_magic_touch"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_marginLeft="9dp"
+						android:textSize="12sp"
+						android:layout_marginStart="10dp"
+						android:thumbTint="#E61F33"
+						android:trackTint="#38000A" />
+				</LinearLayout>
+				<TextView
+					android:id="@+id/textview15"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="16dp"
+					android:layout_marginBottom="3dp"
+					android:text="Sensitivity Area"
+					android:textSize="15sp"
+					android:textColor="#796061" />
+				<LinearLayout
+					android:id="@+id/linear21"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="10dp"
+					android:orientation="horizontal">
+					<com.rizxbyte.inject.HexagonLinearLayout
+						android:id="@+id/area_left"
+						android:layout_width="0dp"
+						android:layout_height="wrap_content"
+						android:layout_marginRight="4dp"
+						android:padding="8dp"
+						android:background="#403B3D"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="vertical"
+						android:layout_weight="1">
+						<ImageView
+							android:id="@+id/imageview1"
+							android:layout_width="35dp"
+							android:layout_height="25dp"
+							android:src="@drawable/left"
+							android:scaleType="centerCrop" />
+						<TextView
+							android:id="@+id/textview16"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginTop="6dp"
+							android:text="Left"
+							android:textSize="12sp"
+							android:textColor="#E0E0E0" />
+					</com.rizxbyte.inject.HexagonLinearLayout>
+					<com.rizxbyte.inject.HexagonLinearLayout
+						android:id="@+id/area_all"
+						android:layout_width="0dp"
+						android:layout_height="wrap_content"
+						android:layout_marginLeft="4dp"
+						android:layout_marginRight="4dp"
+						android:padding="8dp"
+						android:background="#E61F33"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="vertical"
+						android:layout_weight="1">
+						<ImageView
+							android:id="@+id/imageview2"
+							android:layout_width="35dp"
+							android:layout_height="25dp"
+							android:src="@drawable/all"
+							android:scaleType="centerCrop"
+							android:tint="#221D19" />
+						<TextView
+							android:id="@+id/textview18"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginTop="5dp"
+							android:text="All"
+							android:textSize="13sp"
+							android:textColor="#221D19" />
+					</com.rizxbyte.inject.HexagonLinearLayout>
+					<com.rizxbyte.inject.HexagonLinearLayout
+						android:id="@+id/area_right"
+						android:layout_width="0dp"
+						android:layout_height="wrap_content"
+						android:layout_marginLeft="4dp"
+						android:padding="8dp"
+						android:background="#403B3D"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="vertical"
+						android:layout_weight="1">
+						<ImageView
+							android:id="@+id/imageview3"
+							android:layout_width="35dp"
+							android:layout_height="25dp"
+							android:src="@drawable/right"
+							android:scaleType="centerCrop" />
+						<TextView
+							android:id="@+id/textview17"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginTop="6dp"
+							android:text="Right"
+							android:textSize="12sp"
+							android:textColor="#E0E0E0" />
+					</com.rizxbyte.inject.HexagonLinearLayout>
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/linear22"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="19dp"
+					android:gravity="center_vertical"
+					android:orientation="horizontal">
+					<TextView
+						android:id="@+id/textview19"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="Sensitivity X (Horizontal)"
+						android:textSize="14sp"
+						android:textColor="#796061"
+						android:layout_weight="1" />
+					<TextView
+						android:id="@+id/val_sens_x"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="1.00×"
+						android:textSize="14sp"
+						android:textStyle="bold"
+						android:textColor="#E61F33" />
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/linear23"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="9dp"
+					android:gravity="center_vertical"
+					android:orientation="horizontal">
+					<com.rizxbyte.inject.HexagonLinearLayout
+						android:id="@+id/btn_sens_x_minus"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_marginRight="6dp"
+						android:padding="8dp"
+						android:background="#733516"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="vertical">
+						<ImageView
+							android:id="@+id/imageview9"
+							android:layout_width="17dp"
+							android:layout_height="17dp"
+							android:src="@drawable/min"
+							android:scaleType="centerCrop" />
+					</com.rizxbyte.inject.HexagonLinearLayout>
+					<com.rizxbyte.inject.GamingSeekBar
+						android:id="@+id/seek_sens_x"
+						android:layout_width="0dp"
+						android:layout_height="wrap_content"
+						android:layout_marginLeft="2dp"
+						android:layout_marginRight="2dp"
+						android:layout_weight="1"
+						android:layout_marginStart="6dp"
+						android:layout_marginEnd="6dp"
+						android:progressTint="#E61F33"
+						android:thumbTint="#E61F33"
+						android:progressBackgroundTint="#252530" />
+					<com.rizxbyte.inject.HexagonLinearLayout
+						android:id="@+id/btn_sens_x_plus"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_marginLeft="6dp"
+						android:layout_marginRight="8dp"
+						android:padding="8dp"
+						android:background="#733516"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="vertical">
+						<ImageView
+							android:id="@+id/imageview11"
+							android:layout_width="17dp"
+							android:layout_height="17dp"
+							android:src="@drawable/add"
+							android:scaleType="centerCrop" />
+					</com.rizxbyte.inject.HexagonLinearLayout>
+					<ImageView
+						android:id="@+id/btn_reset_x"
+						android:layout_width="28dp"
+						android:layout_height="28dp"
+						android:src="@drawable/reset"
+						android:scaleType="centerCrop"
+						android:alpha="0.9" />
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/linear26"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="9dp"
+					android:gravity="center_vertical"
+					android:orientation="horizontal">
+					<TextView
+						android:id="@+id/textview21"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="Sensitivity Y (Vertical)"
+						android:textSize="14sp"
+						android:textColor="#796061"
+						android:layout_weight="1" />
+					<TextView
+						android:id="@+id/val_sens_y"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="1.00×"
+						android:textSize="14sp"
+						android:textStyle="bold"
+						android:textColor="#E61F33" />
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/linear28"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="9dp"
+					android:gravity="center_vertical"
+					android:orientation="horizontal">
+					<LinearLayout
+						android:id="@+id/btn_sens_y_minus"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_marginRight="6dp"
+						android:padding="8dp"
+						android:background="#733516"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="vertical">
+						<ImageView
+							android:id="@+id/imageview10"
+							android:layout_width="17dp"
+							android:layout_height="17dp"
+							android:src="@drawable/min"
+							android:scaleType="centerCrop" />
+					</LinearLayout>
+					<com.rizxbyte.inject.GamingSeekBar
+						android:id="@+id/seek_sens_y"
+						android:layout_width="0dp"
+						android:layout_height="wrap_content"
+						android:layout_marginLeft="2dp"
+						android:layout_marginRight="2dp"
+						android:layout_weight="1"
+						android:layout_marginStart="6dp"
+						android:layout_marginEnd="6dp"
+						android:progressTint="#E61F33"
+						android:thumbTint="#E61F33"
+						android:progressBackgroundTint="#252530" />
+					<LinearLayout
+						android:id="@+id/btn_sens_y_plus"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_marginLeft="6dp"
+						android:layout_marginRight="8dp"
+						android:padding="8dp"
+						android:background="#733516"
+						android:gravity="center_horizontal|center_vertical"
+						android:orientation="vertical">
+						<ImageView
+							android:id="@+id/imageview12"
+							android:layout_width="17dp"
+							android:layout_height="17dp"
+							android:src="@drawable/add"
+							android:scaleType="centerCrop" />
+					</LinearLayout>
+					<ImageView
+						android:id="@+id/btn_reset_y"
+						android:layout_width="28dp"
+						android:layout_height="28dp"
+						android:src="@drawable/reset"
+						android:scaleType="centerCrop"
+						android:alpha="0.9" />
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/linear33"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="18dp"
+					android:gravity="center_vertical"
+					android:orientation="horizontal">
+					<LinearLayout
+						android:id="@+id/linear34"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:orientation="vertical"
+						android:layout_weight="1">
+						<TextView
+							android:id="@+id/textview24"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="TactiX"
+							android:textSize="17sp"
+							android:textColor="#E0E0E0"
+							android:alpha="0.9" />
+						<TextView
+							android:id="@+id/textview23"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="Steadier aim when still, no lag on flicks"
+							android:textSize="12sp"
+							android:textColor="#796061" />
+					</LinearLayout>
+					<LinearLayout
+						android:id="@+id/linear35"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:padding="8dp"
+						android:orientation="vertical" />
+				</LinearLayout>
+				<LinearLayout
+					android:id="@+id/linear36"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="18dp"
+					android:orientation="vertical">
+					<LinearLayout
+						android:id="@+id/linear37"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:gravity="center_vertical"
+						android:orientation="horizontal">
+						<TextView
+							android:id="@+id/textview25"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="Strength"
+							android:textSize="14sp"
+							android:textColor="#796061"
+							android:layout_weight="1" />
+						<TextView
+							android:id="@+id/val_strength"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="0%"
+							android:textSize="14sp"
+							android:textStyle="bold"
+							android:textColor="#E61F33" />
+					</LinearLayout>
+					<LinearLayout
+						android:id="@+id/linear38"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:layout_marginTop="9dp"
+						android:gravity="center_vertical"
+						android:orientation="horizontal">
+						<com.rizxbyte.inject.HexagonLinearLayout
+							android:id="@+id/btn_strength_minus"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginRight="6dp"
+							android:padding="8dp"
+							android:background="#733516"
+							android:gravity="center_horizontal|center_vertical"
+							android:orientation="vertical">
+							<ImageView
+								android:id="@+id/imageview13"
+								android:layout_width="17dp"
+								android:layout_height="17dp"
+								android:src="@drawable/min"
+								android:scaleType="centerCrop" />
+						</com.rizxbyte.inject.HexagonLinearLayout>
+						<com.rizxbyte.inject.GamingSeekBar
+							android:id="@+id/linear40"
+							android:layout_width="0dp"
+							android:layout_height="wrap_content"
+							android:layout_marginLeft="2dp"
+							android:layout_marginRight="2dp"
+							android:layout_weight="1"
+							android:layout_marginStart="6dp"
+							android:layout_marginEnd="6dp"
+							android:progressTint="#E61F33"
+							android:thumbTint="#E61F33"
+							android:progressBackgroundTint="#252530" />
+						<com.rizxbyte.inject.HexagonLinearLayout
+							android:id="@+id/btn_strength_plus"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginLeft="6dp"
+							android:padding="8dp"
+							android:background="#733516"
+							android:gravity="center_horizontal|center_vertical"
+							android:orientation="vertical">
+							<ImageView
+								android:id="@+id/imageview15"
+								android:layout_width="17dp"
+								android:layout_height="17dp"
+								android:src="@drawable/add"
+								android:scaleType="centerCrop" />
+						</com.rizxbyte.inject.HexagonLinearLayout>
+					</LinearLayout>
+					<LinearLayout
+						android:id="@+id/linear42"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:layout_marginTop="9dp"
+						android:gravity="center_vertical"
+						android:orientation="horizontal">
+						<TextView
+							android:id="@+id/textview27"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="Responsiveness"
+							android:textSize="14sp"
+							android:textColor="#796061"
+							android:layout_weight="1" />
+						<TextView
+							android:id="@+id/val_resposive"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="0%"
+							android:textSize="14sp"
+							android:textStyle="bold"
+							android:textColor="#E61F33" />
+					</LinearLayout>
+					<LinearLayout
+						android:id="@+id/linear43"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:layout_marginTop="9dp"
+						android:gravity="center_vertical"
+						android:orientation="horizontal">
+						<com.rizxbyte.inject.HexagonLinearLayout
+							android:id="@+id/btn_responsive_minus"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginRight="6dp"
+							android:padding="8dp"
+							android:background="#733516"
+							android:gravity="center_horizontal|center_vertical"
+							android:orientation="vertical">
+							<ImageView
+								android:id="@+id/imageview14"
+								android:layout_width="17dp"
+								android:layout_height="17dp"
+								android:src="@drawable/min"
+								android:scaleType="centerCrop" />
+						</com.rizxbyte.inject.HexagonLinearLayout>
+						<com.rizxbyte.inject.GamingSeekBar
+							android:id="@+id/linear45"
+							android:layout_width="0dp"
+							android:layout_height="wrap_content"
+							android:layout_marginLeft="2dp"
+							android:layout_marginRight="2dp"
+							android:layout_weight="1"
+							android:layout_marginStart="6dp"
+							android:layout_marginEnd="6dp"
+							android:progressTint="#E61F33"
+							android:thumbTint="#E61F33"
+							android:progressBackgroundTint="#252530" />
+						<com.rizxbyte.inject.HexagonLinearLayout
+							android:id="@+id/btn_responsive_plus"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginLeft="6dp"
+							android:padding="8dp"
+							android:background="#733516"
+							android:gravity="center_horizontal|center_vertical"
+							android:orientation="vertical">
+							<ImageView
+								android:id="@+id/imageview17"
+								android:layout_width="17dp"
+								android:layout_height="17dp"
+								android:src="@drawable/add"
+								android:scaleType="centerCrop" />
+						</com.rizxbyte.inject.HexagonLinearLayout>
+					</LinearLayout>
+					<LinearLayout
+						android:id="@+id/linear47"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:layout_marginTop="15dp"
+						android:padding="10dp"
+						android:background="#403B3D"
+						android:gravity="center_vertical"
+						android:orientation="horizontal">
+						<ImageView
+							android:id="@+id/imageview8"
+							android:layout_width="25dp"
+							android:layout_height="25dp"
+							android:src="@drawable/info"
+							android:scaleType="centerCrop" />
+						<TextView
+							android:id="@+id/textview29"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginLeft="10dp"
+							android:text="Implementasi of One Euro Filter "
+							android:textSize="13sp"
+							android:textColor="#E0E0E0" />
+					</LinearLayout>
+				</LinearLayout>
+			</LinearLayout>
+		</ScrollView>
+	</com.rizxbyte.inject.HexagonLinearLayout>
 </FrameLayout>

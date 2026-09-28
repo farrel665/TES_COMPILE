@@ -1,4 +1,4 @@
-package com.my.newproject;
+package com.rizxbyte.inject;
 
 import android.content.Context;
 import android.graphics.Canvas;
