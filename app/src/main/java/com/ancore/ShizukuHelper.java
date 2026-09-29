@@ -167,50 +167,52 @@ public final class ShizukuHelper {
     }
 
     // ── Binder Proxy ──────────────────────────────────────────────────
-    private static class UserServiceProxy implements IUserService {
-        private final IBinder remote;
-        UserServiceProxy(IBinder remote) { this.remote = remote; }
+    // Bagian dalam ShizukuHelper.java — ganti class UserServiceProxy
+  private static class UserServiceProxy implements IUserService {
+    private final android.os.IBinder remote;
 
-        @Override public IBinder asBinder() { return remote; }
-
-        @Override
-        public boolean startWorker(String srcPath, int presetIdx,
-                                   float sensX, float sensY,
-                                   int area, int tactix) throws RemoteException {
-            Parcel data = Parcel.obtain(), reply = Parcel.obtain();
-            try {
-                data.writeInterfaceToken(DESCRIPTOR);
-                data.writeString(srcPath);
-                data.writeInt(presetIdx);
-                data.writeFloat(sensX);
-                data.writeFloat(sensY);
-                data.writeInt(area);
-                data.writeInt(tactix);
-                remote.transact(1, data, reply, 0);
-                reply.readException();
-                return reply.readInt() != 0;
-            } finally { data.recycle(); reply.recycle(); }
-        }
-
-        @Override
-        public void stopWorker() throws RemoteException {
-            Parcel data = Parcel.obtain(), reply = Parcel.obtain();
-            try {
-                data.writeInterfaceToken(DESCRIPTOR);
-                remote.transact(2, data, reply, 0);
-                reply.readException();
-            } finally { data.recycle(); reply.recycle(); }
-        }
-
-        @Override
-        public String ping() throws RemoteException {
-            Parcel data = Parcel.obtain(), reply = Parcel.obtain();
-            try {
-                data.writeInterfaceToken(DESCRIPTOR);
-                remote.transact(3, data, reply, 0);
-                reply.readException();
-                return reply.readString();
-            } finally { data.recycle(); reply.recycle(); }
-        }
+    UserServiceProxy(android.os.IBinder remote) {
+        this.remote = remote;
     }
+
+    @Override
+    public boolean startWorker(String srcPath, int presetIdx,
+                               float sensX, float sensY,
+                               int area, int tactix) throws RemoteException {
+        Parcel data = Parcel.obtain(), reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(IUserService.DESCRIPTOR);
+            data.writeString(srcPath);
+            data.writeInt(presetIdx);
+            data.writeFloat(sensX);
+            data.writeFloat(sensY);
+            data.writeInt(area);
+            data.writeInt(tactix);
+            remote.transact(1, data, reply, 0);
+            reply.readException();
+            return reply.readInt() != 0;
+        } finally { data.recycle(); reply.recycle(); }
+    }
+
+    @Override
+    public void stopWorker() throws RemoteException {
+        Parcel data = Parcel.obtain(), reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(IUserService.DESCRIPTOR);
+            remote.transact(2, data, reply, 0);
+            reply.readException();
+        } finally { data.recycle(); reply.recycle(); }
+    }
+
+    @Override
+    public String ping() throws RemoteException {
+        Parcel data = Parcel.obtain(), reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken(IUserService.DESCRIPTOR);
+            remote.transact(3, data, reply, 0);
+            reply.readException();
+            return reply.readString();
+        } finally { data.recycle(); reply.recycle(); }
+    }
+  }
 }

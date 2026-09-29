@@ -1,9 +1,9 @@
 package com.ancore;
 
-import android.os.IBinder;
 import android.os.RemoteException;
 
-public interface IUserService extends IBinder {
+public interface IUserService {
+
     String DESCRIPTOR = "com.ancore.IUserService";
 
     boolean startWorker(String srcPath, int presetIdx,
