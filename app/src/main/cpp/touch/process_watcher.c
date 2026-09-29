@@ -1,4 +1,3 @@
-// process_watcher.c
 #include "process_watcher.h"
 #include <stdio.h>
 #include <string.h>
@@ -39,14 +38,14 @@ pid_t ancore_pw_find_pid(const char *process_name) {
 }
 
 pid_t ancore_pw_find_freefire(const char **out_name) {
-    pid_t pid = ancore_pw_find_pid(ANCORE_FF_PACKAGE_GLOBAL);
+    pid_t pid = ancore_pw_find_pid(RIZXBYTE_FF_PACKAGE_GLOBAL);
     if (pid > 0) {
-        if (out_name) *out_name = ANCORE_FF_PACKAGE_GLOBAL;
+        if (out_name) *out_name = RIZXBYTE_FF_PACKAGE_GLOBAL;
         return pid;
     }
-    pid = ancore_pw_find_pid(ANCORE_FF_PACKAGE_MAX);
+    pid = ancore_pw_find_pid(RIZXBYTE_FF_PACKAGE_MAX);
     if (pid > 0) {
-        if (out_name) *out_name = ANCORE_FF_PACKAGE_MAX;
+        if (out_name) *out_name = RIZXBYTE_FF_PACKAGE_MAX;
         return pid;
     }
     if (out_name) *out_name = NULL;
@@ -71,5 +70,16 @@ pid_t ancore_pw_wait_for_process(const char *process_name, int interval_ms) {
 
 bool ancore_pw_is_alive(pid_t pid) {
     if (pid <= 0) return false;
-    return kill(pid, 0) == 0;
+    /* kill(pid,0) returns EPERM for other-uid processes even when alive.
+       Shizuku shell cannot signal app PIDs — use /proc presence instead. */
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/%d", (int)pid);
+    if (access(path, F_OK) != 0) return false;
+    /* Optional: confirm still same package (PID reuse safety) */
+    char cmd[512];
+    if (read_cmdline(pid, cmd, sizeof(cmd)) <= 0) return false;
+    if (strstr(cmd, RIZXBYTE_FF_PACKAGE_GLOBAL) != NULL) return true;
+    if (strstr(cmd, RIZXBYTE_FF_PACKAGE_MAX) != NULL) return true;
+    /* PID alive but not FF anymore */
+    return false;
 }

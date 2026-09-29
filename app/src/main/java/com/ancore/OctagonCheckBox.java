@@ -93,6 +93,14 @@ public class OctagonCheckBox extends View {
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int desired = (int) dpToPx(30);
+        setMeasuredDimension(
+                resolveSize(desired, widthMeasureSpec),
+                resolveSize(desired, heightMeasureSpec));
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 

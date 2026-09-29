@@ -1,4 +1,3 @@
-// touch_io.h
 #ifndef TOUCH_IO_H
 #define TOUCH_IO_H
 
@@ -9,15 +8,15 @@ typedef struct {
     int tracking_id;
     int x, y;
     int active;
-} AncoreCaptureSlot;
+} RizxbyteCaptureSlot;
 
 typedef struct {
     int  fd;
     int  grabbed;
     int  abs_x_min, abs_x_max;
     int  abs_y_min, abs_y_max;
-    int  cur_slot;
-    AncoreCaptureSlot slots[TS_MAX_SLOTS];
+    int  cur_slot;   
+    RizxbyteCaptureSlot slots[TS_MAX_SLOTS];
 } TouchCapture;
 
 typedef struct {
@@ -26,14 +25,13 @@ typedef struct {
     int virtual_x[TS_MAX_SLOTS];
     int virtual_y[TS_MAX_SLOTS];
     int tracking_id[TS_MAX_SLOTS];
-    int last_active[TS_MAX_SLOTS];
+    int last_active[TS_MAX_SLOTS]; 
     int last_btn;
     int next_tracking_id;
     int dirty;
     int any_active;
 } TouchInject;
 
-/* ── Original functions ─────────────────────────────────────────── */
 int  ancore_capture_open(TouchCapture *tc);
 void ancore_capture_close(TouchCapture *tc);
 int  ancore_capture_grab(TouchCapture *tc);
@@ -41,16 +39,11 @@ void ancore_capture_ungrab(TouchCapture *tc);
 bool ancore_capture_poll(TouchCapture *tc);
 
 int  ancore_inject_open(TouchInject *ti, int abs_x_min, int abs_x_max,
-                        int abs_y_min, int abs_y_max);
+                          int abs_y_min, int abs_y_max);
 void ancore_inject_close(TouchInject *ti);
+
 void ancore_inject_slot(TouchInject *ti, int slot, int x, int y, int down);
 void ancore_inject_slot_release(TouchInject *ti, int slot);
 void ancore_inject_flush(TouchInject *ti);
-
-/* ── NEW: pre-opened fd versions (untuk Shizuku UID 2000, tanpa root) ── */
-int  ancore_capture_open_fd(TouchCapture *tc, int fd);
-int  ancore_inject_open_fd(TouchInject *ti, int fd,
-                            int abs_x_min, int abs_x_max,
-                            int abs_y_min, int abs_y_max);
 
 #endif

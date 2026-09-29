@@ -38,7 +38,6 @@ public class HexagonLinearLayout extends LinearLayout {
 
     private void init(Context context) {
         setWillNotDraw(false);
-        setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         setVerticalScrollBarEnabled(false);
         setHorizontalScrollBarEnabled(false);
 
@@ -58,6 +57,7 @@ public class HexagonLinearLayout extends LinearLayout {
 
     private void createCutPath(float width, float height) {
         hexagonPath.reset();
+        if (width <= 0 || height <= 0) return;
 
         float strokeOffset = showBorder ? (strokeWidthPx / 2f) : 0f;
         float L = strokeOffset;
@@ -82,6 +82,14 @@ public class HexagonLinearLayout extends LinearLayout {
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
+        if (hexagonPath.isEmpty()) {
+            if (hasBgColor) {
+                canvas.drawColor(fillPaint.getColor());
+            }
+            super.dispatchDraw(canvas);
+            return;
+        }
+
         canvas.save();
         canvas.clipPath(hexagonPath);
 
@@ -119,7 +127,9 @@ public class HexagonLinearLayout extends LinearLayout {
 
     public void setCornerCut(float cutInDp) {
         this.cornerCutPx = dpToPx(cutInDp);
-        createCutPath(getWidth(), getHeight());
+        if (getWidth() > 0 && getHeight() > 0) {
+            createCutPath(getWidth(), getHeight());
+        }
         invalidate();
     }
 
@@ -140,13 +150,17 @@ public class HexagonLinearLayout extends LinearLayout {
     public void setStrokeWidth(float widthInDp) {
         this.strokeWidthPx = dpToPx(widthInDp);
         borderPaint.setStrokeWidth(this.strokeWidthPx);
-        createCutPath(getWidth(), getHeight());
+        if (getWidth() > 0 && getHeight() > 0) {
+            createCutPath(getWidth(), getHeight());
+        }
         invalidate();
     }
 
     public void setStrokeEnabled(boolean enabled) {
         this.showBorder = enabled;
-        createCutPath(getWidth(), getHeight());
+        if (getWidth() > 0 && getHeight() > 0) {
+            createCutPath(getWidth(), getHeight());
+        }
         invalidate();
     }
 

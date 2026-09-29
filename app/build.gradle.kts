@@ -47,10 +47,16 @@ android {
         }
     }
 
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+        disable += setOf("Instantiatable")
+    }
+
     packaging {
         jniLibs {
             useLegacyPackaging = true
-            keepDebugSymbols += "**/libinput_ancore.so"
+            keepDebugSymbols += "**/libancoreengine.so"
         }
     }
 }

@@ -13,7 +13,7 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="rizxbyte inject"
+        android:label="ancore inject"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
         <activity
@@ -35,7 +35,7 @@
                 android:value="floating_control_panel" />
         </service>
 
-        <!-- WAJIB: Shizuku butuh ini untuk spawn UserService -->
+        <!-- Shizuku UserService: Binder, NOT android.app.Service — lint Instantiatable is expected -->
         <service
             android:name=".UserService"
             android:exported="true"

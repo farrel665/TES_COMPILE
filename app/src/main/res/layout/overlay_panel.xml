@@ -1,700 +1,246 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/overlay_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:background="@android:color/transparent">
 
     <ImageView
         android:id="@+id/bubble"
-        android:layout_width="38dp"
-        android:layout_height="38dp"
-        android:src="@drawable/default_image"
-        android:scaleType="centerCrop" />
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_ancore"
+        android:scaleType="fitCenter"
+        android:background="@android:color/transparent"
+        android:visibility="gone"
+        android:elevation="8dp" />
 
-    <com.ancore.HexagonLinearLayout
-        android:id="@+id/Panel"
-        android:layout_width="325dp"
-        android:layout_height="507dp"
-        android:padding="16dp"
-        android:background="#221D19"
-        android:orientation="vertical">
+    <LinearLayout
+        android:id="@+id/panel"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_panel"
+        android:padding="12dp"
+        android:elevation="12dp">
 
-        <!-- SafeScrollView: aman dari NPE ScrollBarDrawable di overlay window -->
-        <com.ancore.SafeScrollView
-            android:id="@+id/vscroll1"
+        <!-- Header -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="none"
-            android:overScrollMode="never">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-            <LinearLayout
-                android:id="@+id/linear32"
-                android:layout_width="match_parent"
+            <TextView
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:id="@+id/linear19"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:id="@+id/linear44"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="bottom"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/textview9"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:alpha="0.9"
-                            android:text="Sensitivity Manager"
-                            android:textColor="#E0E0E0"
-                            android:textSize="20sp"
-                            android:textStyle="bold" />
-
-                        <ImageView
-                            android:id="@+id/btn_hide"
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/min" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/linear20"
-                        android:layout_width="match_parent"
-                        android:layout_height="25dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/textview13"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:alpha="0.9"
-                            android:text="Free Fire"
-                            android:textColor="#E0E0E0"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/textview14"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="6dp"
-                            android:text="• com.dts.freefireth"
-                            android:textColor="#796061"
-                            android:textSize="11sp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/linear17"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:id="@+id/linear18"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="9dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/textview11"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:alpha="0.9"
-                            android:text="Magic Touch"
-                            android:textColor="#EAEBEF"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/textview12"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Intercept and remap touchscreen input via privileged injector"
-                            android:textColor="#796061"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <com.ancore.GamingSwitch
-                        android:id="@+id/switch_magic_touch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="12sp" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/textview15"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="3dp"
-                    android:text="Sensitivity Area"
-                    android:textColor="#796061"
-                    android:textSize="15sp" />
-
-                <LinearLayout
-                    android:id="@+id/linear21"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
-
-                    <com.ancore.HexagonLinearLayout
-                        android:id="@+id/area_left"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="4dp"
-                        android:layout_weight="1"
-                        android:gravity="center_horizontal|center_vertical"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <ImageView
-                            android:id="@+id/img_left"
-                            android:layout_width="35dp"
-                            android:layout_height="25dp"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/left" />
-
-                        <TextView
-                            android:id="@+id/txt_left"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Left"
-                            android:textColor="#E0E0E0"
-                            android:textSize="12sp" />
-
-                    </com.ancore.HexagonLinearLayout>
-
-                    <com.ancore.HexagonLinearLayout
-                        android:id="@+id/area_all"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="4dp"
-                        android:layout_marginRight="4dp"
-                        android:layout_weight="1"
-                        android:gravity="center_horizontal|center_vertical"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <ImageView
-                            android:id="@+id/img_all"
-                            android:layout_width="35dp"
-                            android:layout_height="25dp"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/all"
-                            android:tint="#221D19" />
-
-                        <TextView
-                            android:id="@+id/txt_all"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="5dp"
-                            android:text="All"
-                            android:textColor="#221D19"
-                            android:textSize="13sp" />
-
-                    </com.ancore.HexagonLinearLayout>
-
-                    <com.ancore.HexagonLinearLayout
-                        android:id="@+id/area_right"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="4dp"
-                        android:layout_weight="1"
-                        android:gravity="center_horizontal|center_vertical"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <ImageView
-                            android:id="@+id/img_right"
-                            android:layout_width="35dp"
-                            android:layout_height="25dp"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/right" />
-
-                        <TextView
-                            android:id="@+id/txt_right"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:text="Right"
-                            android:textColor="#E0E0E0"
-                            android:textSize="12sp" />
-
-                    </com.ancore.HexagonLinearLayout>
-
-                </LinearLayout>
-
-                <!-- Sensitivity X -->
-                <LinearLayout
-                    android:id="@+id/linear22"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="19dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/textview19"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Sensitivity X (Horizontal)"
-                        android:textColor="#796061"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/val_sens_x"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="1.00×"
-                        android:textColor="#E61F33"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/linear23"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="9dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <com.ancore.HexagonLinearLayout
-                        android:id="@+id/btn_sens_x_minus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="6dp"
-                        android:gravity="center_horizontal|center_vertical"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <ImageView
-                            android:id="@+id/imageview9"
-                            android:layout_width="17dp"
-                            android:layout_height="17dp"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/min" />
-
-                    </com.ancore.HexagonLinearLayout>
-
-                    <com.ancore.GamingSeekBar
-                        android:id="@+id/seek_sens_x"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:progressBackgroundTint="#252530"
-                        android:progressTint="#E61F33"
-                        android:thumbTint="#E61F33" />
-
-                    <com.ancore.HexagonLinearLayout
-                        android:id="@+id/btn_sens_x_plus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="6dp"
-                        android:layout_marginRight="8dp"
-                        android:gravity="center_horizontal|center_vertical"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <ImageView
-                            android:id="@+id/imageview11"
-                            android:layout_width="17dp"
-                            android:layout_height="17dp"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/add" />
-
-                    </com.ancore.HexagonLinearLayout>
-
-                    <ImageView
-                        android:id="@+id/btn_reset_x"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:alpha="0.9"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/reset" />
-
-                </LinearLayout>
-
-                <!-- Sensitivity Y -->
-                <LinearLayout
-                    android:id="@+id/linear26"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="9dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/textview21"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Sensitivity Y (Vertical)"
-                        android:textColor="#796061"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/val_sens_y"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="1.00×"
-                        android:textColor="#E61F33"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/linear28"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="9dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <com.ancore.HexagonLinearLayout
-                        android:id="@+id/btn_sens_y_minus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="6dp"
-                        android:gravity="center_horizontal|center_vertical"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <ImageView
-                            android:id="@+id/imageview10"
-                            android:layout_width="17dp"
-                            android:layout_height="17dp"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/min" />
-
-                    </com.ancore.HexagonLinearLayout>
-
-                    <com.ancore.GamingSeekBar
-                        android:id="@+id/seek_sens_y"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:progressBackgroundTint="#252530"
-                        android:progressTint="#E61F33"
-                        android:thumbTint="#E61F33" />
-
-                    <com.ancore.HexagonLinearLayout
-                        android:id="@+id/btn_sens_y_plus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="6dp"
-                        android:layout_marginRight="8dp"
-                        android:gravity="center_horizontal|center_vertical"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <ImageView
-                            android:id="@+id/imageview12"
-                            android:layout_width="17dp"
-                            android:layout_height="17dp"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/add" />
-
-                    </com.ancore.HexagonLinearLayout>
-
-                    <ImageView
-                        android:id="@+id/btn_reset_y"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:alpha="0.9"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/reset" />
-
-                </LinearLayout>
-
-                <!-- TactiX -->
-                <LinearLayout
-                    android:id="@+id/linear33"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:id="@+id/linear34"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/textview24"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:alpha="0.9"
-                            android:text="TactiX"
-                            android:textColor="#E0E0E0"
-                            android:textSize="17sp" />
-
-                        <TextView
-                            android:id="@+id/textview23"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Steadier aim when still, no lag on flicks"
-                            android:textColor="#796061"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <com.ancore.OctagonCheckBox
-                        android:id="@+id/check_tactix"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:orientation="vertical"
-                        android:padding="8dp" />
-
-                </LinearLayout>
-
-                <!-- Strength & Responsiveness -->
-                <LinearLayout
-                    android:id="@+id/linear36"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="18dp"
-                    android:orientation="vertical">
-
-                    <LinearLayout
-                        android:id="@+id/linear37"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/textview25"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Strength"
-                            android:textColor="#796061"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/val_strength"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0%"
-                            android:textColor="#E61F33"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/linear38"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="9dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <com.ancore.HexagonLinearLayout
-                            android:id="@+id/btn_strength_minus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginRight="6dp"
-                            android:gravity="center_horizontal|center_vertical"
-                            android:orientation="vertical"
-                            android:padding="8dp">
-
-                            <ImageView
-                                android:id="@+id/imageview13"
-                                android:layout_width="17dp"
-                                android:layout_height="17dp"
-                                android:scaleType="fitXY"
-                                android:src="@drawable/min" />
-
-                        </com.ancore.HexagonLinearLayout>
-
-                        <com.ancore.GamingSeekBar
-                            android:id="@+id/seek_strength"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:layout_marginEnd="6dp"
-                            android:layout_weight="1"
-                            android:progressBackgroundTint="#252530"
-                            android:progressTint="#E61F33"
-                            android:thumbTint="#E61F33" />
-
-                        <com.ancore.HexagonLinearLayout
-                            android:id="@+id/btn_strength_plus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="6dp"
-                            android:gravity="center_horizontal|center_vertical"
-                            android:orientation="vertical"
-                            android:padding="8dp">
-
-                            <ImageView
-                                android:id="@+id/imageview15"
-                                android:layout_width="17dp"
-                                android:layout_height="17dp"
-                                android:scaleType="centerCrop"
-                                android:src="@drawable/add" />
-
-                        </com.ancore.HexagonLinearLayout>
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/linear42"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="9dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:id="@+id/textview27"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Responsiveness"
-                            android:textColor="#796061"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/val_resposive"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0%"
-                            android:textColor="#E61F33"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/linear43"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="9dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <com.ancore.HexagonLinearLayout
-                            android:id="@+id/btn_responsive_minus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginRight="6dp"
-                            android:gravity="center_horizontal|center_vertical"
-                            android:orientation="vertical"
-                            android:padding="8dp">
-
-                            <ImageView
-                                android:id="@+id/imageview14"
-                                android:layout_width="17dp"
-                                android:layout_height="17dp"
-                                android:scaleType="fitXY"
-                                android:src="@drawable/min" />
-
-                        </com.ancore.HexagonLinearLayout>
-
-                        <com.ancore.GamingSeekBar
-                            android:id="@+id/seek_responsive"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="6dp"
-                            android:layout_marginEnd="6dp"
-                            android:layout_weight="1"
-                            android:progressBackgroundTint="#252530"
-                            android:progressTint="#E61F33"
-                            android:thumbTint="#E61F33" />
-
-                        <com.ancore.HexagonLinearLayout
-                            android:id="@+id/btn_responsive_plus"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="6dp"
-                            android:gravity="center_horizontal|center_vertical"
-                            android:orientation="vertical"
-                            android:padding="8dp">
-
-                            <ImageView
-                                android:id="@+id/imageview17"
-                                android:layout_width="17dp"
-                                android:layout_height="17dp"
-                                android:scaleType="centerCrop"
-                                android:src="@drawable/add" />
-
-                        </com.ancore.HexagonLinearLayout>
-
-                    </LinearLayout>
-
-                    <!-- Status info -->
-                    <LinearLayout
-                        android:id="@+id/info"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="15dp"
-                        android:background="#403B3D"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="10dp">
-
-                        <ImageView
-                            android:id="@+id/imageview8"
-                            android:layout_width="25dp"
-                            android:layout_height="25dp"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/info" />
-
-                        <TextView
-                            android:id="@+id/textview29"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="10dp"
-                            android:text="Implementasi of One Euro Filter"
-                            android:textColor="#E0E0E0"
-                            android:textSize="13sp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </com.ancore.SafeScrollView>
-
-    </com.ancore.HexagonLinearLayout>
-
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="ancore injection"
+                android:textColor="#EAEBEF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/btn_hide"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:gravity="center"
+                android:text="–"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:background="@drawable/bg_btn_dark" />
+
+            <TextView
+                android:id="@+id/btn_close"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="4dp"
+                android:gravity="center"
+                android:text="×"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:background="@drawable/bg_btn_dark" />
+        </LinearLayout>
+
+        <!-- Area -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Sensitivity Area"
+            android:textColor="#B0B3BA"
+            android:textSize="11sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/area_left"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Left"
+                android:textColor="#B0B3BA"
+                android:textSize="12sp"
+                android:background="@drawable/bg_btn_dark" />
+
+            <TextView
+                android:id="@+id/area_all"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:gravity="center"
+                android:text="All"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:background="@drawable/bg_btn_red" />
+
+            <TextView
+                android:id="@+id/area_right"
+                android:layout_width="0dp"
+                android:layout_height="32dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Right"
+                android:textColor="#B0B3BA"
+                android:textSize="12sp"
+                android:background="@drawable/bg_btn_dark" />
+        </LinearLayout>
+
+        <!-- Sens X: [-] seek [+]  value -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sensitivity X"
+                android:textColor="#B0B3BA"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/val_sens_x"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="2.00x"
+                android:textColor="#F23A48"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <com.ancore.GamingSeekBar
+            android:id="@+id/seek_sens_x"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="2dp" />
+
+        <!-- Sens Y -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sensitivity Y"
+                android:textColor="#B0B3BA"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/val_sens_y"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="2.00x"
+                android:textColor="#F23A48"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <com.ancore.GamingSeekBar
+            android:id="@+id/seek_sens_y"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginTop="2dp" />
+
+        <!-- TactiX row compact -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="TactiX"
+                android:textColor="#EAEBEF"
+                android:textSize="12sp" />
+
+            <CheckBox
+                android:id="@+id/check_tactix"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="#E61F33"
+                android:minWidth="0dp"
+                android:minHeight="0dp" />
+        </LinearLayout>
+
+        <!-- START / STOP -->
+        <TextView
+            android:id="@+id/btn_start"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="START"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="13sp"
+            android:background="@drawable/bg_btn_red" />
+
+        <TextView
+            android:id="@+id/btn_stop"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="STOP"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="13sp"
+            android:background="@drawable/bg_btn_dark"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/status_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Standing"
+            android:textColor="#8A8E96"
+            android:textSize="10sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
 </FrameLayout>

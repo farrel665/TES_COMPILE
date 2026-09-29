@@ -1,4 +1,4 @@
-# rizxbyte inject — Shizuku (non-root) edition
+# ancore inject — Shizuku (non-root) edition
 
 Same touch-smoother / uinput injector as the original root version, but **all privileged work is done through Shizuku**.
 
@@ -39,7 +39,7 @@ Only the launcher / exec path was replaced.
 3. NDK must be present (same as before).
 4. Build → Run.
 
-If you already have a pre-built `librizxbytesmoother.so`, drop it into  
+If you already have a pre-built `libancoresmoother.so`, drop it into  
 `app/src/main/jniLibs/arm64-v8a/` and the CMake post-build step will still copy the fresh one.
 
 ---
@@ -58,7 +58,7 @@ NativeActivity (ImGui)
          └─ start_worker()  [C++]
                └─ JNI → NativeBridge.startWorkerViaShizuku()
                      └─ ShizukuHelper → UserService.startWorker()
-                           ├─ copy binary → /data/local/tmp/rizxbyte_smoother
+                           ├─ copy binary → /data/local/tmp/ancore_smoother
                            ├─ chmod 755
                            └─ setsid … --preset N &
 ```
@@ -73,13 +73,13 @@ Worker binary still opens `/dev/input/event*` + `/dev/uinput` exactly like the r
 |--------------------------------|--------------------------------------------------|
 | "Shizuku not authorized"       | Open Shizuku app → start service → grant this app |
 | "UserService not bound"        | Wait 1-2 s after launch, or restart Shizuku      |
-| worker starts then dies        | Check `/data/local/tmp/rizxbyte_smoother.log`    |
+| worker starts then dies        | Check `/data/local/tmp/ancore_smoother.log`    |
 | Permission denied on /dev/uinput | Rare; some OEMs restrict uinput even for shell. Try another device or a custom kernel that exposes uinput to shell. |
 
 ---
 
 ## Notes
 
-- Package name stays `com.rizxbyte.inject` so you can side-grade over the root APK if you want.
-- The worker still writes its log to `/data/local/tmp/rizxbyte_smoother.log` (readable without root).
+- Package name stays `com.ancore` so you can side-grade over the root APK if you want.
+- The worker still writes its log to `/data/local/tmp/ancore_smoother.log` (readable without root).
 - Volume-key menu and all presets work identically.

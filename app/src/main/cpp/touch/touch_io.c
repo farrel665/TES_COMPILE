@@ -1,4 +1,3 @@
-// touch_io.c
 #include "touch_io.h"
 
 #include <stdio.h>
@@ -58,19 +57,33 @@ static int ancore_score_name(const char *name) {
     return s;
 }
 
+/* Try RDWR first (needed for EVIOCGRAB); fall back to RDONLY for read-only shell access */
+static int ancore_open_event(const char *path) {
+    int fd = open(path, O_RDWR | O_NONBLOCK);
+    if (fd >= 0) return fd;
+    fd = open(path, O_RDONLY | O_NONBLOCK);
+    return fd;
+}
+
 static int ancore_find_touch_capture(void) {
     char path[64];
     char name[256];
     int best_fd = -1;
     int best_score = -999;
     char best_path[64] = {};
+    int any_visible = 0;
+    int open_errno = 0;
 
     for (int pass = 0; pass < 2; pass++) {
         int require_slot = (pass == 0);
         for (int i = 0; i < 32; i++) {
             snprintf(path, sizeof(path), "/dev/input/event%d", i);
-            int fd = open(path, O_RDWR | O_NONBLOCK);
-            if (fd < 0) continue;
+            int fd = ancore_open_event(path);
+            if (fd < 0) {
+                if (errno == EACCES || errno == EPERM) open_errno = errno;
+                continue;
+            }
+            any_visible = 1;
 
             memset(name, 0, sizeof(name));
             ioctl(fd, EVIOCGNAME(sizeof(name) - 1), name);
@@ -99,6 +112,11 @@ static int ancore_find_touch_capture(void) {
     if (best_fd >= 0) {
         snprintf(g_capture_path, sizeof(g_capture_path), "%s", best_path);
         fprintf(stderr, "[ancore] capture device %s\n", g_capture_path);
+    } else {
+        fprintf(stderr, "[ancore] no touch event node opened (visible=%d errno=%d %s)\n",
+                any_visible, open_errno, open_errno ? strerror(open_errno) : "none");
+        fprintf(stderr, "[ancore] hint: shell needs read on /dev/input/event* — "
+                "check ls -l /dev/input and Shizuku uid\n");
     }
     return best_fd;
 }
@@ -157,8 +175,9 @@ int ancore_capture_grab(TouchCapture *tc) {
             return 0;
         }
 
+        
         if (g_capture_path[0]) {
-            int nfd = open(g_capture_path, O_RDWR | O_NONBLOCK);
+            int nfd = ancore_open_event(g_capture_path);
             if (nfd >= 0) {
                 close(tc->fd);
                 tc->fd = nfd;
@@ -169,12 +188,13 @@ int ancore_capture_grab(TouchCapture *tc) {
             }
         }
 
+        
         char path[64], name[256];
         for (int i = 0; i < 32; i++) {
             snprintf(path, sizeof(path), "/dev/input/event%d", i);
             if (g_capture_path[0] && strcmp(path, g_capture_path) == 0)
                 continue;
-            int fd = open(path, O_RDWR | O_NONBLOCK);
+            int fd = ancore_open_event(path);
             if (fd < 0) continue;
             memset(name, 0, sizeof(name));
             ioctl(fd, EVIOCGNAME(sizeof(name) - 1), name);
@@ -183,6 +203,7 @@ int ancore_capture_grab(TouchCapture *tc) {
                 continue;
             }
             if (ancore_try_grab_fd(fd) == 0) {
+                
                 if (tc->fd >= 0) close(tc->fd);
                 tc->fd = fd;
                 snprintf(g_capture_path, sizeof(g_capture_path), "%s", path);
@@ -274,6 +295,7 @@ bool ancore_capture_poll(TouchCapture *tc) {
             if (ev.code == SYN_REPORT) {
                 if (have_update) return true;
             } else if (ev.code == SYN_DROPPED) {
+                
                 for (int i = 0; i < TS_MAX_SLOTS; i++) {
                     tc->slots[i].active = 0;
                     tc->slots[i].tracking_id = -1;
@@ -295,7 +317,7 @@ static void ancore_emit(int fd, int type, int code, int val) {
 }
 
 int ancore_inject_open(TouchInject *ti, int abs_x_min, int abs_x_max,
-                       int abs_y_min, int abs_y_max) {
+                         int abs_y_min, int abs_y_max) {
     if (ti == NULL) return -1;
 
     ti->fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
@@ -414,6 +436,7 @@ void ancore_inject_flush(TouchInject *ti) {
         if (ti->virtual_active[i]) count++;
     }
 
+    
     for (int slot = 0; slot < TS_MAX_SLOTS; slot++) {
         int was = ti->last_active[slot];
         int now = ti->virtual_active[slot];
@@ -445,112 +468,4 @@ void ancore_inject_flush(TouchInject *ti) {
     ancore_emit(ti->fd, EV_SYN, SYN_REPORT, 0);
     ti->dirty = 0;
     ti->any_active = count;
-}
-
-int ancore_capture_open_fd(TouchCapture *tc, int fd) {
-    if (!tc || fd < 0) return -1;
-
-    memset(tc, 0, sizeof(*tc));
-    tc->fd       = fd;
-    tc->grabbed  = 0;
-    tc->cur_slot = 0;
-
-    struct input_absinfo info;
-    memset(&info, 0, sizeof(info));
-
-    if (ioctl(tc->fd, EVIOCGABS(ABS_MT_POSITION_X), &info) < 0) {
-        fprintf(stderr, "[ancore] capture_open_fd: EVIOCGABS X failed: %s\n",
-                strerror(errno));
-        tc->fd = -1;
-        return -1;
-    }
-    tc->abs_x_min = info.minimum;
-    tc->abs_x_max = info.maximum;
-
-    if (ioctl(tc->fd, EVIOCGABS(ABS_MT_POSITION_Y), &info) < 0) {
-        fprintf(stderr, "[ancore] capture_open_fd: EVIOCGABS Y failed: %s\n",
-                strerror(errno));
-        tc->fd = -1;
-        return -1;
-    }
-    tc->abs_y_min = info.minimum;
-    tc->abs_y_max = info.maximum;
-
-    for (int i = 0; i < TS_MAX_SLOTS; i++) {
-        tc->slots[i].tracking_id = -1;
-        tc->slots[i].x           = 0;
-        tc->slots[i].y           = 0;
-        tc->slots[i].active      = 0;
-    }
-
-    fprintf(stderr, "[ancore] capture_open_fd ok fd=%d x=[%d..%d] y=[%d..%d]\n",
-            fd, tc->abs_x_min, tc->abs_x_max, tc->abs_y_min, tc->abs_y_max);
-    return 0;
-}
-
-int ancore_inject_open_fd(TouchInject *ti, int fd,
-                           int abs_x_min, int abs_x_max,
-                           int abs_y_min, int abs_y_max) {
-    if (!ti || fd < 0) return -1;
-
-    memset(ti, 0, sizeof(*ti));
-    ti->fd = fd;
-
-    ioctl(ti->fd, UI_SET_EVBIT,  EV_ABS);
-    ioctl(ti->fd, UI_SET_EVBIT,  EV_KEY);
-    ioctl(ti->fd, UI_SET_EVBIT,  EV_SYN);
-    ioctl(ti->fd, UI_SET_KEYBIT, BTN_TOUCH);
-    ioctl(ti->fd, UI_SET_KEYBIT, BTN_TOOL_FINGER);
-    ioctl(ti->fd, UI_SET_ABSBIT, ABS_MT_SLOT);
-    ioctl(ti->fd, UI_SET_ABSBIT, ABS_MT_TRACKING_ID);
-    ioctl(ti->fd, UI_SET_ABSBIT, ABS_MT_POSITION_X);
-    ioctl(ti->fd, UI_SET_ABSBIT, ABS_MT_POSITION_Y);
-    ioctl(ti->fd, UI_SET_PROPBIT, INPUT_PROP_DIRECT);
-
-    struct uinput_user_dev udev;
-    memset(&udev, 0, sizeof(udev));
-    snprintf(udev.name, UINPUT_MAX_NAME_SIZE, "ancore_touch");
-    udev.id.bustype = BUS_VIRTUAL;
-    udev.id.vendor  = 0x1;
-    udev.id.product = 0x1;
-    udev.id.version = 1;
-
-    udev.absmin[ABS_MT_POSITION_X]  = abs_x_min;
-    udev.absmax[ABS_MT_POSITION_X]  = abs_x_max;
-    udev.absmin[ABS_MT_POSITION_Y]  = abs_y_min;
-    udev.absmax[ABS_MT_POSITION_Y]  = abs_y_max;
-    udev.absmin[ABS_MT_SLOT]        = 0;
-    udev.absmax[ABS_MT_SLOT]        = TS_MAX_SLOTS - 1;
-    udev.absmin[ABS_MT_TRACKING_ID] = 0;
-    udev.absmax[ABS_MT_TRACKING_ID] = 65535;
-
-    if (write(ti->fd, &udev, sizeof(udev)) != (ssize_t)sizeof(udev)) {
-        fprintf(stderr, "[ancore] inject_open_fd: write udev failed: %s\n",
-                strerror(errno));
-        ti->fd = -1;
-        return -1;
-    }
-
-    if (ioctl(ti->fd, UI_DEV_CREATE) < 0) {
-        fprintf(stderr, "[ancore] inject_open_fd: UI_DEV_CREATE failed: %s\n",
-                strerror(errno));
-        ti->fd = -1;
-        return -1;
-    }
-
-    for (int i = 0; i < TS_MAX_SLOTS; i++) {
-        ti->virtual_active[i] = 0;
-        ti->virtual_x[i]      = 0;
-        ti->virtual_y[i]      = 0;
-        ti->tracking_id[i]    = -1;
-        ti->last_active[i]    = 0;
-    }
-    ti->last_btn         = 0;
-    ti->next_tracking_id = 1;
-    ti->dirty            = 0;
-    ti->any_active       = 0;
-
-    usleep(50000);
-    fprintf(stderr, "[ancore] inject_open_fd ok fd=%d\n", fd);
-    return 0;
 }

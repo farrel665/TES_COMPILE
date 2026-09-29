@@ -1,11 +1,10 @@
-// reaper.c
 #include "reaper.h"
 #include <stdio.h>
 #include <unistd.h>
 
-#define ANCORE_REAPER_INTERVAL_MS 250
+#define RIZXBYTE_REAPER_INTERVAL_MS 250
 
-static void ancore_reaper_sync(AncoreReaper *rp) {
+static void ancore_reaper_sync(RizxbyteReaper *rp) {
     int hw_active[TS_MAX_SLOTS];
     int purged = 0;
 
@@ -30,10 +29,10 @@ static void ancore_reaper_sync(AncoreReaper *rp) {
 }
 
 static void *ancore_reaper_thread(void *arg) {
-    AncoreReaper *rp = (AncoreReaper *)arg;
+    RizxbyteReaper *rp = (RizxbyteReaper *)arg;
 
     while (rp->running) {
-        usleep(ANCORE_REAPER_INTERVAL_MS * 1000);
+        usleep(RIZXBYTE_REAPER_INTERVAL_MS * 1000);
         if (!rp->running) break;
 
         pthread_mutex_lock(&rp->lock);
@@ -44,15 +43,15 @@ static void *ancore_reaper_thread(void *arg) {
     return NULL;
 }
 
-int ancore_reaper_start(AncoreReaper *rp,
-                        TouchCapture *tc,
-                        TouchInject *ti,
-                        TouchEngine *ts) {
+int ancore_reaper_start(RizxbyteReaper *rp,
+                          TouchCapture *tc,
+                          TouchInject *ti,
+                          TouchEngine *ts) {
     if (rp == NULL || tc == NULL || ti == NULL || ts == NULL) return -1;
 
     rp->capture  = tc;
     rp->inject   = ti;
-    rp->engine   = ts;
+    rp->engine = ts;
     rp->running  = 1;
 
     if (pthread_mutex_init(&rp->lock, NULL) != 0) return -1;
@@ -65,17 +64,17 @@ int ancore_reaper_start(AncoreReaper *rp,
     return 0;
 }
 
-void ancore_reaper_stop(AncoreReaper *rp) {
+void ancore_reaper_stop(RizxbyteReaper *rp) {
     if (rp == NULL || !rp->running) return;
     rp->running = 0;
     pthread_join(rp->thread, NULL);
     pthread_mutex_destroy(&rp->lock);
 }
 
-void ancore_reaper_lock(AncoreReaper *rp) {
+void ancore_reaper_lock(RizxbyteReaper *rp) {
     if (rp != NULL) pthread_mutex_lock(&rp->lock);
 }
 
-void ancore_reaper_unlock(AncoreReaper *rp) {
+void ancore_reaper_unlock(RizxbyteReaper *rp) {
     if (rp != NULL) pthread_mutex_unlock(&rp->lock);
 }

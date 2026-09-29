@@ -14,10 +14,10 @@
 #include "touch_io.h"
 #include "reaper.h"
 
-#define ANCORE_POLL_INTERVAL_MS  500
-#define ANCORE_WARMUP_SECONDS    5
-#define ANCORE_FRAME_DT          (1.0f / 120.0f)
-#define ANCORE_WATCHDOG_SECONDS  5
+#define RIZXBYTE_POLL_INTERVAL_MS  500
+#define RIZXBYTE_WARMUP_SECONDS    5
+#define RIZXBYTE_FRAME_DT          (1.0f / 120.0f)
+#define RIZXBYTE_WATCHDOG_SECONDS  5
 
 static void ancore_panic(int sig) {
     (void)sig;
@@ -58,7 +58,7 @@ static void ancore_kill_stale(void) {
         fclose(f);
         buf[n] = '\0';
 
-        if (strstr(buf, "ancore_engine") != NULL || strstr(buf, "input_ancore") != NULL) {
+        if (strstr(buf, "ancore_engine") != NULL) {
             fprintf(stderr, "[ancore_engine] killing stale instance pid=%d\n", pid);
             kill(pid, SIGKILL);
             usleep(200000);
@@ -75,9 +75,11 @@ int main(void) {
     TouchEngine engine;
     TouchCapture capture;
     TouchInject  inject;
-    AncoreReaper reaper;
+    RizxbyteReaper reaper;
 
-    int preset_idx = 0;
+    int preset_idx = ancore_menu_run();
+    if (preset_idx < 0) preset_idx = 0;
+    if (preset_idx > 2) preset_idx = 2;
     static const float k_factor[3] = { 1.00f, 0.75f, 2.00f };
     static const float k_sens[3]   = { 2.00f, 4.50f, 7.50f };
     static const char *k_name[3]   = { "LINEAR", "ACCEL", "DECEL" };
@@ -111,15 +113,15 @@ int main(void) {
     printf("[ancore_engine] reaper thread started (250ms interval).\n");
     printf("[ancore_engine] waiting for Free Fire...\n");
 
-    alarm(ANCORE_WATCHDOG_SECONDS * 4);
+    alarm(RIZXBYTE_WATCHDOG_SECONDS * 4);
 
-    pid_t ff_pid = ancore_pw_wait_for_process(ANCORE_FF_PACKAGE_GLOBAL,
-                                                ANCORE_POLL_INTERVAL_MS);
+    pid_t ff_pid = ancore_pw_wait_for_process(RIZXBYTE_FF_PACKAGE_GLOBAL,
+                                                RIZXBYTE_POLL_INTERVAL_MS);
     printf("[ancore_engine] launcher detected (pid=%d).\n", ff_pid);
-    printf("[ancore_engine] warming up %d seconds...\n", ANCORE_WARMUP_SECONDS);
+    printf("[ancore_engine] warming up %d seconds...\n", RIZXBYTE_WARMUP_SECONDS);
 
-    for (int elapsed = 0; elapsed < ANCORE_WARMUP_SECONDS; elapsed++) {
-        alarm(ANCORE_WATCHDOG_SECONDS);
+    for (int elapsed = 0; elapsed < RIZXBYTE_WARMUP_SECONDS; elapsed++) {
+        alarm(RIZXBYTE_WATCHDOG_SECONDS);
         if (!ancore_pw_is_alive(ff_pid)) {
             printf("[ancore_engine] process died during warmup. restarting.\n");
             ancore_reaper_stop(&reaper);
@@ -141,6 +143,7 @@ int main(void) {
     }
     printf("[ancore_engine] touch grabbed (passthrough off).\n");
 
+    
     while (ancore_capture_poll(&capture)) {  }
     for (int i = 0; i < TS_MAX_SLOTS; i++) {
         capture.slots[i].active = 0;
@@ -152,7 +155,7 @@ int main(void) {
     touch_set_sensitivity(&engine, sens);
 
     while (ancore_pw_is_alive(ff_pid)) {
-        alarm(ANCORE_WATCHDOG_SECONDS);
+        alarm(RIZXBYTE_WATCHDOG_SECONDS);
 
         ancore_reaper_lock(&reaper);
 
@@ -167,7 +170,7 @@ int main(void) {
             float in_y = (float)capture.slots[slot].y;
 
             touch_slot(&engine, slot, in_x, in_y, hw_active,
-                                ANCORE_FRAME_DT, &ox, &oy, &od);
+                                RIZXBYTE_FRAME_DT, &ox, &oy, &od);
 
             if (hw_active) {
                 ancore_inject_slot(&inject, slot, (int)ox, (int)oy, 1);
@@ -182,7 +185,7 @@ int main(void) {
 
         ancore_reaper_unlock(&reaper);
 
-        usleep((useconds_t)(ANCORE_FRAME_DT * 1000000));
+        usleep((useconds_t)(RIZXBYTE_FRAME_DT * 1000000));
     }
 
     printf("[ancore_engine] Free Fire closed. disengaging.\n");
