@@ -9,7 +9,7 @@
 		android:id="@+id/bubble"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:src="@drawable/ic_rizxbyte"
+		android:src="@drawable/default_image"
 		android:scaleType="center" />
 	<com.ancore.HexagonLinearLayout
 		android:id="@+id/Panel"
@@ -21,7 +21,7 @@
 		<ScrollView
 			android:id="@+id/vscroll1"
 			android:layout_width="match_parent"
-			android:layout_height="match_parent">
+			android:layout_height="wrap_content">
 			<LinearLayout
 				android:id="@+id/linear32"
 				android:layout_width="match_parent"
@@ -32,15 +32,29 @@
 					android:layout_width="match_parent"
 					android:layout_height="wrap_content"
 					android:orientation="vertical">
-					<TextView
-						android:id="@+id/textview9"
-						android:layout_width="wrap_content"
+					<LinearLayout
+						android:id="@+id/linear44"
+						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
-						android:text="Sensitivity Manager"
-						android:textSize="20sp"
-						android:textStyle="bold"
-						android:textColor="#E0E0E0"
-						android:alpha="0.9" />
+						android:gravity="bottom"
+						android:orientation="horizontal">
+						<TextView
+							android:id="@+id/textview9"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:text="Sensitivity Manager"
+							android:textSize="20sp"
+							android:textStyle="bold"
+							android:textColor="#E0E0E0"
+							android:layout_weight="1"
+							android:alpha="0.9" />
+						<ImageView
+							android:id="@+id/btn_hide"
+							android:layout_width="20dp"
+							android:layout_height="20dp"
+							android:src="@drawable/min"
+							android:scaleType="centerCrop" />
+					</LinearLayout>
 					<LinearLayout
 						android:id="@+id/linear20"
 						android:layout_width="match_parent"
