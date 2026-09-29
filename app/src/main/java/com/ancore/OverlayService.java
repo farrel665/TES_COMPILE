@@ -7,7 +7,10 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,8 +23,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.CheckBox;
-import android.widget.Switch;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,29 +44,32 @@ public class OverlayService extends Service {
 
     // ── Window ────────────────────────────────────────────────────────
     private WindowManager wm;
-    private View root, panel, bubble;
+    private View root, bubble;
+    private HexagonLinearLayout panel;
     private WindowManager.LayoutParams lp;
     private final Handler main = new Handler(Looper.getMainLooper());
 
     // ── State ─────────────────────────────────────────────────────────
     /** 0=Left  1=All  2=Right */
     private int sensArea = 1;
-    /** Curve fixed to Decel (2) — UI removed */
+    /** Curve fixed to Decel (2) */
     private static final int CURVE_MODE = 2;
     /** Default sensitivity = 1.00x */
     private float sensX = 1.00f;
     private float sensY = 1.00f;
-    /** Magic Touch toggle (Switch in UI) */
+    /** Magic Touch toggle */
     private boolean tactix        = false;
     private boolean workerRunning = false;
     private boolean panelVisible  = true;
 
     // ── View references ───────────────────────────────────────────────
-    private TextView      statusTv;
-    private TextView[]    areaBtns;
-    private TextView      valX, valY;
-    private Switch        switchMagicTouch;
-    private GamingSeekBar sx, sy;
+    private TextView             statusTv;
+    private TextView             valX, valY, valStrength, valResponsive;
+    private TextView             txtLeft, txtAll, txtRight;
+    private ImageView            imgLeft, imgAll, imgRight;
+    private HexagonLinearLayout  areaLeft, areaAll, areaRight;
+    private GamingSwitch         switchMagicTouch;
+    private GamingSeekBar        sx, sy, seekStrength, seekResponsive;
 
     // ── Drag state ────────────────────────────────────────────────────
     private int startX, startY, startTouchX, startTouchY;
@@ -143,37 +149,232 @@ public class OverlayService extends Service {
     private void inflateOverlay() {
         LayoutInflater inf = LayoutInflater.from(this);
         root   = inf.inflate(R.layout.overlay_panel, null);
-        panel  = root.findViewById(R.id.panel);
+        panel  = root.findViewById(R.id.Panel); // Sesuai ID di XML
         bubble = root.findViewById(R.id.bubble);
 
-        statusTv = root.findViewById(R.id.status_text);
-        valX     = root.findViewById(R.id.val_sens_x);
-        valY     = root.findViewById(R.id.val_sens_y);
+        // Map statusTv ke textview29 (bagian info) agar pesan status dapat terlihat
+        statusTv      = root.findViewById(R.id.textview29);
+        valX          = root.findViewById(R.id.val_sens_x);
+        valY          = root.findViewById(R.id.val_sens_y);
+        valStrength   = root.findViewById(R.id.val_strength);
+        valResponsive = root.findViewById(R.id.val_resposive); // Sesuai ID XML: val_resposive
 
-        // ── Magic Touch switch → langsung start / stop worker ─────
-        switchMagicTouch = root.findViewById(R.id.switch_magic_touch);
-        switchMagicTouch.setOnCheckedChangeListener((btn, checked) -> {
-            tactix = checked;
-            if (checked) doStart();
-            else         doStop();
-        });
+        areaLeft  = root.findViewById(R.id.area_left);
+        areaAll   = root.findViewById(R.id.area_all);
+        areaRight = root.findViewById(R.id.area_right);
 
-        // ── Sensitivity Area buttons ───────────────────────────────
-        areaBtns = new TextView[]{
-                root.findViewById(R.id.area_left),
-                root.findViewById(R.id.area_all),
-                root.findViewById(R.id.area_right)
-        };
-        for (int i = 0; i < areaBtns.length; i++) {
-            final int idx = i;
-            areaBtns[i].setOnClickListener(v -> {
-                sensArea = idx;
-                refreshAreaUi();
-                if (workerRunning) doStart();
+        imgLeft  = root.findViewById(R.id.img_left);
+        imgAll   = root.findViewById(R.id.img_all);
+        imgRight = root.findViewById(R.id.img_right);
+
+        txtLeft  = root.findViewById(R.id.txt_left);
+        txtAll   = root.findViewById(R.id.txt_all);
+        txtRight = root.findViewById(R.id.txt_right);
+
+        HexagonLinearLayout btnSensXMinus     = root.findViewById(R.id.btn_sens_x_minus);
+        HexagonLinearLayout btnSensXPlus      = root.findViewById(R.id.btn_sens_x_plus);
+        View btnSensYMinus                    = root.findViewById(R.id.btn_sens_y_minus);
+        View btnSensYPlus                     = root.findViewById(R.id.btn_sens_y_plus);
+        HexagonLinearLayout btnStrengthMinus  = root.findViewById(R.id.btn_strength_minus);
+        HexagonLinearLayout btnStrengthPlus   = root.findViewById(R.id.btn_strength_plus);
+        HexagonLinearLayout btnResponsiveMinus= root.findViewById(R.id.btn_responsive_minus);
+        HexagonLinearLayout btnResponsivePlus = root.findViewById(R.id.btn_responsive_plus);
+
+        ImageView btnResetX = root.findViewById(R.id.btn_reset_x);
+        ImageView btnResetY = root.findViewById(R.id.btn_reset_y);
+        LinearLayout info   = root.findViewById(R.id.info);
+
+        // ── Direct View Styling Setup (Tambahan Kode Permintaan) ────
+        if (panel != null) {
+            panel.setBackgroundColor(Color.parseColor("#221D19"));
+            panel.setCornerCut(6f);
+            panel.setStrokeEnabled(false);
+        }
+
+        if (areaLeft != null) {
+            areaLeft.setBackgroundColor(Color.parseColor("#403B3D"));
+            areaLeft.setCornerCut(6f);
+            areaLeft.setStrokeEnabled(false);
+        }
+
+        if (areaAll != null) {
+            areaAll.setBackgroundColor(Color.parseColor("#E61F33"));
+            areaAll.setCornerCut(6f);
+            areaAll.setStrokeEnabled(false);
+        }
+
+        if (areaRight != null) {
+            areaRight.setBackgroundColor(Color.parseColor("#403B3D"));
+            areaRight.setCornerCut(6f);
+            areaRight.setStrokeEnabled(false);
+        }
+
+        if (btnSensXMinus != null) {
+            btnSensXMinus.setBackgroundColor(Color.parseColor("#733516"));
+            btnSensXMinus.setCornerCut(6f);
+            btnSensXMinus.setStrokeEnabled(false);
+        }
+
+        if (btnSensXPlus != null) {
+            btnSensXPlus.setBackgroundColor(Color.parseColor("#733516"));
+            btnSensXPlus.setCornerCut(6f);
+            btnSensXPlus.setStrokeEnabled(false);
+        }
+
+        if (btnSensYMinus != null) {
+            btnSensYMinus.setBackgroundColor(Color.parseColor("#733516"));
+            if (btnSensYMinus instanceof HexagonLinearLayout) {
+                ((HexagonLinearLayout) btnSensYMinus).setCornerCut(6f);
+                ((HexagonLinearLayout) btnSensYMinus).setStrokeEnabled(false);
+            }
+        }
+
+        if (btnSensYPlus != null) {
+            btnSensYPlus.setBackgroundColor(Color.parseColor("#733516"));
+            if (btnSensYPlus instanceof HexagonLinearLayout) {
+                ((HexagonLinearLayout) btnSensYPlus).setCornerCut(6f);
+                ((HexagonLinearLayout) btnSensYPlus).setStrokeEnabled(false);
+            }
+        }
+
+        if (btnResponsiveMinus != null) {
+            btnResponsiveMinus.setBackgroundColor(Color.parseColor("#733516"));
+            btnResponsiveMinus.setCornerCut(6f);
+            btnResponsiveMinus.setStrokeEnabled(false);
+        }
+
+        if (btnResponsivePlus != null) {
+            btnResponsivePlus.setBackgroundColor(Color.parseColor("#733516"));
+            btnResponsivePlus.setCornerCut(6f);
+            btnResponsivePlus.setStrokeEnabled(false);
+        }
+
+        if (btnStrengthMinus != null) {
+            btnStrengthMinus.setBackgroundColor(Color.parseColor("#733516"));
+            btnStrengthMinus.setCornerCut(6f);
+            btnStrengthMinus.setStrokeEnabled(false);
+        }
+
+        if (btnStrengthPlus != null) {
+            btnStrengthPlus.setBackgroundColor(Color.parseColor("#733516"));
+            btnStrengthPlus.setCornerCut(6f);
+            btnStrengthPlus.setStrokeEnabled(false);
+        }
+
+        // ── Sensitivity Area Click Listeners (Tambahan Kode Permintaan) ─
+        if (areaLeft != null) {
+            areaLeft.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View _view) {
+                    sensArea = 0;
+                    if (areaRight != null) areaRight.setBackgroundColor(Color.parseColor("#403B3D"));
+                    if (areaAll != null)   areaAll.setBackgroundColor(Color.parseColor("#403B3D"));
+                    areaLeft.setBackgroundColor(Color.parseColor("#E61F33"));
+
+                    applyTintColor(imgAll, 0xFFE0E0E0);
+                    applyTintColor(imgRight, 0xFFE0E0E0);
+                    applyTintColor(imgLeft, 0xFF221D19);
+
+                    if (txtLeft != null)  txtLeft.setTextColor(0xFF221D19);
+                    if (txtAll != null)   txtAll.setTextColor(0xFFE0E0E0);
+                    if (txtRight != null) txtRight.setTextColor(0xFFE0E0E0);
+
+                    if (workerRunning) doStart();
+                }
             });
         }
 
-        // ── Custom GamingSeekBars — range 0..900 → 1.00x..10.00x ───
+        if (areaAll != null) {
+            areaAll.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View _view) {
+                    sensArea = 1;
+                    if (areaRight != null) areaRight.setBackgroundColor(Color.parseColor("#403B3D"));
+                    areaAll.setBackgroundColor(Color.parseColor("#E61F33"));
+                    if (areaLeft != null)  areaLeft.setBackgroundColor(Color.parseColor("#403B3D"));
+
+                    applyTintColor(imgAll, 0xFF221D19);
+                    applyTintColor(imgRight, 0xFFE0E0E0);
+                    applyTintColor(imgLeft, 0xFFE0E0E0);
+
+                    if (txtLeft != null)  txtLeft.setTextColor(0xFFE0E0E0);
+                    if (txtAll != null)   txtAll.setTextColor(0xFF221D19);
+                    if (txtRight != null) txtRight.setTextColor(0xFFE0E0E0);
+
+                    if (workerRunning) doStart();
+                }
+            });
+        }
+
+        if (areaRight != null) {
+            areaRight.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View _view) {
+                    sensArea = 2;
+                    areaRight.setBackgroundColor(Color.parseColor("#E61F33"));
+                    if (areaAll != null)  areaAll.setBackgroundColor(Color.parseColor("#403B3D"));
+                    if (areaLeft != null) areaLeft.setBackgroundColor(Color.parseColor("#403B3D"));
+
+                    applyTintColor(imgAll, 0xFFE0E0E0);
+                    applyTintColor(imgRight, 0xFF221D19);
+                    applyTintColor(imgLeft, 0xFFE0E0E0);
+
+                    if (txtLeft != null)  txtLeft.setTextColor(0xFFE0E0E0);
+                    if (txtAll != null)   txtAll.setTextColor(0xFFE0E0E0);
+                    if (txtRight != null) txtRight.setTextColor(0xFF221D19);
+
+                    if (workerRunning) doStart();
+                }
+            });
+        }
+
+        // ── Reset Buttons ─────────────────────────────────────────
+        if (btnResetX != null) {
+            btnResetX.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View _view) {
+                    if (sx != null) sx.setProgress(0);
+                    sensX = 1.00f;
+                    if (valX != null) valX.setText("1.00×");
+                    if (workerRunning) doStart();
+                }
+            });
+        }
+
+        if (btnResetY != null) {
+            btnResetY.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View _view) {
+                    if (sy != null) sy.setProgress(0);
+                    sensY = 1.00f;
+                    if (valY != null) valY.setText("1.00×");
+                    if (workerRunning) doStart();
+                }
+            });
+        }
+
+        // ── GradientDrawable Info ──────────────────────────────────
+        if (info != null) {
+            info.setBackground(new GradientDrawable() {
+                public GradientDrawable getIns(int a, int b) {
+                    this.setCornerRadius(a);
+                    this.setColor(b);
+                    return this;
+                }
+            }.getIns(9, 0xFF403B3D));
+        }
+
+        // ── Magic Touch Switch ─────────────────────────────────────
+        switchMagicTouch = root.findViewById(R.id.switch_magic_touch);
+        if (switchMagicTouch != null) {
+            switchMagicTouch.setOnCheckedChangeListener((btn, checked) -> {
+                tactix = checked;
+                if (checked) doStart();
+                else         doStop();
+            });
+        }
+
+        // ── Custom GamingSeekBars ──────────────────────────────────
         sx = root.findViewById(R.id.seek_sens_x);
         sy = root.findViewById(R.id.seek_sens_y);
 
@@ -183,7 +384,7 @@ public class OverlayService extends Service {
             sx.setProgress(0);
             sx.setOnProgressChangeListener((seekBar, progress, fromUser) -> {
                 sensX = 1.0f + progress / 100.f;
-                valX.setText(String.format(Locale.US, "%.2fx", sensX));
+                if (valX != null) valX.setText(String.format(Locale.US, "%.2fx", sensX));
                 if (fromUser && workerRunning) doStart();
             });
         }
@@ -194,38 +395,60 @@ public class OverlayService extends Service {
             sy.setProgress(0);
             sy.setOnProgressChangeListener((seekBar, progress, fromUser) -> {
                 sensY = 1.0f + progress / 100.f;
-                valY.setText(String.format(Locale.US, "%.2fx", sensY));
+                if (valY != null) valY.setText(String.format(Locale.US, "%.2fx", sensY));
                 if (fromUser && workerRunning) doStart();
             });
         }
 
-        // ── Sens step − / + ────────────────────────────────────────
-        root.findViewById(R.id.btn_sens_x_minus).setOnClickListener(v -> stepSens(sx, valX, -10, true));
-        root.findViewById(R.id.btn_sens_x_plus) .setOnClickListener(v -> stepSens(sx, valX, +10, true));
-        root.findViewById(R.id.btn_sens_y_minus).setOnClickListener(v -> stepSens(sy, valY, -10, false));
-        root.findViewById(R.id.btn_sens_y_plus) .setOnClickListener(v -> stepSens(sy, valY, +10, false));
+        // ── Sensitivity Step − / + ─────────────────────────────────
+        if (btnSensXMinus != null) btnSensXMinus.setOnClickListener(v -> stepSens(sx, valX, -10, true));
+        if (btnSensXPlus != null)  btnSensXPlus.setOnClickListener(v -> stepSens(sx, valX, +10, true));
+        if (btnSensYMinus != null) btnSensYMinus.setOnClickListener(v -> stepSens(sy, valY, -10, false));
+        if (btnSensYPlus != null)  btnSensYPlus.setOnClickListener(v -> stepSens(sy, valY, +10, false));
 
-        // ── TactiX checkbox (footer) ───────────────────────────────
-        CheckBox tact = root.findViewById(R.id.check_tactix);
-        tact.setOnCheckedChangeListener((b, checked) -> {
-            tactix = checked;
-            if (switchMagicTouch != null) switchMagicTouch.setChecked(checked);
-            if (workerRunning) doStart();
-        });
+        // ── Strength & Responsiveness Seekbars ────────────────────
+        seekStrength   = root.findViewById(R.id.seek_strength);
+        seekResponsive = root.findViewById(R.id.seek_responsive);
 
-        // ── Hide / Close ───────────────────────────────────────────
-        root.findViewById(R.id.btn_hide) .setOnClickListener(v -> hideToBubble());
-        root.findViewById(R.id.btn_close).setOnClickListener(v -> stopWorkerAndSelf());
+        if (seekStrength != null) {
+            seekStrength.setMin(0);
+            seekStrength.setMax(100);
+            seekStrength.setProgress(0);
+            seekStrength.setOnProgressChangeListener((seekBar, progress, fromUser) -> {
+                if (valStrength != null) valStrength.setText(progress + "%");
+            });
+        }
 
-        // ── Drag: header (panel) + bubble ──────────────────────────
+        if (seekResponsive != null) {
+            seekResponsive.setMin(0);
+            seekResponsive.setMax(100);
+            seekResponsive.setProgress(0);
+            seekResponsive.setOnProgressChangeListener((seekBar, progress, fromUser) -> {
+                if (valResponsive != null) valResponsive.setText(progress + "%");
+            });
+        }
+
+        if (btnStrengthMinus != null)   btnStrengthMinus.setOnClickListener(v -> stepGeneric(seekStrength, -5));
+        if (btnStrengthPlus != null)    btnStrengthPlus.setOnClickListener(v -> stepGeneric(seekStrength, +5));
+        if (btnResponsiveMinus != null) btnResponsiveMinus.setOnClickListener(v -> stepGeneric(seekResponsive, -5));
+        if (btnResponsivePlus != null)  btnResponsivePlus.setOnClickListener(v -> stepGeneric(seekResponsive, +5));
+
+        // ── TactiX Checkbox ───────────────────────────────────────
+        OctagonCheckBox tact = root.findViewById(R.id.check_tactix);
+        if (tact != null) {
+            tact.setOnCheckedChangeListener((b, checked) -> {
+                tactix = checked;
+                if (switchMagicTouch != null) switchMagicTouch.setChecked(checked);
+                if (workerRunning) doStart();
+            });
+        }
+
+        // ── Drag behavior ──────────────────────────────────────────
         View.OnTouchListener drag = this::onDrag;
-        panel .setOnTouchListener(drag);
-        bubble.setOnTouchListener(drag);
+        if (panel != null)  panel.setOnTouchListener(drag);
+        if (bubble != null) bubble.setOnTouchListener(drag);
 
-        // ── Initial UI state ───────────────────────────────────────
-        refreshAreaUi();
-
-        // ── Window params ──────────────────────────────────────────
+        // ── Window Params ──────────────────────────────────────────
         int type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
 
         lp = new WindowManager.LayoutParams(
@@ -255,12 +478,12 @@ public class OverlayService extends Service {
     }
 
     // ═════════════════════════════════════════════════════════════════
-    //  Panel visibility
+    //  Panel visibility & Drag
     // ═════════════════════════════════════════════════════════════════
 
     private void showPanel() {
         panelVisible = true;
-        if (panel  != null) panel .setVisibility(View.VISIBLE);
+        if (panel  != null) panel.setVisibility(View.VISIBLE);
         if (bubble != null) bubble.setVisibility(View.GONE);
         if (lp != null) {
             lp.width  = WindowManager.LayoutParams.WRAP_CONTENT;
@@ -271,7 +494,7 @@ public class OverlayService extends Service {
 
     private void hideToBubble() {
         panelVisible = false;
-        if (panel  != null) panel .setVisibility(View.GONE);
+        if (panel  != null) panel.setVisibility(View.GONE);
         if (bubble != null) bubble.setVisibility(View.VISIBLE);
         if (lp != null) {
             lp.width  = dp(52);
@@ -279,10 +502,6 @@ public class OverlayService extends Service {
             try { wm.updateViewLayout(root, lp); } catch (Throwable ignored) {}
         }
     }
-
-    // ═════════════════════════════════════════════════════════════════
-    //  Drag
-    // ═════════════════════════════════════════════════════════════════
 
     private boolean onDrag(View v, MotionEvent e) {
         switch (e.getAction()) {
@@ -309,11 +528,11 @@ public class OverlayService extends Service {
     }
 
     // ═════════════════════════════════════════════════════════════════
-    //  Worker control
+    //  Worker Control
     // ═════════════════════════════════════════════════════════════════
 
     private void doStart() {
-        statusTv.setText("Starting…");
+        if (statusTv != null) statusTv.setText("Starting…");
         main.post(() -> {
             try {
                 if (!ShizukuHelper.isReady()) ShizukuHelper.init();
@@ -333,8 +552,10 @@ public class OverlayService extends Service {
                 workerRunning = ok;
                 if (ok) {
                     String[] areas = {"LEFT", "ALL", "RIGHT"};
-                    statusTv.setText(String.format(Locale.US, "Engaged  X=%.2f  Y=%.2f  %s%s",
-                            sensX, sensY, areas[sensArea], (tactix ? "  TX" : "")));
+                    if (statusTv != null) {
+                        statusTv.setText(String.format(Locale.US, "Engaged  X=%.2f  Y=%.2f  %s%s",
+                                sensX, sensY, areas[sensArea], (tactix ? "  TX" : "")));
+                    }
                     Toast.makeText(this, "Worker started", Toast.LENGTH_SHORT).show();
                 } else {
                     if (switchMagicTouch != null) {
@@ -346,11 +567,11 @@ public class OverlayService extends Service {
                             else         doStop();
                         });
                     }
-                    statusTv.setText("Start failed — check Shizuku / binary");
+                    if (statusTv != null) statusTv.setText("Start failed — check Shizuku / binary");
                     Toast.makeText(this, "Start failed", Toast.LENGTH_SHORT).show();
                 }
             } catch (Throwable t) {
-                statusTv.setText("Error: " + t.getMessage());
+                if (statusTv != null) statusTv.setText("Error: " + t.getMessage());
                 Log.e(TAG, "doStart", t);
             }
         });
@@ -359,7 +580,7 @@ public class OverlayService extends Service {
     private void doStop() {
         try { ShizukuHelper.stopWorker(); } catch (Throwable t) { Log.e(TAG, "stopWorker", t); }
         workerRunning = false;
-        statusTv.setText("Disengaged");
+        if (statusTv != null) statusTv.setText("Disengaged");
     }
 
     private void stopWorkerAndSelf() {
@@ -377,21 +598,16 @@ public class OverlayService extends Service {
     }
 
     // ═════════════════════════════════════════════════════════════════
-    //  UI Refresh helpers
-    // ═════════════════════════════════════════════════════════════════
-
-    private void refreshAreaUi() {
-        for (int i = 0; i < areaBtns.length; i++) {
-            boolean active = (i == sensArea);
-            areaBtns[i].setBackgroundResource(
-                    active ? R.drawable.bg_hexagon_red : R.drawable.bg_hexagon_dark);
-            areaBtns[i].setTextColor(active ? 0xFFFFFFFF : 0xFFB0B3BA);
-        }
-    }
-
-    // ═════════════════════════════════════════════════════════════════
     //  Helpers
     // ═════════════════════════════════════════════════════════════════
+
+    private void applyTintColor(ImageView img, int color) {
+        if (img == null) return;
+        if (img.getBackground() != null) {
+            img.getBackground().setColorFilter(color, PorterDuff.Mode.SRC_IN);
+        }
+        img.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+    }
 
     private void stepSens(GamingSeekBar bar, TextView label, int delta, boolean isX) {
         if (bar == null) return;
@@ -401,6 +617,12 @@ public class OverlayService extends Service {
         if (isX) sensX = v; else sensY = v;
         if (label != null) label.setText(String.format(Locale.US, "%.2fx", v));
         if (workerRunning) doStart();
+    }
+
+    private void stepGeneric(GamingSeekBar bar, int delta) {
+        if (bar == null) return;
+        int p = Math.max(0, Math.min(bar.getMax(), bar.getProgress() + delta));
+        bar.setProgress(p);
     }
 
     private int dp(int v) {

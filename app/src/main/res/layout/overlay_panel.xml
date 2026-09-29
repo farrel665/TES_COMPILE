@@ -133,13 +133,13 @@
 						android:orientation="vertical"
 						android:layout_weight="1">
 						<ImageView
-							android:id="@+id/imageview1"
+							android:id="@+id/img_left"
 							android:layout_width="35dp"
 							android:layout_height="25dp"
 							android:src="@drawable/left"
 							android:scaleType="centerCrop" />
 						<TextView
-							android:id="@+id/textview16"
+							android:id="@+id/txt_left"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:layout_marginTop="6dp"
@@ -159,14 +159,14 @@
 						android:orientation="vertical"
 						android:layout_weight="1">
 						<ImageView
-							android:id="@+id/imageview2"
+							android:id="@+id/img_all"
 							android:layout_width="35dp"
 							android:layout_height="25dp"
 							android:src="@drawable/all"
 							android:scaleType="centerCrop"
 							android:tint="#221D19" />
 						<TextView
-							android:id="@+id/textview18"
+							android:id="@+id/txt_all"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:layout_marginTop="5dp"
@@ -185,13 +185,13 @@
 						android:orientation="vertical"
 						android:layout_weight="1">
 						<ImageView
-							android:id="@+id/imageview3"
+							android:id="@+id/img_right"
 							android:layout_width="35dp"
 							android:layout_height="25dp"
 							android:src="@drawable/right"
 							android:scaleType="centerCrop" />
 						<TextView
-							android:id="@+id/textview17"
+							android:id="@+id/txt_right"
 							android:layout_width="wrap_content"
 							android:layout_height="wrap_content"
 							android:layout_marginTop="6dp"
@@ -397,8 +397,8 @@
 							android:textSize="12sp"
 							android:textColor="#796061" />
 					</LinearLayout>
-					<LinearLayout
-						android:id="@+id/linear35"
+					<com.ancore.OctagonCheckBox
+						android:id="@+id/check_tactix"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:padding="8dp"
@@ -457,7 +457,7 @@
 								android:scaleType="centerCrop" />
 						</com.ancore.HexagonLinearLayout>
 						<com.ancore.GamingSeekBar
-							android:id="@+id/linear40"
+							android:id="@+id/seek_strength"
 							android:layout_width="0dp"
 							android:layout_height="wrap_content"
 							android:layout_marginLeft="2dp"
@@ -533,7 +533,7 @@
 								android:scaleType="centerCrop" />
 						</com.ancore.HexagonLinearLayout>
 						<com.ancore.GamingSeekBar
-							android:id="@+id/linear45"
+							android:id="@+id/seek_responsive"
 							android:layout_width="0dp"
 							android:layout_height="wrap_content"
 							android:layout_marginLeft="2dp"
@@ -562,7 +562,7 @@
 						</com.ancore.HexagonLinearLayout>
 					</LinearLayout>
 					<LinearLayout
-						android:id="@+id/linear47"
+						android:id="@+id/info"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"
 						android:layout_marginTop="15dp"
