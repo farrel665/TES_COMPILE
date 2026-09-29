@@ -15,7 +15,7 @@ public class HexagonLinearLayout extends LinearLayout {
     private Path hexagonPath = new Path();
     private Paint fillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    
+
     private boolean hasBgColor = false;
     private boolean showBorder = true;
     private float strokeWidthPx = 0f;
@@ -40,14 +40,14 @@ public class HexagonLinearLayout extends LinearLayout {
         setWillNotDraw(false);
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
-        // FIX: ScrollBarDrawable null di overlay window → NPE saat draw
+        // FIX: disable scrollbar supaya tidak NPE di overlay window
         setVerticalScrollBarEnabled(false);
         setHorizontalScrollBarEnabled(false);
 
         fillPaint.setStyle(Paint.Style.FILL);
         borderPaint.setStyle(Paint.Style.STROKE);
         borderPaint.setColor(Color.BLACK);
-        
+
         setCornerCut(12f);
         setStrokeWidth(1f);
     }
@@ -97,6 +97,14 @@ public class HexagonLinearLayout extends LinearLayout {
         if (showBorder && strokeWidthPx > 0) {
             canvas.drawPath(hexagonPath, borderPaint);
         }
+    }
+
+    // FIX: override supaya tidak NPE kalau scrollbar drawable null
+    @Override
+    protected void onDrawScrollBars(Canvas canvas) {
+        try {
+            super.onDrawScrollBars(canvas);
+        } catch (NullPointerException ignored) {}
     }
 
     public void setCornerCut(float cutInDp) {
@@ -150,9 +158,9 @@ public class HexagonLinearLayout extends LinearLayout {
 
     private float dpToPx(float dp) {
         return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            dp,
-            getContext().getResources().getDisplayMetrics()
+                TypedValue.COMPLEX_UNIT_DIP,
+                dp,
+                getContext().getResources().getDisplayMetrics()
         );
     }
 }
