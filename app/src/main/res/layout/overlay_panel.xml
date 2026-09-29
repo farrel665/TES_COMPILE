@@ -91,6 +91,7 @@
 						android:id="@+id/linear18"
 						android:layout_width="0dp"
 						android:layout_height="wrap_content"
+						android:layout_marginRight="9dp"
 						android:orientation="vertical"
 						android:layout_weight="1">
 						<TextView
@@ -115,11 +116,7 @@
 						android:id="@+id/switch_magic_touch"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
-						android:layout_marginLeft="9dp"
-						android:textSize="12sp"
-						android:layout_marginStart="10dp"
-						android:thumbTint="#E61F33"
-						android:trackTint="#38000A" />
+						android:textSize="12sp" />
 				</LinearLayout>
 				<TextView
 					android:id="@+id/textview15"
@@ -142,7 +139,6 @@
 						android:layout_height="wrap_content"
 						android:layout_marginRight="4dp"
 						android:padding="8dp"
-						android:background="#403B3D"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="vertical"
 						android:layout_weight="1">
@@ -168,7 +164,6 @@
 						android:layout_marginLeft="4dp"
 						android:layout_marginRight="4dp"
 						android:padding="8dp"
-						android:background="#E61F33"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="vertical"
 						android:layout_weight="1">
@@ -194,7 +189,6 @@
 						android:layout_height="wrap_content"
 						android:layout_marginLeft="4dp"
 						android:padding="8dp"
-						android:background="#403B3D"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="vertical"
 						android:layout_weight="1">
@@ -251,7 +245,6 @@
 						android:layout_height="wrap_content"
 						android:layout_marginRight="6dp"
 						android:padding="8dp"
-						android:background="#733516"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="vertical">
 						<ImageView
@@ -280,7 +273,6 @@
 						android:layout_marginLeft="6dp"
 						android:layout_marginRight="8dp"
 						android:padding="8dp"
-						android:background="#733516"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="vertical">
 						<ImageView
@@ -335,7 +327,6 @@
 						android:layout_height="wrap_content"
 						android:layout_marginRight="6dp"
 						android:padding="8dp"
-						android:background="#733516"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="vertical">
 						<ImageView
@@ -364,7 +355,6 @@
 						android:layout_marginLeft="6dp"
 						android:layout_marginRight="8dp"
 						android:padding="8dp"
-						android:background="#733516"
 						android:gravity="center_horizontal|center_vertical"
 						android:orientation="vertical">
 						<ImageView
@@ -413,8 +403,8 @@
 					</LinearLayout>
 					<com.ancore.OctagonCheckBox
 						android:id="@+id/check_tactix"
-						android:layout_width="wrap_content"
-						android:layout_height="wrap_content"
+						android:layout_width="30dp"
+						android:layout_height="30dp"
 						android:padding="8dp"
 						android:orientation="vertical" />
 				</LinearLayout>
@@ -460,7 +450,6 @@
 							android:layout_height="wrap_content"
 							android:layout_marginRight="6dp"
 							android:padding="8dp"
-							android:background="#733516"
 							android:gravity="center_horizontal|center_vertical"
 							android:orientation="vertical">
 							<ImageView
@@ -488,7 +477,6 @@
 							android:layout_height="wrap_content"
 							android:layout_marginLeft="6dp"
 							android:padding="8dp"
-							android:background="#733516"
 							android:gravity="center_horizontal|center_vertical"
 							android:orientation="vertical">
 							<ImageView
@@ -536,7 +524,6 @@
 							android:layout_height="wrap_content"
 							android:layout_marginRight="6dp"
 							android:padding="8dp"
-							android:background="#733516"
 							android:gravity="center_horizontal|center_vertical"
 							android:orientation="vertical">
 							<ImageView
@@ -564,7 +551,6 @@
 							android:layout_height="wrap_content"
 							android:layout_marginLeft="6dp"
 							android:padding="8dp"
-							android:background="#733516"
 							android:gravity="center_horizontal|center_vertical"
 							android:orientation="vertical">
 							<ImageView
