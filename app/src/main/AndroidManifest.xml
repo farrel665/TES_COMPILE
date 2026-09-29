@@ -34,6 +34,12 @@
                 android:value="floating_control_panel" />
         </service>
 
+        <!-- WAJIB: Shizuku butuh ini untuk spawn UserService -->
+        <service
+            android:name=".UserService"
+            android:exported="true"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"

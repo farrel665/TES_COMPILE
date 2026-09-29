@@ -1,4 +1,3 @@
-// app/src/main/java/com/ancore/ShizukuHelper.java
 package com.ancore;
 
 import android.content.ComponentName;
@@ -18,26 +17,28 @@ public final class ShizukuHelper {
     private static final String TAG = "ancore_shizuku";
 
     private static IUserService sService;
-    private static boolean sBound;
+    private static boolean sBound = false;
     private static final Object LOCK = new Object();
 
-    // ── Callback setelah bound ────────────────────────────────────────
     public interface OnReadyCallback {
         void onReady(boolean success);
     }
 
+    // List callback disimpan di luar lock supaya dispatch tidak deadlock
     private static final List<OnReadyCallback> sPendingCallbacks = new ArrayList<>();
 
     private static void dispatchReady(boolean success) {
+        List<OnReadyCallback> toCall;
         synchronized (LOCK) {
-            for (OnReadyCallback cb : sPendingCallbacks) {
-                try { cb.onReady(success); } catch (Throwable ignored) {}
-            }
+            toCall = new ArrayList<>(sPendingCallbacks);
             sPendingCallbacks.clear();
+        }
+        // Panggil callback DI LUAR synchronized — cegah deadlock
+        for (OnReadyCallback cb : toCall) {
+            try { cb.onReady(success); } catch (Throwable ignored) {}
         }
     }
 
-    // ── ServiceConnection ─────────────────────────────────────────────
     private static final ServiceConnection CONN = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -52,7 +53,7 @@ public final class ShizukuHelper {
             } catch (Throwable t) {
                 Log.w(TAG, "ping failed", t);
             }
-            dispatchReady(true);
+            dispatchReady(true); // di luar LOCK — aman
         }
 
         @Override
@@ -67,22 +68,19 @@ public final class ShizukuHelper {
 
     private static final Shizuku.UserServiceArgs ARGS =
             new Shizuku.UserServiceArgs(
-                    new ComponentName("com.ancore", UserService.class.getName()))
+                    new ComponentName("com.ancore", "com.ancore.UserService"))
                     .daemon(false)
                     .processNameSuffix("ancore_svc")
                     .debuggable(false)
                     .version(1);
 
-    // ── init ──────────────────────────────────────────────────────────
-    /**
-     * Inisialisasi Shizuku. Kalau sudah bound, langsung panggil callback.
-     * Kalau belum, binding dulu lalu callback dipanggil setelah selesai.
-     */
     public static void init(OnReadyCallback callback) {
         synchronized (LOCK) {
-            if (callback != null && sBound && sService != null) {
-                // Sudah siap, langsung callback
-                callback.onReady(true);
+            if (sBound && sService != null) {
+                // Sudah ready, langsung callback di luar lock
+                if (callback != null) {
+                    try { callback.onReady(true); } catch (Throwable ignored) {}
+                }
                 return;
             }
             if (callback != null) {
@@ -112,7 +110,6 @@ public final class ShizukuHelper {
         }
     }
 
-    // Overload tanpa callback (dipanggil dari BootstrapActivity)
     public static void init() {
         init(null);
     }
@@ -127,7 +124,6 @@ public final class ShizukuHelper {
         }
     }
 
-    // ── Worker control ────────────────────────────────────────────────
     public static boolean startWorker(String binaryPath, int presetIdx,
                                       float sensX, float sensY,
                                       int area, int tactix) {
@@ -140,15 +136,6 @@ public final class ShizukuHelper {
                 return false;
             }
         }
-    }
-
-    public static boolean startWorker(String binaryPath, int presetIdx,
-                                      float sensX, float sensY) {
-        return startWorker(binaryPath, presetIdx, sensX, sensY, 1, 0);
-    }
-
-    public static boolean startWorker(String binaryPath, int presetIdx) {
-        return startWorker(binaryPath, presetIdx, 2.0f, 2.0f, 1, 0);
     }
 
     public static void stopWorker() {
@@ -166,53 +153,51 @@ public final class ShizukuHelper {
         }
     }
 
-    // ── Binder Proxy ──────────────────────────────────────────────────
-    // Bagian dalam ShizukuHelper.java — ganti class UserServiceProxy
-  private static class UserServiceProxy implements IUserService {
-    private final android.os.IBinder remote;
+    private static class UserServiceProxy implements IUserService {
+        private final IBinder remote;
 
-    UserServiceProxy(android.os.IBinder remote) {
-        this.remote = remote;
-    }
+        UserServiceProxy(IBinder remote) {
+            this.remote = remote;
+        }
 
-    @Override
-    public boolean startWorker(String srcPath, int presetIdx,
-                               float sensX, float sensY,
-                               int area, int tactix) throws RemoteException {
-        Parcel data = Parcel.obtain(), reply = Parcel.obtain();
-        try {
-            data.writeInterfaceToken(IUserService.DESCRIPTOR);
-            data.writeString(srcPath);
-            data.writeInt(presetIdx);
-            data.writeFloat(sensX);
-            data.writeFloat(sensY);
-            data.writeInt(area);
-            data.writeInt(tactix);
-            remote.transact(1, data, reply, 0);
-            reply.readException();
-            return reply.readInt() != 0;
-        } finally { data.recycle(); reply.recycle(); }
-    }
+        @Override
+        public boolean startWorker(String srcPath, int presetIdx,
+                                   float sensX, float sensY,
+                                   int area, int tactix) throws RemoteException {
+            Parcel data = Parcel.obtain(), reply = Parcel.obtain();
+            try {
+                data.writeInterfaceToken(IUserService.DESCRIPTOR);
+                data.writeString(srcPath);
+                data.writeInt(presetIdx);
+                data.writeFloat(sensX);
+                data.writeFloat(sensY);
+                data.writeInt(area);
+                data.writeInt(tactix);
+                remote.transact(1, data, reply, 0);
+                reply.readException();
+                return reply.readInt() != 0;
+            } finally { data.recycle(); reply.recycle(); }
+        }
 
-    @Override
-    public void stopWorker() throws RemoteException {
-        Parcel data = Parcel.obtain(), reply = Parcel.obtain();
-        try {
-            data.writeInterfaceToken(IUserService.DESCRIPTOR);
-            remote.transact(2, data, reply, 0);
-            reply.readException();
-        } finally { data.recycle(); reply.recycle(); }
-    }
+        @Override
+        public void stopWorker() throws RemoteException {
+            Parcel data = Parcel.obtain(), reply = Parcel.obtain();
+            try {
+                data.writeInterfaceToken(IUserService.DESCRIPTOR);
+                remote.transact(2, data, reply, 0);
+                reply.readException();
+            } finally { data.recycle(); reply.recycle(); }
+        }
 
-    @Override
-    public String ping() throws RemoteException {
-        Parcel data = Parcel.obtain(), reply = Parcel.obtain();
-        try {
-            data.writeInterfaceToken(IUserService.DESCRIPTOR);
-            remote.transact(3, data, reply, 0);
-            reply.readException();
-            return reply.readString();
-        } finally { data.recycle(); reply.recycle(); }
+        @Override
+        public String ping() throws RemoteException {
+            Parcel data = Parcel.obtain(), reply = Parcel.obtain();
+            try {
+                data.writeInterfaceToken(IUserService.DESCRIPTOR);
+                remote.transact(3, data, reply, 0);
+                reply.readException();
+                return reply.readString();
+            } finally { data.recycle(); reply.recycle(); }
+        }
     }
-  }
 }
