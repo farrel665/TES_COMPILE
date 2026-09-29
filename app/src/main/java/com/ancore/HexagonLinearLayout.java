@@ -97,8 +97,14 @@ public class HexagonLinearLayout extends LinearLayout {
         }
     }
 
-    // onDrawScrollBars DIHAPUS method ini final di API 33+
-    // Tidak perlu di-override karena scrollbar sudah di-disable di init()
+    @Override
+    public void onDrawForeground(Canvas canvas) {
+        try {
+            super.onDrawForeground(canvas);
+        } catch (NullPointerException ignored) {
+            // Bug AOSP: ScrollBarDrawable null di overlay window
+        }
+    }
 
     public void setCornerCut(float cutInDp) {
         this.cornerCutPx = dpToPx(cutInDp);

@@ -1,6 +1,7 @@
 package com.ancore;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.widget.ScrollView;
 
@@ -27,6 +28,12 @@ public class SafeScrollView extends ScrollView {
         setOverScrollMode(OVER_SCROLL_NEVER);
     }
 
-    // onDrawScrollBars DIHAPUS — method ini final di API 33+
-    // Tidak perlu di-override karena scrollbar sudah di-disable di init()
+    @Override
+    public void onDrawForeground(Canvas canvas) {
+        try {
+            super.onDrawForeground(canvas);
+        } catch (NullPointerException ignored) {
+            // Bug AOSP: ScrollBarDrawable null di overlay window
+        }
+    }
 }
