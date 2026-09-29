@@ -40,6 +40,10 @@ public class HexagonLinearLayout extends LinearLayout {
         setWillNotDraw(false);
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
+        // FIX: ScrollBarDrawable null di overlay window → NPE saat draw
+        setVerticalScrollBarEnabled(false);
+        setHorizontalScrollBarEnabled(false);
+
         fillPaint.setStyle(Paint.Style.FILL);
         borderPaint.setStyle(Paint.Style.STROKE);
         borderPaint.setColor(Color.BLACK);
