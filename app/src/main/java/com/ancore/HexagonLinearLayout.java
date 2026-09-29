@@ -39,8 +39,6 @@ public class HexagonLinearLayout extends LinearLayout {
     private void init(Context context) {
         setWillNotDraw(false);
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-
-        // FIX: disable scrollbar supaya tidak NPE di overlay window
         setVerticalScrollBarEnabled(false);
         setHorizontalScrollBarEnabled(false);
 
@@ -99,13 +97,8 @@ public class HexagonLinearLayout extends LinearLayout {
         }
     }
 
-    // FIX: override supaya tidak NPE kalau scrollbar drawable null
-    @Override
-    protected void onDrawScrollBars(Canvas canvas) {
-        try {
-            super.onDrawScrollBars(canvas);
-        } catch (NullPointerException ignored) {}
-    }
+    // onDrawScrollBars DIHAPUS method ini final di API 33+
+    // Tidak perlu di-override karena scrollbar sudah di-disable di init()
 
     public void setCornerCut(float cutInDp) {
         this.cornerCutPx = dpToPx(cutInDp);
