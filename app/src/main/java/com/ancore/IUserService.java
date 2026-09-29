@@ -7,15 +7,15 @@ public interface IUserService extends IInterface {
     String DESCRIPTOR = "com.ancore.IUserService";
 
     /**
-     * Stage + exec worker.
-     * @param presetIdx 0 Linear / 1 Accel / 2 Decel
-     * @param area      0 Left / 1 All / 2 Right
-     * @param tactix    0 off / 1 on (deadzone + flick boost)
+     * Starts the native worker through the Shizuku UserService.
+     * area: 0 Left / 1 All / 2 Right.
+     * tactix: 0 off / 1 on.
+     * strength/responsiveness are normalized 0..100 values.
      */
     boolean startWorker(String srcPath, int presetIdx, float sensX, float sensY,
-                        int area, int tactix) throws RemoteException;
+                        int area, int tactix, float strength,
+                        float responsiveness) throws RemoteException;
 
     void stopWorker() throws RemoteException;
-
     String ping() throws RemoteException;
 }

@@ -12,97 +12,74 @@ import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
 public class GamingSwitch extends View {
-
-    // Interface Listener untuk mendeteksi perubahan status switch
     public interface OnCheckedChangeListener {
         void onCheckedChanged(GamingSwitch switchView, boolean isChecked);
     }
 
-    private boolean isChecked = true;
+    // Default MUST be OFF.
+    private boolean isChecked = false;
     private OnCheckedChangeListener listener;
 
-    private Paint trackPaint;
-    private Paint thumbPaint;
-    private Path trackPath;
-    private Path thumbPath;
+    private final Paint trackPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint thumbPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Path trackPath = new Path();
+    private final Path thumbPath = new Path();
 
-    // Warna UI sesuai dengan contoh gambar
-    private int colorTrackOn = Color.parseColor("#E51010");   // Merah menyala[span_2](start_span)[span_2](end_span)[span_3](start_span)[span_3](end_span)
-    private int colorThumbOn = Color.parseColor("#1A0505");   // Gelap / Hitam[span_4](start_span)[span_4](end_span)[span_5](start_span)[span_5](end_span)
-    private int colorTrackOff = Color.parseColor("#2B2B2B");  // Abu-abu gelap
-    private int colorThumbOff = Color.parseColor("#777777");  // Abu-abu sedang
+    private int colorTrackOn = Color.parseColor("#E51010");
+    private int colorThumbOn = Color.parseColor("#1A0505");
+    private int colorTrackOff = Color.parseColor("#2B2B2B");
+    private int colorThumbOff = Color.parseColor("#777777");
 
-    // Progress animasi (0.0f = OFF / Kiri, 1.0f = ON / Kanan)
-    private float animatedValue = 1.0f;
+    // 0.0 = OFF, 1.0 = ON.
+    private float animatedValue = 0.0f;
     private ValueAnimator animator;
 
-    public GamingSwitch(Context context) {
-        super(context);
-        init();
-    }
-
-    public GamingSwitch(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init();
-    }
-
+    public GamingSwitch(Context context) { super(context); init(); }
+    public GamingSwitch(Context context, AttributeSet attrs) { super(context, attrs); init(); }
     public GamingSwitch(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init();
+        super(context, attrs, defStyleAttr); init();
     }
 
     private void init() {
-        trackPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        thumbPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        trackPath = new Path();
-        thumbPath = new Path();
-
+        setClickable(true);
         setOnClickListener(v -> toggle());
+        setContentDescription("Active switch");
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        // Ukuran default jika tidak ditentukan di XML (60dp x 32dp)
-        int defaultWidth = (int) dpToPx(60);
-        int defaultHeight = (int) dpToPx(32);
-
-        int width = resolveSize(defaultWidth, widthMeasureSpec);
-        int height = resolveSize(defaultHeight, heightMeasureSpec);
-
-        setMeasuredDimension(width, height);
+        int defaultWidth = (int) dpToPx(68);
+        int defaultHeight = (int) dpToPx(34);
+        setMeasuredDimension(resolveSize(defaultWidth, widthMeasureSpec),
+                resolveSize(defaultHeight, heightMeasureSpec));
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
         float width = getWidth();
         float height = getHeight();
-        float padding = height * 0.12f; // Padding dalam untuk thumb
-        float cutSize = height * 0.25f; // Ukuran potongan sudut (chamfer)
+        float padding = height * 0.12f;
+        float cutSize = height * 0.25f;
 
-        // 1. Gambar Track (Background)
-        trackPaint.setColor(isChecked ? colorTrackOn : colorTrackOff); //[span_6](start_span)[span_6](end_span)[span_7](start_span)[span_7](end_span)
+        trackPaint.setColor(isChecked ? colorTrackOn : colorTrackOff);
         createChamferedPath(trackPath, 0, 0, width, height, cutSize);
         canvas.drawPath(trackPath, trackPaint);
 
-        // 2. Hitung Posisi Thumb (Toggle Inner Box)
         float thumbSize = height - (padding * 2);
         float minX = padding;
         float maxX = width - padding - thumbSize;
         float currentX = minX + (maxX - minX) * animatedValue;
 
-        // 3. Gambar Thumb
-        thumbPaint.setColor(isChecked ? colorThumbOn : colorThumbOff); //[span_8](start_span)[span_8](end_span)[span_9](start_span)[span_9](end_span)
+        thumbPaint.setColor(isChecked ? colorThumbOn : colorThumbOff);
         float thumbCut = thumbSize * 0.25f;
-        createChamferedPath(thumbPath, currentX, padding, currentX + thumbSize, padding + thumbSize, thumbCut);
+        createChamferedPath(thumbPath, currentX, padding,
+                currentX + thumbSize, padding + thumbSize, thumbCut);
         canvas.drawPath(thumbPath, thumbPaint);
     }
 
-    /**
-     * Membuat Path persegi dengan sudut terpotong 45 derajat (Chamfer)
-     */
-    private void createChamferedPath(Path path, float left, float top, float right, float bottom, float cut) {
+    private void createChamferedPath(Path path, float left, float top,
+                                     float right, float bottom, float cut) {
         path.reset();
         path.moveTo(left + cut, top);
         path.lineTo(right - cut, top);
@@ -115,35 +92,22 @@ public class GamingSwitch extends View {
         path.close();
     }
 
-    public void toggle() {
-        setChecked(!isChecked);
-    }
-
-    public boolean isChecked() {
-        return isChecked;
-    }
-
-    public void setChecked(boolean checked) {
-        setChecked(checked, true);
-    }
+    public void toggle() { setChecked(!isChecked); }
+    public boolean isChecked() { return isChecked; }
+    public void setChecked(boolean checked) { setChecked(checked, true); }
 
     public void setChecked(boolean checked, boolean animate) {
-        if (this.isChecked == checked && animator != null && !animator.isRunning()) {
+        if (this.isChecked == checked && (animator == null || !animator.isRunning())) {
+            animatedValue = checked ? 1.0f : 0.0f;
+            invalidate();
             return;
         }
-
         this.isChecked = checked;
-
-        if (listener != null) {
-            listener.onCheckedChanged(this, isChecked);
-        }
+        if (listener != null) listener.onCheckedChanged(this, isChecked);
 
         float targetValue = checked ? 1.0f : 0.0f;
-
         if (animate) {
-            if (animator != null && animator.isRunning()) {
-                animator.cancel();
-            }
+            if (animator != null && animator.isRunning()) animator.cancel();
             animator = ValueAnimator.ofFloat(animatedValue, targetValue);
             animator.setDuration(200);
             animator.setInterpolator(new DecelerateInterpolator());
@@ -163,10 +127,7 @@ public class GamingSwitch extends View {
     }
 
     private float dpToPx(float dp) {
-        return TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                dp,
-                getResources().getDisplayMetrics()
-        );
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
+                getResources().getDisplayMetrics());
     }
 }
