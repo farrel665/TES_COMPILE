@@ -16,6 +16,7 @@
 		android:layout_width="325dp"
 		android:layout_height="507dp"
 		android:padding="16dp"
+		android:background="#221D19"
 		android:orientation="vertical">
 		<ScrollView
 			android:id="@+id/vscroll1"
@@ -320,7 +321,7 @@
 					android:layout_marginTop="9dp"
 					android:gravity="center_vertical"
 					android:orientation="horizontal">
-					<LinearLayout
+					<com.ancore.HexagonLinearLayout
 						android:id="@+id/btn_sens_y_minus"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
@@ -334,7 +335,7 @@
 							android:layout_height="17dp"
 							android:src="@drawable/min"
 							android:scaleType="centerCrop" />
-					</LinearLayout>
+					</com.ancore.HexagonLinearLayout>
 					<com.ancore.GamingSeekBar
 						android:id="@+id/seek_sens_y"
 						android:layout_width="0dp"
@@ -347,7 +348,7 @@
 						android:progressTint="#E61F33"
 						android:thumbTint="#E61F33"
 						android:progressBackgroundTint="#252530" />
-					<LinearLayout
+					<com.ancore.HexagonLinearLayout
 						android:id="@+id/btn_sens_y_plus"
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
@@ -362,7 +363,7 @@
 							android:layout_height="17dp"
 							android:src="@drawable/add"
 							android:scaleType="centerCrop" />
-					</LinearLayout>
+					</com.ancore.HexagonLinearLayout>
 					<ImageView
 						android:id="@+id/btn_reset_y"
 						android:layout_width="28dp"
