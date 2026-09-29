@@ -7,10 +7,10 @@
 	android:background="@android:color/transparent">
 	<ImageView
 		android:id="@+id/bubble"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
+		android:layout_width="38dp"
+		android:layout_height="38dp"
 		android:src="@drawable/default_image"
-		android:scaleType="center" />
+		android:scaleType="centerCrop" />
 	<com.ancore.HexagonLinearLayout
 		android:id="@+id/Panel"
 		android:layout_width="325dp"
@@ -53,7 +53,7 @@
 							android:layout_width="20dp"
 							android:layout_height="20dp"
 							android:src="@drawable/min"
-							android:scaleType="centerCrop" />
+							android:scaleType="fitXY" />
 					</LinearLayout>
 					<LinearLayout
 						android:id="@+id/linear20"
@@ -252,7 +252,7 @@
 							android:layout_width="17dp"
 							android:layout_height="17dp"
 							android:src="@drawable/min"
-							android:scaleType="centerCrop" />
+							android:scaleType="fitXY" />
 					</com.ancore.HexagonLinearLayout>
 					<com.ancore.GamingSeekBar
 						android:id="@+id/seek_sens_x"
@@ -334,7 +334,7 @@
 							android:layout_width="17dp"
 							android:layout_height="17dp"
 							android:src="@drawable/min"
-							android:scaleType="centerCrop" />
+							android:scaleType="fitXY" />
 					</com.ancore.HexagonLinearLayout>
 					<com.ancore.GamingSeekBar
 						android:id="@+id/seek_sens_y"
@@ -457,7 +457,7 @@
 								android:layout_width="17dp"
 								android:layout_height="17dp"
 								android:src="@drawable/min"
-								android:scaleType="centerCrop" />
+								android:scaleType="fitXY" />
 						</com.ancore.HexagonLinearLayout>
 						<com.ancore.GamingSeekBar
 							android:id="@+id/seek_strength"
@@ -531,7 +531,7 @@
 								android:layout_width="17dp"
 								android:layout_height="17dp"
 								android:src="@drawable/min"
-								android:scaleType="centerCrop" />
+								android:scaleType="fitXY" />
 						</com.ancore.HexagonLinearLayout>
 						<com.ancore.GamingSeekBar
 							android:id="@+id/seek_responsive"
