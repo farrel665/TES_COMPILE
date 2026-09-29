@@ -209,7 +209,7 @@ public class UserService extends Binder implements IUserService {
     }
 
     // ─────────────────────────────────────────────────────────────────
-    //  findTouchDevice — cari /dev/input/eventX yang MT touch
+    //  findTouchDevice cari /dev/input/eventX yang MT touch
     // ─────────────────────────────────────────────────────────────────
 
     /**
