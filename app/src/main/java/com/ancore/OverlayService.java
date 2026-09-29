@@ -142,13 +142,13 @@ public class OverlayService extends Service {
         if (imgResetY != null) imgResetY.setOnClickListener(v -> resetY(sy));
 
         if (checkTactix != null) {
-            checkTactix.setChecked(false, false);
+            checkTactix.setChecked(false);
             checkTactix.setOnCheckedChangeListener((button, checked) -> {
                 tactix = checked;
                 restartIfRunning();
             });
         }
-        if (checkGlobalSens != null) checkGlobalSens.setChecked(true, false);
+        if (checkGlobalSens != null) checkGlobalSens.setChecked(true);
 
         if (seekStrength != null) {
             seekStrength.setMin(0); seekStrength.setMax(100); seekStrength.setStep(1);
