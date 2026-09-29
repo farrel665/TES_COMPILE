@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-    namespace = "com.rizxbyte.inject"
+    namespace = "com.ancore"
     compileSdk = 34
     ndkVersion = "25.1.8937393"
 
     defaultConfig {
-        applicationId = "com.rizxbyte.inject"
+        applicationId = "com.ancore"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
@@ -50,7 +50,7 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
-            keepDebugSymbols += "**/librizxbyteengine.so"
+            keepDebugSymbols += "**/libinput_ancore.so"
         }
     }
 }
