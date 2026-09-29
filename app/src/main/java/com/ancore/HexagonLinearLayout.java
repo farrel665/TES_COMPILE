@@ -97,6 +97,17 @@ public class HexagonLinearLayout extends LinearLayout {
         }
     }
 
+    // Tangkap NPE dari child view manapun di dalam hierarki ini
+    @Override
+    protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
+        try {
+            return super.drawChild(canvas, child, drawingTime);
+        } catch (NullPointerException ignored) {
+            // Bug AOSP: ScrollBarDrawable null di overlay window
+            return false;
+        }
+    }
+
     @Override
     public void onDrawForeground(Canvas canvas) {
         try {
