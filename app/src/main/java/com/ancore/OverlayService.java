@@ -30,9 +30,6 @@ import android.widget.Toast;
 
 import java.util.Locale;
 
-/**
- * System overlay floating panel — lives outside the app Activity.
- */
 public class OverlayService extends Service {
 
     private static final String TAG   = "ancore_overlay";
@@ -50,28 +47,24 @@ public class OverlayService extends Service {
     private final Handler main = new Handler(Looper.getMainLooper());
 
     // ── State ─────────────────────────────────────────────────────────
-    /** 0=Left  1=All  2=Right */
     private int sensArea = 1;
-    /** Curve fixed to Decel (2) */
     private static final int CURVE_MODE = 2;
-    /** Default sensitivity = 1.00x */
     private float sensX = 1.00f;
     private float sensY = 1.00f;
-    /** Magic Touch toggle */
-    private boolean tactix        = false;
-    private boolean workerRunning = false;
-    private boolean panelVisible  = true;
+    private boolean tactix          = false;
+    private boolean workerRunning   = false;
+    private boolean panelVisible    = true;
     private boolean isSyncingTactix = false;
 
     // ── View references ───────────────────────────────────────────────
-    private TextView             statusTv;
-    private TextView             valX, valY, valStrength, valResponsive;
-    private TextView             txtLeft, txtAll, txtRight;
-    private ImageView            imgLeft, imgAll, imgRight, btnHide;
-    private HexagonLinearLayout  areaLeft, areaAll, areaRight;
-    private GamingSwitch         switchMagicTouch;
-    private OctagonCheckBox      checkTactix;
-    private GamingSeekBar        sx, sy, seekStrength, seekResponsive;
+    private TextView            statusTv;
+    private TextView            valX, valY, valStrength, valResponsive;
+    private TextView            txtLeft, txtAll, txtRight;
+    private ImageView           imgLeft, imgAll, imgRight, btnHide;
+    private HexagonLinearLayout areaLeft, areaAll, areaRight;
+    private GamingSwitch        switchMagicTouch;
+    private OctagonCheckBox     checkTactix;
+    private GamingSeekBar       sx, sy, seekStrength, seekResponsive;
 
     // ── Drag state ────────────────────────────────────────────────────
     private int startX, startY, startTouchX, startTouchY;
@@ -173,20 +166,20 @@ public class OverlayService extends Service {
         txtAll   = root.findViewById(R.id.txt_all);
         txtRight = root.findViewById(R.id.txt_right);
 
-        HexagonLinearLayout btnSensXMinus     = root.findViewById(R.id.btn_sens_x_minus);
-        HexagonLinearLayout btnSensXPlus      = root.findViewById(R.id.btn_sens_x_plus);
-        HexagonLinearLayout btnSensYMinus     = root.findViewById(R.id.btn_sens_y_minus);
-        HexagonLinearLayout btnSensYPlus      = root.findViewById(R.id.btn_sens_y_plus);
-        HexagonLinearLayout btnStrengthMinus  = root.findViewById(R.id.btn_strength_minus);
-        HexagonLinearLayout btnStrengthPlus   = root.findViewById(R.id.btn_strength_plus);
-        HexagonLinearLayout btnResponsiveMinus= root.findViewById(R.id.btn_responsive_minus);
-        HexagonLinearLayout btnResponsivePlus = root.findViewById(R.id.btn_responsive_plus);
+        HexagonLinearLayout btnSensXMinus      = root.findViewById(R.id.btn_sens_x_minus);
+        HexagonLinearLayout btnSensXPlus       = root.findViewById(R.id.btn_sens_x_plus);
+        HexagonLinearLayout btnSensYMinus      = root.findViewById(R.id.btn_sens_y_minus);
+        HexagonLinearLayout btnSensYPlus       = root.findViewById(R.id.btn_sens_y_plus);
+        HexagonLinearLayout btnStrengthMinus   = root.findViewById(R.id.btn_strength_minus);
+        HexagonLinearLayout btnStrengthPlus    = root.findViewById(R.id.btn_strength_plus);
+        HexagonLinearLayout btnResponsiveMinus = root.findViewById(R.id.btn_responsive_minus);
+        HexagonLinearLayout btnResponsivePlus  = root.findViewById(R.id.btn_responsive_plus);
 
-        ImageView btnResetX = root.findViewById(R.id.btn_reset_x);
-        ImageView btnResetY = root.findViewById(R.id.btn_reset_y);
-        LinearLayout info   = root.findViewById(R.id.info);
+        ImageView    btnResetX = root.findViewById(R.id.btn_reset_x);
+        ImageView    btnResetY = root.findViewById(R.id.btn_reset_y);
+        LinearLayout info      = root.findViewById(R.id.info);
 
-        // ── Panel & Button Styling Setup ─────────────────────────────
+        // ── Panel & Button Styling ────────────────────────────────────
         if (panel != null) {
             panel.setBackgroundColor(Color.parseColor("#221D19"));
             panel.setCornerCut(11f);
@@ -220,7 +213,7 @@ public class OverlayService extends Service {
         setupHexagonButton(btnStrengthMinus);
         setupHexagonButton(btnStrengthPlus);
 
-        // ── Hide & Show Listeners ────────────────────────────────────
+        // ── Hide / Show ───────────────────────────────────────────────
         if (btnHide != null) {
             btnHide.setOnClickListener(v -> hideToBubble());
         }
@@ -231,11 +224,12 @@ public class OverlayService extends Service {
             });
         }
 
-        // ── Sensitivity Area Click Listeners ─────────────────────────
+        // ── Area buttons ──────────────────────────────────────────────
         if (areaLeft != null) {
             areaLeft.setOnClickListener(_view -> {
                 sensArea = 0;
-                updateAreaUI(areaLeft, areaAll, areaRight, imgLeft, imgAll, imgRight, txtLeft, txtAll, txtRight);
+                updateAreaUI(areaLeft, areaAll, areaRight,
+                        imgLeft, imgAll, imgRight, txtLeft, txtAll, txtRight);
                 if (workerRunning) doStart();
             });
         }
@@ -243,7 +237,8 @@ public class OverlayService extends Service {
         if (areaAll != null) {
             areaAll.setOnClickListener(_view -> {
                 sensArea = 1;
-                updateAreaUI(areaAll, areaLeft, areaRight, imgAll, imgLeft, imgRight, txtAll, txtLeft, txtRight);
+                updateAreaUI(areaAll, areaLeft, areaRight,
+                        imgAll, imgLeft, imgRight, txtAll, txtLeft, txtRight);
                 if (workerRunning) doStart();
             });
         }
@@ -251,12 +246,13 @@ public class OverlayService extends Service {
         if (areaRight != null) {
             areaRight.setOnClickListener(_view -> {
                 sensArea = 2;
-                updateAreaUI(areaRight, areaLeft, areaAll, imgRight, imgLeft, imgAll, txtRight, txtLeft, txtAll);
+                updateAreaUI(areaRight, areaLeft, areaAll,
+                        imgRight, imgLeft, imgAll, txtRight, txtLeft, txtAll);
                 if (workerRunning) doStart();
             });
         }
 
-        // ── Reset Buttons ─────────────────────────────────────────────
+        // ── Reset buttons ─────────────────────────────────────────────
         if (btnResetX != null) {
             btnResetX.setOnClickListener(_view -> {
                 if (sx != null) sx.setProgress(0);
@@ -275,7 +271,7 @@ public class OverlayService extends Service {
             });
         }
 
-        // ── GradientDrawable Info ──────────────────────────────────────
+        // ── Info background ───────────────────────────────────────────
         if (info != null) {
             info.setBackground(new GradientDrawable() {
                 public GradientDrawable getIns(int a, int b) {
@@ -286,19 +282,21 @@ public class OverlayService extends Service {
             }.getIns(9, 0xFF403B3D));
         }
 
-        // ── Magic Touch Switch & CheckBox Dual Sync ────────────────────
+        // ── Magic Touch Switch & CheckBox ──────────────────────────────
         switchMagicTouch = root.findViewById(R.id.switch_magic_touch);
         checkTactix      = root.findViewById(R.id.check_tactix);
 
         if (switchMagicTouch != null) {
-            switchMagicTouch.setOnCheckedChangeListener((btn, checked) -> setTactixState(checked, true));
+            switchMagicTouch.setOnCheckedChangeListener((btn, checked) ->
+                    setTactixState(checked, true));
         }
 
         if (checkTactix != null) {
-            checkTactix.setOnCheckedChangeListener((b, checked) -> setTactixState(checked, true));
+            checkTactix.setOnCheckedChangeListener((b, checked) ->
+                    setTactixState(checked, true));
         }
 
-        // ── Custom GamingSeekBars ──────────────────────────────────────
+        // ── SeekBars ──────────────────────────────────────────────────
         sx = root.findViewById(R.id.seek_sens_x);
         sy = root.findViewById(R.id.seek_sens_y);
 
@@ -324,13 +322,11 @@ public class OverlayService extends Service {
             });
         }
 
-        // ── Sensitivity Step − / + ─────────────────────────────────────
         if (btnSensXMinus != null) btnSensXMinus.setOnClickListener(v -> stepSens(sx, valX, -10, true));
-        if (btnSensXPlus != null)  btnSensXPlus.setOnClickListener(v -> stepSens(sx, valX, +10, true));
+        if (btnSensXPlus  != null) btnSensXPlus .setOnClickListener(v -> stepSens(sx, valX, +10, true));
         if (btnSensYMinus != null) btnSensYMinus.setOnClickListener(v -> stepSens(sy, valY, -10, false));
-        if (btnSensYPlus != null)  btnSensYPlus.setOnClickListener(v -> stepSens(sy, valY, +10, false));
+        if (btnSensYPlus  != null) btnSensYPlus .setOnClickListener(v -> stepSens(sy, valY, +10, false));
 
-        // ── Strength & Responsiveness Seekbars ────────────────────────
         seekStrength   = root.findViewById(R.id.seek_strength);
         seekResponsive = root.findViewById(R.id.seek_responsive);
 
@@ -352,23 +348,21 @@ public class OverlayService extends Service {
             });
         }
 
-        if (btnStrengthMinus != null)   btnStrengthMinus.setOnClickListener(v -> stepGeneric(seekStrength, valStrength, -5));
-        if (btnStrengthPlus != null)    btnStrengthPlus.setOnClickListener(v -> stepGeneric(seekStrength, valStrength, +5));
+        if (btnStrengthMinus   != null) btnStrengthMinus  .setOnClickListener(v -> stepGeneric(seekStrength,   valStrength,   -5));
+        if (btnStrengthPlus    != null) btnStrengthPlus   .setOnClickListener(v -> stepGeneric(seekStrength,   valStrength,   +5));
         if (btnResponsiveMinus != null) btnResponsiveMinus.setOnClickListener(v -> stepGeneric(seekResponsive, valResponsive, -5));
-        if (btnResponsivePlus != null)  btnResponsivePlus.setOnClickListener(v -> stepGeneric(seekResponsive, valResponsive, +5));
+        if (btnResponsivePlus  != null) btnResponsivePlus .setOnClickListener(v -> stepGeneric(seekResponsive, valResponsive, +5));
 
-        // ── Drag behavior ──────────────────────────────────────────────
+        // ── Drag ──────────────────────────────────────────────────────
         View.OnTouchListener drag = this::onDrag;
-        if (panel != null)  panel.setOnTouchListener(drag);
+        if (panel  != null) panel .setOnTouchListener(drag);
         if (bubble != null) bubble.setOnTouchListener(drag);
 
-        // ── Window Params ──────────────────────────────────────────────
-        int type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-
+        // ── Window params ─────────────────────────────────────────────
         lp = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
-                type,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                         | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                         | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
@@ -397,7 +391,7 @@ public class OverlayService extends Service {
 
     private void showPanel() {
         panelVisible = true;
-        if (panel  != null) panel.setVisibility(View.VISIBLE);
+        if (panel  != null) panel .setVisibility(View.VISIBLE);
         if (bubble != null) bubble.setVisibility(View.GONE);
         if (lp != null) {
             lp.width  = WindowManager.LayoutParams.WRAP_CONTENT;
@@ -408,7 +402,7 @@ public class OverlayService extends Service {
 
     private void hideToBubble() {
         panelVisible = false;
-        if (panel  != null) panel.setVisibility(View.GONE);
+        if (panel  != null) panel .setVisibility(View.GONE);
         if (bubble != null) bubble.setVisibility(View.VISIBLE);
         if (lp != null) {
             lp.width  = dp(52);
@@ -448,15 +442,13 @@ public class OverlayService extends Service {
     private void setTactixState(boolean checked, boolean triggerWorker) {
         if (isSyncingTactix) return;
         isSyncingTactix = true;
-        
+
         tactix = checked;
-        if (switchMagicTouch != null && switchMagicTouch.isChecked() != checked) {
+        if (switchMagicTouch != null && switchMagicTouch.isChecked() != checked)
             switchMagicTouch.setChecked(checked);
-        }
-        if (checkTactix != null && checkTactix.isChecked() != checked) {
+        if (checkTactix != null && checkTactix.isChecked() != checked)
             checkTactix.setChecked(checked);
-        }
-        
+
         isSyncingTactix = false;
 
         if (triggerWorker) {
@@ -465,12 +457,21 @@ public class OverlayService extends Service {
         }
     }
 
+    // ── FIX UTAMA: pakai callback supaya tunggu Shizuku siap ──────────
     private void doStart() {
-        if (statusTv != null) statusTv.setText("Starting…");
-        main.post(() -> {
-            try {
-                if (!ShizukuHelper.isReady()) ShizukuHelper.init();
+        if (statusTv != null) statusTv.setText("Connecting to Shizuku…");
 
+        ShizukuHelper.init(success -> main.post(() -> {
+            if (!success) {
+                workerRunning = false;
+                setTactixState(false, false);
+                if (statusTv != null) statusTv.setText("Shizuku not ready");
+                Toast.makeText(this, "Shizuku not ready", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (statusTv != null) statusTv.setText("Starting…");
+            try {
                 String bin = getApplicationInfo().nativeLibraryDir + "/libancoreengine.so";
                 if (!new java.io.File(bin).exists()) bin = "/data/local/tmp/ancore_engine";
 
@@ -487,20 +488,21 @@ public class OverlayService extends Service {
                 if (ok) {
                     String[] areas = {"LEFT", "ALL", "RIGHT"};
                     if (statusTv != null) {
-                        statusTv.setText(String.format(Locale.US, "Engaged  X=%.2f  Y=%.2f  %s%s",
+                        statusTv.setText(String.format(Locale.US,
+                                "Engaged  X=%.2f  Y=%.2f  %s%s",
                                 sensX, sensY, areas[sensArea], (tactix ? "  TX" : "")));
                     }
                     Toast.makeText(this, "Worker started", Toast.LENGTH_SHORT).show();
                 } else {
                     setTactixState(false, false);
-                    if (statusTv != null) statusTv.setText("Start failed — check Shizuku / binary");
+                    if (statusTv != null) statusTv.setText("Start failed — binary error");
                     Toast.makeText(this, "Start failed", Toast.LENGTH_SHORT).show();
                 }
             } catch (Throwable t) {
                 if (statusTv != null) statusTv.setText("Error: " + t.getMessage());
                 Log.e(TAG, "doStart", t);
             }
-        });
+        }));
     }
 
     private void doStop() {
@@ -535,27 +537,27 @@ public class OverlayService extends Service {
         }
     }
 
-    private void updateAreaUI(HexagonLinearLayout activeArea, HexagonLinearLayout in1, HexagonLinearLayout in2,
+    private void updateAreaUI(HexagonLinearLayout activeArea,
+                              HexagonLinearLayout in1, HexagonLinearLayout in2,
                               ImageView activeImg, ImageView inImg1, ImageView inImg2,
                               TextView activeTxt, TextView inTxt1, TextView inTxt2) {
         if (activeArea != null) activeArea.setBackgroundColor(Color.parseColor("#E61F33"));
-        if (in1 != null) in1.setBackgroundColor(Color.parseColor("#403B3D"));
-        if (in2 != null) in2.setBackgroundColor(Color.parseColor("#403B3D"));
+        if (in1 != null)        in1.setBackgroundColor(Color.parseColor("#403B3D"));
+        if (in2 != null)        in2.setBackgroundColor(Color.parseColor("#403B3D"));
 
         applyTintColor(activeImg, 0xFF221D19);
-        applyTintColor(inImg1, 0xFFE0E0E0);
-        applyTintColor(inImg2, 0xFFE0E0E0);
+        applyTintColor(inImg1,   0xFFE0E0E0);
+        applyTintColor(inImg2,   0xFFE0E0E0);
 
         if (activeTxt != null) activeTxt.setTextColor(0xFF221D19);
-        if (inTxt1 != null)    inTxt1.setTextColor(0xFFE0E0E0);
-        if (inTxt2 != null)    inTxt2.setTextColor(0xFFE0E0E0);
+        if (inTxt1    != null) inTxt1.setTextColor(0xFFE0E0E0);
+        if (inTxt2    != null) inTxt2.setTextColor(0xFFE0E0E0);
     }
 
     private void applyTintColor(ImageView img, int color) {
         if (img == null) return;
-        if (img.getBackground() != null) {
+        if (img.getBackground() != null)
             img.getBackground().setColorFilter(color, PorterDuff.Mode.SRC_IN);
-        }
         img.setColorFilter(color, PorterDuff.Mode.SRC_IN);
     }
 
