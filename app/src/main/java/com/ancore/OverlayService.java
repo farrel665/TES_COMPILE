@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Handler;
@@ -114,6 +115,9 @@ public class OverlayService extends Service {
     //  Notification
     // ═════════════════════════════════════════════════════════════════
 
+    // FIX 1: @SuppressWarnings untuk Notification.Builder(Context) tanpa channel
+    //        yang deprecated sejak API 26 — dipakai hanya di else (API < 26)
+    @SuppressWarnings("deprecation")
     private void startForegroundNotif() {
         if (Build.VERSION.SDK_INT >= 26) {
             NotificationChannel ch = new NotificationChannel(
@@ -127,7 +131,7 @@ public class OverlayService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder b = Build.VERSION.SDK_INT >= 26
                 ? new Notification.Builder(this, CH_ID)
-                : new Notification.Builder(this);
+                : new Notification.Builder(this);   // hanya dipakai di API < 26
         Notification n = b.setContentTitle("ancore inject")
                 .setContentText("Floating panel active — tap to show")
                 .setSmallIcon(android.R.drawable.ic_menu_manage)
@@ -369,8 +373,9 @@ public class OverlayService extends Service {
                 PixelFormat.TRANSLUCENT);
         lp.gravity = Gravity.TOP | Gravity.START;
 
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
+        // FIX 2: getDefaultDisplay().getMetrics() deprecated API 30
+        //        → pakai getResources().getDisplayMetrics() langsung
+        DisplayMetrics dm = getResources().getDisplayMetrics();
         lp.x = (dm.widthPixels - dp(300)) / 2;
         lp.y = dm.heightPixels / 5;
 
@@ -457,7 +462,6 @@ public class OverlayService extends Service {
         }
     }
 
-    // ── FIX UTAMA: pakai callback supaya tunggu Shizuku siap ──────────
     private void doStart() {
         if (statusTv != null) statusTv.setText("Connecting to Shizuku…");
 
@@ -511,10 +515,17 @@ public class OverlayService extends Service {
         if (statusTv != null) statusTv.setText("Disengaged");
     }
 
+    // FIX 3: stopForeground(boolean) deprecated API 33
+    //        → pakai STOP_FOREGROUND_REMOVE untuk API 24+, fallback boolean untuk di bawahnya
+    @SuppressWarnings("deprecation")
     private void stopWorkerAndSelf() {
         doStop();
         removeOverlay();
-        stopForeground(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(Service.STOP_FOREGROUND_REMOVE);
+        } else {
+            stopForeground(true);
+        }
         stopSelf();
     }
 
@@ -554,11 +565,14 @@ public class OverlayService extends Service {
         if (inTxt2    != null) inTxt2.setTextColor(0xFFE0E0E0);
     }
 
+    // FIX 4: setColorFilter(int, PorterDuff.Mode) deprecated API 29
+    //        → pakai PorterDuffColorFilter
     private void applyTintColor(ImageView img, int color) {
         if (img == null) return;
+        PorterDuffColorFilter filter = new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN);
         if (img.getBackground() != null)
-            img.getBackground().setColorFilter(color, PorterDuff.Mode.SRC_IN);
-        img.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            img.getBackground().setColorFilter(filter);
+        img.setColorFilter(filter);
     }
 
     private void stepSens(GamingSeekBar bar, TextView label, int delta, boolean isX) {
