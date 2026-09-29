@@ -8,10 +8,22 @@
     <LinearLayout
         android:id="@+id/panel"
         android:layout_width="360dp"
-        android:layout_height="wrap_content"
+        android:layout_height="660dp"
         android:orientation="vertical"
         android:padding="12dp"
         android:background="@drawable/bg_panel">
+
+        <ScrollView
+            android:id="@+id/panel_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:overScrollMode="never">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/drag_handle"
@@ -43,46 +55,107 @@
             android:textColor="#F0F0F0"
             android:textSize="21sp"
             android:fontFamily="@font/gf_medium" />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Intercept and remap touchscreen input via privileged injector"
-            android:textColor="#777777"
-            android:textSize="12sp"
-            android:fontFamily="@font/gf_light" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            android:background="@drawable/bg_section">
-            <LinearLayout
+            android:orientation="horizontal">
+            <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical">
+                android:text="Intercept and remap touchscreen input via privileged injector"
+                android:textColor="#777777"
+                android:textSize="12sp"
+                android:fontFamily="@font/gf_light" />
+            <com.ancore.GamingSwitch
+                android:id="@+id/switch_active"
+                android:layout_width="68dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Sensitivity Area"
+            android:textColor="#D6D6D6"
+            android:textSize="16sp"
+            android:fontFamily="@font/gf_medium" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="82dp"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal">
+            <com.ancore.HexagonLinearLayout
+                android:id="@+id/area_left"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="5dp"
+                android:background="@android:color/transparent">
+                <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:src="@drawable/ic_area_left" />
                 <TextView
-                    android:layout_width="match_parent"
+                    android:id="@+id/area_left_text"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Global Sensitivity"
-                    android:textColor="#F0F0F0"
-                    android:textSize="17sp"
+                    android:text="Left"
+                    android:textColor="#B0B3BA"
+                    android:textSize="12sp"
                     android:fontFamily="@font/gf_medium" />
+            </com.ancore.HexagonLinearLayout>
+            <com.ancore.HexagonLinearLayout
+                android:id="@+id/area_all"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="5dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="5dp"
+                android:background="@android:color/transparent">
+                <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:src="@drawable/ic_area_all" />
                 <TextView
-                    android:layout_width="match_parent"
+                    android:id="@+id/area_all_text"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Apply sensitivity to all armed input sources"
-                    android:textColor="#6F6F6F"
-                    android:textSize="11sp"
-                    android:fontFamily="@font/gf_light" />
-            </LinearLayout>
-            <com.ancore.OctagonCheckBox
-                android:id="@+id/check_global_sens"
-                android:layout_width="42dp"
-                android:layout_height="42dp" />
+                    android:text="All"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/gf_medium" />
+            </com.ancore.HexagonLinearLayout>
+            <com.ancore.HexagonLinearLayout
+                android:id="@+id/area_right"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="5dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="5dp"
+                android:background="@android:color/transparent">
+                <ImageView
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:src="@drawable/ic_area_right" />
+                <TextView
+                    android:id="@+id/area_right_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Right"
+                    android:textColor="#B0B3BA"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/gf_medium" />
+            </com.ancore.HexagonLinearLayout>
         </LinearLayout>
 
         <TextView
@@ -239,58 +312,6 @@
                 android:fontFamily="@font/gf_medium" />
         </LinearLayout>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Sensitivity Area"
-            android:textColor="#D6D6D6"
-            android:textSize="16sp"
-            android:fontFamily="@font/gf_medium" />
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="88dp"
-            android:layout_marginTop="4dp"
-            android:orientation="horizontal">
-            <LinearLayout
-                android:id="@+id/area_left"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="6dp"
-                android:background="@drawable/bg_area_normal">
-                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/ic_area_left" />
-                <TextView android:id="@+id/area_left_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Left" android:textColor="#B0B3BA" android:textSize="12sp" android:fontFamily="@font/gf_medium" />
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/area_all"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginStart="5dp"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="6dp"
-                android:background="@drawable/bg_area_selected">
-                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/ic_area_all" />
-                <TextView android:id="@+id/area_all_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="All" android:textColor="#FFFFFF" android:textSize="12sp" android:fontFamily="@font/gf_medium" />
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/area_right"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_marginStart="5dp"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="6dp"
-                android:background="@drawable/bg_area_normal">
-                <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/ic_area_right" />
-                <TextView android:id="@+id/area_right_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Right" android:textColor="#B0B3BA" android:textSize="12sp" android:fontFamily="@font/gf_medium" />
-            </LinearLayout>
-        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -307,10 +328,6 @@
                 android:textColor="#777777"
                 android:textSize="11sp"
                 android:fontFamily="@font/gf_light" />
-            <com.ancore.GamingSwitch
-                android:id="@+id/switch_active"
-                android:layout_width="68dp"
-                android:layout_height="34dp" />
         </LinearLayout>
 
         <LinearLayout
@@ -340,8 +357,9 @@
                 android:textSize="11sp"
                 android:fontFamily="@font/gf_medium" />
         </LinearLayout>
-    </LinearLayout>
-
+                </LinearLayout>
+            </ScrollView>
+        </LinearLayout>
     <FrameLayout
         android:id="@+id/bubble"
         android:layout_width="52dp"

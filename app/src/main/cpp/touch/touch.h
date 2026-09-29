@@ -11,7 +11,7 @@
 #define TS_FACTOR_MIN           0.01f
 #define TS_FACTOR_MAX           1.0f
 #define TS_SENSITIVITY_MIN      1.0f
-#define TS_SENSITIVITY_MAX      30.0f
+#define TS_SENSITIVITY_MAX      5.0f
 
 #define TS_AREA_LEFT            0
 #define TS_AREA_ALL             1
@@ -34,8 +34,9 @@ typedef struct {
     float   sensitivity;
     float   sens_x;
     float   sens_y;
+    float   strength;
+    float   responsiveness;
 
-    
     int     area;           
     float   screen_w;
     float   screen_h;
@@ -73,6 +74,8 @@ static void touch_init(TouchEngine *s, float factor, float dpi_scale) {
     s->sensitivity = TS_DEFAULT_SENSITIVITY;
     s->sens_x = TS_DEFAULT_SENSITIVITY;
     s->sens_y = TS_DEFAULT_SENSITIVITY;
+    s->strength = 0.0f;
+    s->responsiveness = 0.0f;
     s->area = TS_AREA_ALL;
     s->screen_w = 1080.0f;
     s->screen_h = 1920.0f;
@@ -109,9 +112,15 @@ static void touch_set_sensitivity(TouchEngine *s, float sensitivity) {
 
 static void touch_set_sensitivity_xy(TouchEngine *s, float sx, float sy) {
     if (s == NULL) return;
-    s->sens_x = ts_clamp_float(sy, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX);
-    s->sens_y = ts_clamp_float(sx, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX);
+    s->sens_x = ts_clamp_float(sx, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX);
+    s->sens_y = ts_clamp_float(sy, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX);
     s->sensitivity = (s->sens_x + s->sens_y) * 0.5f;
+}
+
+static void touch_set_filter_controls(TouchEngine *s, float strength, float responsiveness) {
+    if (s == NULL) return;
+    s->strength = ts_clamp_float(strength, 0.0f, 100.0f);
+    s->responsiveness = ts_clamp_float(responsiveness, 0.0f, 100.0f);
 }
 
 static void touch_set_dpi_scale(TouchEngine *s, float dpi_scale) {
@@ -197,14 +206,24 @@ static void touch_slot(TouchEngine *s, int slot,
         return;
     }
 
-    float safe_dt = (dt_seconds > 0.0f) ? dt_seconds : (1.0f / 60.0f);
-    float smoothingFactor;
-    if (s->factor >= 0.999f) {
-        smoothingFactor = 1.0f;
-    } else {
-        smoothingFactor = 1.0f - powf(1.0f - s->factor, safe_dt * 60.0f);
-        smoothingFactor = ts_clamp_float(smoothingFactor, 0.0f, 1.0f);
+    float safe_dt = (dt_seconds > 0.0f) ? dt_seconds : (1.0f / 120.0f);
+    float strength01 = s->strength * 0.01f;
+    float response01 = s->responsiveness * 0.01f;
+    /*
+     * Strength controls how much filtering is applied. Responsiveness
+     * controls how much of that filtering is bypassed. At 0/0 the path is
+     * effectively raw (no added latency); at high strength the path is
+     * smoothed, and higher responsiveness brings it back toward direct.
+     */
+    float smoothing = strength01 * (1.0f - response01);
+    float smoothingFactor = 1.0f - smoothing * 0.92f;
+    smoothingFactor = ts_clamp_float(smoothingFactor, 0.08f, 1.0f);
+    if (strength01 > 0.001f && s->factor < 0.999f) {
+        smoothingFactor *= ts_clamp_float(s->factor, 0.05f, 1.0f);
+        smoothingFactor = ts_clamp_float(smoothingFactor, 0.08f, 1.0f);
     }
+    smoothingFactor = 1.0f - powf(1.0f - smoothingFactor, safe_dt * 120.0f);
+    smoothingFactor = ts_clamp_float(smoothingFactor, 0.0f, 1.0f);
 
     float rawDx = nx - sl->last_raw_x;
     float rawDy = ny - sl->last_raw_y;

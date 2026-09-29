@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,6 +29,7 @@ public class GamingSeekBar extends View {
     private RectF plusBtnRect = new RectF();
     private RectF trackRect = new RectF();
     private RectF progressRect = new RectF();
+    private Path buttonPath = new Path();
 
     private OnProgressChangeListener listener;
 
@@ -75,14 +77,14 @@ public class GamingSeekBar extends View {
         if (width == 0 || height == 0) return;
 
         float btnSize = height;
-        float btnRadius = dpToPx(6);
         float padding = dpToPx(12);
+        float cut = Math.max(dpToPx(5), btnSize * 0.18f);
 
         // 1. Gambar Tombol Minus (-)
         minusBtnRect.set(0, 0, btnSize, btnSize);
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(buttonBgColor);
-        canvas.drawRoundRect(minusBtnRect, btnRadius, btnRadius, paint);
+        drawChamferedRect(canvas, minusBtnRect, cut, paint);
 
         paint.setColor(buttonTextColor);
         paint.setStrokeWidth(dpToPx(3));
@@ -93,7 +95,7 @@ public class GamingSeekBar extends View {
         plusBtnRect.set(width - btnSize, 0, width, btnSize);
         paint.setColor(buttonBgColor);
         paint.setStyle(Paint.Style.FILL);
-        canvas.drawRoundRect(plusBtnRect, btnRadius, btnRadius, paint);
+        drawChamferedRect(canvas, plusBtnRect, cut, paint);
 
         paint.setColor(buttonTextColor);
         paint.setStrokeWidth(dpToPx(3));
@@ -133,6 +135,21 @@ public class GamingSeekBar extends View {
         );
         paint.setColor(thumbColor);
         canvas.drawRoundRect(thumbRect, dpToPx(2), dpToPx(2), paint);
+    }
+
+    private void drawChamferedRect(Canvas canvas, RectF r, float cut, Paint p) {
+        buttonPath.reset();
+        float c = Math.min(cut, Math.min(r.width(), r.height()) / 2f);
+        buttonPath.moveTo(r.left + c, r.top);
+        buttonPath.lineTo(r.right - c, r.top);
+        buttonPath.lineTo(r.right, r.top + c);
+        buttonPath.lineTo(r.right, r.bottom - c);
+        buttonPath.lineTo(r.right - c, r.bottom);
+        buttonPath.lineTo(r.left + c, r.bottom);
+        buttonPath.lineTo(r.left, r.bottom - c);
+        buttonPath.lineTo(r.left, r.top + c);
+        buttonPath.close();
+        canvas.drawPath(buttonPath, p);
     }
 
     private boolean isDragging = false;

@@ -153,6 +153,7 @@ int main(void) {
 
     touch_init(&engine, factor, 1.0f);
     touch_set_sensitivity(&engine, sens);
+    touch_set_filter_controls(&engine, 0.0f, 100.0f);
 
     while (ancore_pw_is_alive(ff_pid)) {
         alarm(RIZXBYTE_WATCHDOG_SECONDS);

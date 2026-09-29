@@ -53,7 +53,7 @@ public class OverlayService extends Service {
     private TextView areaLeftText, areaAllText, areaRightText;
     private GamingSwitch switchActive;
     private GamingSeekBar seekStrength, seekResponsiveness;
-    private OctagonCheckBox checkGlobalSens, checkTactix;
+    private OctagonCheckBox checkTactix;
     private ImageView imgResetX, imgResetY;
 
     private int startX, startY, startTouchX, startTouchY;
@@ -111,6 +111,13 @@ public class OverlayService extends Service {
     private void inflateOverlay() {
         root = LayoutInflater.from(this).inflate(R.layout.overlay_panel, null);
         panel = root.findViewById(R.id.panel);
+        if (panel instanceof HexagonLinearLayout) {
+            HexagonLinearLayout hp = (HexagonLinearLayout) panel;
+            hp.setBackgroundColor(0xF21C1C21);
+            hp.setStrokeColor(0xFF3A3A40);
+            hp.setStrokeWidth(1f);
+            hp.setCornerCut(18f);
+        }
         bubble = root.findViewById(R.id.bubble);
         statusTv = root.findViewById(R.id.status_text);
         valX = root.findViewById(R.id.val_sens_x);
@@ -121,7 +128,6 @@ public class OverlayService extends Service {
         switchActive = root.findViewById(R.id.switch_active);
         seekStrength = root.findViewById(R.id.seek_strength);
         seekResponsiveness = root.findViewById(R.id.seek_responsiveness);
-        checkGlobalSens = root.findViewById(R.id.check_global_sens);
         checkTactix = root.findViewById(R.id.check_tactix);
         imgResetX = root.findViewById(R.id.img_reset_x);
         imgResetY = root.findViewById(R.id.img_reset_y);
@@ -148,8 +154,6 @@ public class OverlayService extends Service {
                 restartIfRunning();
             });
         }
-        if (checkGlobalSens != null) checkGlobalSens.setChecked(true);
-
         if (seekStrength != null) {
             seekStrength.setMin(0); seekStrength.setMax(100); seekStrength.setStep(1);
             seekStrength.setProgress(0);
@@ -321,12 +325,16 @@ public class OverlayService extends Service {
             try {
                 if (!ShizukuHelper.isReady()) {
                     ShizukuHelper.init();
-                    if (!ShizukuHelper.isReady()) {
-                        workerRunning = false;
-                        if (switchActive != null) switchActive.setChecked(false, true);
-                        if (statusTv != null) statusTv.setText("Shizuku not connected");
-                        return;
-                    }
+                    main.postDelayed(() -> {
+                        if (switchActive != null && switchActive.isChecked() && !workerRunning) {
+                            if (ShizukuHelper.isReady()) doStart();
+                            else {
+                                switchActive.setChecked(false, true);
+                                if (statusTv != null) statusTv.setText("Shizuku not connected");
+                            }
+                        }
+                    }, 450);
+                    return;
                 }
                 String bin = getApplicationInfo().nativeLibraryDir + "/libancoreengine.so";
                 if (!new java.io.File(bin).exists()) bin = "/data/local/tmp/ancore_engine";
@@ -380,8 +388,13 @@ public class OverlayService extends Service {
         LinearLayout[] views = {areaLeft, areaAll, areaRight};
         TextView[] labels = {areaLeftText, areaAllText, areaRightText};
         for (int i = 0; i < views.length; i++) {
-            views[i].setBackgroundResource(i == sensArea
-                    ? R.drawable.bg_area_selected : R.drawable.bg_area_normal);
+            if (views[i] instanceof HexagonLinearLayout) {
+                HexagonLinearLayout h = (HexagonLinearLayout) views[i];
+                h.setBackgroundColor(i == sensArea ? 0xFFE51010 : 0xFF262323);
+                h.setStrokeColor(i == sensArea ? 0xFFE51010 : 0xFF363232);
+                h.setStrokeWidth(1f);
+                h.setCornerCut(10f);
+            }
             if (labels[i] != null) {
                 labels[i].setTextColor(i == sensArea ? 0xFFFFFFFF : 0xFFB0B3BA);
             }

@@ -10,6 +10,7 @@
 #include <linux/input.h>
 #include <linux/uinput.h>
 #include <time.h>
+#include <math.h>
 
 #ifndef UI_SET_ABSBIT
 #define UI_SET_ABSBIT _IOW(UINPUT_IOCTL_BASE, 103, int)
@@ -412,9 +413,11 @@ void ancore_inject_slot(TouchInject *ti, int slot, int x, int y, int down) {
             if (ti->next_tracking_id > 65535) ti->next_tracking_id = 1;
             ti->virtual_active[slot] = 1;
         }
-        ti->virtual_x[slot] = x;
-        ti->virtual_y[slot] = y;
-        ti->dirty = 1;
+        if (!ti->virtual_active[slot] || ti->virtual_x[slot] != x || ti->virtual_y[slot] != y) {
+            ti->virtual_x[slot] = x;
+            ti->virtual_y[slot] = y;
+            ti->dirty = 1;
+        }
     } else {
         if (ti->virtual_active[slot]) {
             ti->virtual_active[slot] = 0;

@@ -21,7 +21,7 @@
 
 #define RIZXBYTE_POLL_INTERVAL_MS  500
 #define RIZXBYTE_WARMUP_SECONDS    0
-#define RIZXBYTE_FRAME_DT          (1.0f / 120.0f)
+#define RIZXBYTE_FRAME_DT          (1.0f / 240.0f)
 #define RIZXBYTE_WATCHDOG_SECONDS  8
 
 static void ancore_panic(int sig) { (void)sig; _exit(0); }
@@ -108,6 +108,8 @@ int main(int argc, char **argv) {
     float cli_deadzone = 1.5f;
     float cli_flick_speed = 18.0f;
     float cli_flick_boost = 1.55f;
+    float cli_strength = 0.0f;
+    float cli_responsiveness = 0.0f;
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--preset") && i + 1 < argc)
             preset_idx = atoi(argv[++i]);
@@ -125,13 +127,20 @@ int main(int argc, char **argv) {
             cli_flick_speed = (float)atof(argv[++i]);
         else if (!strcmp(argv[i], "--flick-boost") && i + 1 < argc)
             cli_flick_boost = (float)atof(argv[++i]);
+        else if (!strcmp(argv[i], "--strength") && i + 1 < argc)
+            cli_strength = (float)atof(argv[++i]);
+        else if (!strcmp(argv[i], "--responsiveness") && i + 1 < argc)
+            cli_responsiveness = (float)atof(argv[++i]);
     }
     if (preset_idx < 0) preset_idx = 0;
     if (preset_idx > 2) preset_idx = 2;
     if (cli_area < 0) cli_area = 0;
     if (cli_area > 2) cli_area = 2;
+    if (cli_strength < 0.f) cli_strength = 0.f;
+    if (cli_strength > 100.f) cli_strength = 100.f;
+    if (cli_responsiveness < 0.f) cli_responsiveness = 0.f;
+    if (cli_responsiveness > 100.f) cli_responsiveness = 100.f;
 
-    
     static const char *k_area[3]   = { "LEFT", "ALL", "RIGHT" };
     float factor = 0.90f;
     float sens_x = (cli_sens_x > 0.f) ? cli_sens_x : 2.0f;
@@ -146,8 +155,8 @@ int main(int argc, char **argv) {
     fprintf(stderr, "[ancore] argv:");
     for (int a = 0; a < argc; a++) fprintf(stderr, " %s", argv[a]);
     fprintf(stderr, "\n");
-    fprintf(stderr, "[ancore] applied sensX=%.3f sensY=%.3f factor=%.3f\n",
-            sens_x, sens_y, factor);
+    fprintf(stderr, "[ancore] applied sensX=%.3f sensY=%.3f strength=%.1f responsiveness=%.1f factor=%.3f\n",
+            sens_x, sens_y, cli_strength, cli_responsiveness, factor);
 
     ancore_kill_stale();
     force_release_grabs();
@@ -158,8 +167,8 @@ int main(int argc, char **argv) {
     TouchInject inject;
     RizxbyteReaper reaper;
 
-    fprintf(stderr, "[ancore] worker %s factor=%.2f sensX=%.2f sensY=%.2f area=%s tactix=%d\n",
-            name, factor, sens_x, sens_y, k_area[cli_area], cli_tactix);
+    fprintf(stderr, "[ancore] worker %s sensX=%.2f sensY=%.2f strength=%.1f response=%.1f area=%s tactix=%d\n",
+            name, sens_x, sens_y, cli_strength, cli_responsiveness, k_area[cli_area], cli_tactix);
 
     if (ancore_capture_open(&capture) < 0) {
         fprintf(stderr, "[ancore] capture open failed — cannot open /dev/input/event* (permission). Shizuku shell may lack access on this ROM.\n");
@@ -217,8 +226,9 @@ int main(int argc, char **argv) {
         }
         capture.cur_slot = 0;
 
-        touch_init(&engine, factor, 1.0f);
+        touch_init(&engine, 1.0f, 1.0f);
         touch_set_sensitivity_xy(&engine, sens_x, sens_y);
+        touch_set_filter_controls(&engine, cli_strength, cli_responsiveness);
         touch_set_region(&engine, cli_area,
             (float)capture.abs_x_min, (float)capture.abs_x_max,
             (float)capture.abs_y_min, (float)capture.abs_y_max);
@@ -229,7 +239,9 @@ int main(int argc, char **argv) {
 
         {
             int miss = 0;
-            const int miss_limit = 30; /* ~0.5s at 60fps before declare dead */
+            const int miss_limit = 60;
+            struct timespec prev_ts;
+            clock_gettime(CLOCK_MONOTONIC, &prev_ts);
             while (1) {
                 if (!ancore_pw_is_alive(ff_pid)) {
                     if (++miss >= miss_limit) break;
@@ -238,21 +250,29 @@ int main(int argc, char **argv) {
                 }
                 alarm(RIZXBYTE_WATCHDOG_SECONDS);
                 ancore_reaper_lock(&reaper);
-                ancore_capture_poll(&capture);
+                bool had_input = ancore_capture_poll(&capture);
+                struct timespec now_ts;
+                clock_gettime(CLOCK_MONOTONIC, &now_ts);
+                float frame_dt = (float)(now_ts.tv_sec - prev_ts.tv_sec)
+                        + (float)(now_ts.tv_nsec - prev_ts.tv_nsec) / 1000000000.0f;
+                prev_ts = now_ts;
+                if (frame_dt < 0.001f) frame_dt = 0.001f;
+                if (frame_dt > 0.050f) frame_dt = 0.050f;
+                if (!had_input) frame_dt = RIZXBYTE_FRAME_DT;
                 for (int slot = 0; slot < TS_MAX_SLOTS; slot++) {
                     float ox = 0, oy = 0;
                     int od = 0;
                     int hw = capture.slots[slot].active;
                     touch_slot(&engine, slot,
                         (float)capture.slots[slot].x, (float)capture.slots[slot].y,
-                        hw, RIZXBYTE_FRAME_DT, &ox, &oy, &od);
+                        hw, frame_dt, &ox, &oy, &od);
                     if (hw) ancore_inject_slot(&inject, slot, (int)ox, (int)oy, 1);
                     else if (inject.virtual_active[slot])
                         ancore_inject_slot_release(&inject, slot);
                 }
                 ancore_inject_flush(&inject);
                 ancore_reaper_unlock(&reaper);
-                usleep((useconds_t)(RIZXBYTE_FRAME_DT * 1000000.0f));
+                if (!had_input) usleep(1000);
             }
         }
 
