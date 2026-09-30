@@ -69,7 +69,8 @@ public class TriggerView extends View {
                 downX = e.getRawX();
                 downY = e.getRawY();
                 moved = false;
-                if (listener != null) listener.onHoldStart();
+                // While Macro Manager is open this view is a drag handle only.
+                // Do not start the macro during repositioning.
                 return true;
             case MotionEvent.ACTION_MOVE:
                 float dx = e.getRawX() - downX;
@@ -85,6 +86,13 @@ public class TriggerView extends View {
                 }
                 return true;
             case MotionEvent.ACTION_UP:
+                if (!moved && listener != null && !listener.isMoveEnabled()) {
+                    listener.onHoldStart();
+                    listener.onHoldStop();
+                } else if (listener != null) {
+                    listener.onHoldStop();
+                }
+                return true;
             case MotionEvent.ACTION_CANCEL:
                 if (listener != null) listener.onHoldStop();
                 return true;

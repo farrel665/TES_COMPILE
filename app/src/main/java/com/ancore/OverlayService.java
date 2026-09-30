@@ -38,8 +38,11 @@ public class OverlayService extends Service implements TriggerView.Listener {
     public static final String ACTION_STOP = "com.ancore.OVERLAY_STOP";
 
     private WindowManager wm;
-    private View root, panel;
+    private View root, panel, bubble;
     private ViewGroup pageHost;
+    private WindowManager.LayoutParams bubbleLp;
+    private static final long PANEL_IDLE_HIDE_MS = 5000L;
+    private final Runnable hidePanelRunnable = this::hidePanel;
     private WindowManager.LayoutParams panelLp;
     private TriggerView triggerView;
     private WindowManager.LayoutParams triggerLp;
@@ -79,6 +82,7 @@ public class OverlayService extends Service implements TriggerView.Listener {
         inflateOverlay();
         // Trigger starts OFF. It is created only after the user enables the switch.
         triggerEnabled = false;
+        schedulePanelHide();
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
@@ -123,12 +127,12 @@ public class OverlayService extends Service implements TriggerView.Listener {
 
     private void setupPanelWindow() {
         int type = Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
-        panelLp = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT, type,
+        panelLp = new WindowManager.LayoutParams(dp(300),
+                dp(360), type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                         | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, PixelFormat.TRANSLUCENT);
-        panelLp.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
-        panelLp.x = dp(8); panelLp.y = 0;
+        panelLp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+        panelLp.x = 0; panelLp.y = dp(36);
         try { wm.addView(root, panelLp); } catch (Throwable t) { Toast.makeText(this, "Overlay failed: " + t.getMessage(), Toast.LENGTH_LONG).show(); stopSelf(); }
     }
 
@@ -311,9 +315,61 @@ public class OverlayService extends Service implements TriggerView.Listener {
     private void updateTriggerSize(){ if(triggerView==null||triggerLp==null)return;int old=triggerLp.width;int n=dp(triggerSizeDp);int cx=triggerLp.x+old/2,cy=triggerLp.y+old/2;triggerLp.width=n;triggerLp.height=n;triggerLp.x=Math.max(0,cx-n/2);triggerLp.y=Math.max(0,cy-n/2);triggerView.setDiameter(triggerSizeDp);try{wm.updateViewLayout(triggerView,triggerLp);}catch(Throwable ignored){}prefs.edit().putInt("size",triggerSizeDp).putInt("x",triggerLp.x).putInt("y",triggerLp.y).apply();}
     private void updateTriggerPositionText(){if(triggerPos!=null) triggerPos.setText(triggerLp==null ? "OFF" : triggerLp.x+", "+triggerLp.y);}
 
-    private void hidePanel(){if(panel!=null)panel.setVisibility(View.GONE);}
-    private void showPanel(){if(panel!=null)panel.setVisibility(View.VISIBLE);}
-    private void removeOverlay(){if(root!=null&&wm!=null){try{wm.removeView(root);}catch(Throwable ignored){}root=null;}}
+    private void hidePanel(){
+        main.removeCallbacks(hidePanelRunnable);
+        macroPageOpen = false;
+        stopMacro();
+        if(panel!=null) panel.setVisibility(View.GONE);
+        addBubbleWindow();
+    }
+
+    private void showPanel(){
+        removeBubbleWindow();
+        if(panel!=null) panel.setVisibility(View.VISIBLE);
+        showMainPage();
+        schedulePanelHide();
+    }
+
+    private void schedulePanelHide(){
+        main.removeCallbacks(hidePanelRunnable);
+        main.postDelayed(hidePanelRunnable, PANEL_IDLE_HIDE_MS);
+    }
+
+    private void addBubbleWindow(){
+        if(bubble!=null || wm==null) return;
+        TextView b = new TextView(this);
+        b.setText("M");
+        b.setTextColor(0xFFFFFFFF);
+        b.setTextSize(16);
+        b.setGravity(Gravity.CENTER);
+        b.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        b.setBackgroundResource(R.drawable.bg_bubble);
+        b.setContentDescription("Show Magic Manager");
+        b.setOnClickListener(v -> showPanel());
+        bubble = b;
+
+        int type = Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
+        bubbleLp = new WindowManager.LayoutParams(dp(48), dp(48), type,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                        | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, PixelFormat.TRANSLUCENT);
+        bubbleLp.gravity = Gravity.TOP | Gravity.END;
+        bubbleLp.x = dp(10); bubbleLp.y = dp(82);
+        try { wm.addView(bubble, bubbleLp); } catch(Throwable t){ bubble=null; bubbleLp=null; Log.w(TAG,"bubble add failed",t); }
+    }
+
+    private void removeBubbleWindow(){
+        main.removeCallbacks(hidePanelRunnable);
+        if(bubble!=null && wm!=null){
+            try{wm.removeView(bubble);}catch(Throwable ignored){}
+            bubble=null; bubbleLp=null;
+        }
+    }
+
+    private void removeOverlay(){
+        main.removeCallbacks(hidePanelRunnable);
+        removeBubbleWindow();
+        if(root!=null&&wm!=null){try{wm.removeView(root);}catch(Throwable ignored){}root=null;}
+    }
     private void removeTrigger(){if(triggerView!=null&&wm!=null){try{wm.removeView(triggerView);}catch(Throwable ignored){}triggerView=null;}}
     private void stopWorkerAndSelf(){doStop();removeTrigger();removeOverlay();stopForeground(true);stopSelf();}
 

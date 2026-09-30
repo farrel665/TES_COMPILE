@@ -7,8 +7,8 @@
 
     <LinearLayout
         android:id="@+id/panel"
-        android:layout_width="310dp"
-        android:layout_height="425dp"
+        android:layout_width="300dp"
+        android:layout_height="360dp"
         android:orientation="vertical"
         android:padding="12dp"
         android:background="@drawable/bg_panel">

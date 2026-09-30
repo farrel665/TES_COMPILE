@@ -124,11 +124,11 @@ public class UserService extends Binder implements IUserService {
         stopMacro();
         x = Math.max(0, x);
         y = Math.max(0, y);
-        intervalMs = Math.max(20, Math.min(intervalMs, 5000));
-        durationMs = Math.max(0, Math.min(durationMs, 5000));
-        String tap = durationMs > 0
-                ? String.format(Locale.US, "input swipe %d %d %d %d %d", x, y, x, y, durationMs)
-                : String.format(Locale.US, "input tap %d %d", x, y);
+        intervalMs = Math.max(30, Math.min(intervalMs, 5000));
+
+        // Use the Android shell input tap command directly. This is more reliable
+        // than a zero-length swipe for a tap-style macro.
+        String tap = String.format(Locale.US, "input tap %d %d", x, y);
         String cmd = String.format(Locale.US,
                 "while true; do %s; sleep %.3f; done", tap, intervalMs / 1000.0);
         try {
