@@ -2,7 +2,6 @@ package com.ancore;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.view.MotionEvent;
@@ -18,7 +17,6 @@ public class TriggerView extends View {
     }
 
     private final Paint circle = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint cross = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint text = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Listener listener;
     private float downX, downY;
@@ -32,10 +30,6 @@ public class TriggerView extends View {
         circle.setStyle(Paint.Style.STROKE);
         circle.setStrokeWidth(dp(3));
         circle.setColor(0xFF20E6AA);
-        cross.setStyle(Paint.Style.STROKE);
-        cross.setStrokeWidth(dp(2));
-        cross.setColor(0xFFDDE8E4);
-        cross.setPathEffect(new DashPathEffect(new float[]{dp(9), dp(9)}, 0));
         text.setColor(0xFFFFFFFF);
         text.setTextSize(dp(16));
         text.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
@@ -48,7 +42,6 @@ public class TriggerView extends View {
     public void setOpacity(float value) {
         int alpha = (int)(Math.max(0f, Math.min(1f, value)) * 255f);
         circle.setAlpha(alpha);
-        cross.setAlpha(alpha);
         text.setAlpha(Math.min(255, alpha + 35));
         invalidate();
     }
@@ -67,8 +60,6 @@ public class TriggerView extends View {
         float cy = getHeight() / 2f;
         float r = Math.min(getWidth(), getHeight()) * .44f;
         c.drawCircle(cx, cy, r, circle);
-        c.drawLine(cx, 0, cx, getHeight(), cross);
-        c.drawLine(0, cy, getWidth(), cy, cross);
         c.drawText("Trigger", cx, cy + dp(6), text);
     }
 

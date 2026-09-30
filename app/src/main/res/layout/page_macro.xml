@@ -19,9 +19,12 @@
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Macro Target" android:textColor="#F0F0F0" android:textSize="17sp" android:fontFamily="@font/gf_medium"/>
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Tekan Trigger untuk menjalankan macro. Buka menu ini untuk memindahkan posisi Trigger." android:textColor="#777777" android:textSize="10sp" android:fontFamily="@font/gf_light"/>
 
-    <LinearLayout android:layout_width="match_parent" android:layout_height="45dp" android:layout_marginTop="8dp" android:gravity="center_vertical" android:background="#161A1A" android:paddingLeft="10dp" android:paddingRight="10dp">
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Trigger" android:textColor="#FFFFFF" android:textSize="14sp" android:fontFamily="@font/gf_medium"/>
-        <TextView android:id="@+id/trigger_pos" android:layout_width="120dp" android:layout_height="wrap_content" android:gravity="end" android:text="CENTER" android:textColor="#20E6AA" android:textSize="11sp"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="45dp" android:layout_marginTop="8dp" android:gravity="center_vertical" android:background="#161A1A" android:paddingLeft="10dp" android:paddingRight="8dp">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Trigger" android:textColor="#FFFFFF" android:textSize="14sp" android:fontFamily="@font/gf_medium"/>
+            <TextView android:id="@+id/trigger_pos" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="OFF" android:textColor="#777777" android:textSize="9sp" android:fontFamily="@font/gf_light"/>
+        </LinearLayout>
+        <com.ancore.GamingSwitch android:id="@+id/switch_trigger" android:layout_width="56dp" android:layout_height="30dp"/>
     </LinearLayout>
 
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Interval Tap:" android:textColor="#F0F0F0" android:textSize="15sp"/>

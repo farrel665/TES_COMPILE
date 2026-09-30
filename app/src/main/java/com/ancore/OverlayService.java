@@ -55,6 +55,7 @@ public class OverlayService extends Service implements TriggerView.Listener {
     private float strength, responsiveness;
     private int macroMode = 1; // Repeat Tap
     private boolean macroPageOpen;
+    private boolean triggerEnabled;
     private float dragStartLpX, dragStartLpY;
 
     private TextView statusTv, valX, valY, valStrength, valResponsiveness;
@@ -76,7 +77,8 @@ public class OverlayService extends Service implements TriggerView.Listener {
         startForegroundNotif();
         if (!Settings.canDrawOverlays(this)) { stopSelf(); return; }
         inflateOverlay();
-        addTriggerWindow();
+        // Trigger starts OFF. It is created only after the user enables the switch.
+        triggerEnabled = false;
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
@@ -131,6 +133,7 @@ public class OverlayService extends Service implements TriggerView.Listener {
     }
 
     private void addTriggerWindow() {
+        if (triggerView != null || !triggerEnabled) return;
         triggerView = new TriggerView(this);
         triggerView.setListener(this);
         triggerView.setOpacity(triggerOpacity);
@@ -199,6 +202,20 @@ public class OverlayService extends Service implements TriggerView.Listener {
         pageHost.addView(v);
         seekMacroInterval = v.findViewById(R.id.seek_macro_interval); seekMacroDuration = v.findViewById(R.id.seek_macro_duration);
         valMacroInterval = v.findViewById(R.id.val_macro_interval); valMacroDuration = v.findViewById(R.id.val_macro_duration); triggerPos = v.findViewById(R.id.trigger_pos);
+        GamingSwitch switchTrigger = v.findViewById(R.id.switch_trigger);
+        switchTrigger.setChecked(triggerEnabled, false);
+        switchTrigger.setOnCheckedChangeListener((sw, checked) -> {
+            triggerEnabled = checked;
+            if (checked) {
+                addTriggerWindow();
+                updateTriggerPositionText();
+                updateTriggerMoveState();
+            } else {
+                stopMacro();
+                removeTrigger();
+                updateTriggerPositionText();
+            }
+        });
         v.findViewById(R.id.btn_back_macro).setOnClickListener(x -> showMainPage());
         v.findViewById(R.id.btn_macro_settings).setOnClickListener(x -> showMacroSettings());
         setupMacroSeekBars();
@@ -235,6 +252,7 @@ public class OverlayService extends Service implements TriggerView.Listener {
     private void setupMacroSeekBarsOld() {}
 
     @Override public void onHoldStart() {
+        if (!triggerEnabled) return;
         if (macroMode == 0) {
             startMacroAtTrigger();
             main.postDelayed(this::stopMacro, Math.max(40, macroDurationMs + 40));
@@ -243,12 +261,12 @@ public class OverlayService extends Service implements TriggerView.Listener {
         }
     }
 
-    @Override public void onHoldStop() { stopMacro(); }
+    @Override public void onHoldStop() { if (triggerEnabled) stopMacro(); }
 
     @Override public boolean isMoveEnabled() { return macroPageOpen; }
 
     @Override public void onMove(float dx, float dy) {
-        if (!macroPageOpen || triggerLp == null) return;
+        if (!triggerEnabled || !macroPageOpen || triggerLp == null) return;
         triggerLp.x += Math.round(dx); triggerLp.y += Math.round(dy);
         DisplayMetrics dm = getResources().getDisplayMetrics(); int s = dp(triggerSizeDp);
         triggerLp.x = clamp(triggerLp.x, 0, Math.max(0, dm.widthPixels-s)); triggerLp.y = clamp(triggerLp.y, 0, Math.max(0, dm.heightPixels-s));
@@ -291,7 +309,7 @@ public class OverlayService extends Service implements TriggerView.Listener {
 
     private void updateTriggerMoveState(){ if(triggerView!=null) triggerView.setOpacity(triggerOpacity); }
     private void updateTriggerSize(){ if(triggerView==null||triggerLp==null)return;int old=triggerLp.width;int n=dp(triggerSizeDp);int cx=triggerLp.x+old/2,cy=triggerLp.y+old/2;triggerLp.width=n;triggerLp.height=n;triggerLp.x=Math.max(0,cx-n/2);triggerLp.y=Math.max(0,cy-n/2);triggerView.setDiameter(triggerSizeDp);try{wm.updateViewLayout(triggerView,triggerLp);}catch(Throwable ignored){}prefs.edit().putInt("size",triggerSizeDp).putInt("x",triggerLp.x).putInt("y",triggerLp.y).apply();}
-    private void updateTriggerPositionText(){if(triggerPos!=null&&triggerLp!=null)triggerPos.setText(triggerLp.x+", "+triggerLp.y);}
+    private void updateTriggerPositionText(){if(triggerPos!=null) triggerPos.setText(triggerLp==null ? "OFF" : triggerLp.x+", "+triggerLp.y);}
 
     private void hidePanel(){if(panel!=null)panel.setVisibility(View.GONE);}
     private void showPanel(){if(panel!=null)panel.setVisibility(View.VISIBLE);}
