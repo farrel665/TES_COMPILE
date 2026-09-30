@@ -345,12 +345,26 @@ public class OverlayService extends Service implements TriggerView.Listener {
     private void hidePanel(){
         macroPageOpen = false;
         stopMacro();
-        if(panel!=null) panel.setVisibility(View.GONE);
+        if (panel != null) panel.setVisibility(View.GONE);
+
+        // The WindowManager window itself is still 300x330 even when the child
+        // panel is GONE. Without this flag, that transparent window continues
+        // to consume touches in the old panel rectangle. Make the hidden
+        // window completely touch-through; the bubble is the only touch target.
+        if (root != null && panelLp != null && wm != null) {
+            panelLp.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+            try { wm.updateViewLayout(root, panelLp); } catch (Throwable ignored) {}
+        }
         addBubble();
     }
 
     private void showPanel(){
         removeBubble();
+
+        if (root != null && panelLp != null && wm != null) {
+            panelLp.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+            try { wm.updateViewLayout(root, panelLp); } catch (Throwable ignored) {}
+        }
         if(panel!=null) panel.setVisibility(View.VISIBLE);
         showMainPage();
     }
