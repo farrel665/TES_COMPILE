@@ -193,93 +193,79 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    for (;;) {
-        alarm(0);
-        fprintf(stderr, "[ancore] waiting Free Fire...\n");
-        const char *ff_name = NULL;
-        pid_t ff_pid = ancore_pw_wait_for_freefire(RIZXBYTE_POLL_INTERVAL_MS, &ff_name);
-        fprintf(stderr, "[ancore] got %s pid=%d\n",
-                ff_name ? ff_name : "ff", (int)ff_pid);
+    /* Global touch mode: do not wait for or validate a target package/PID.
+     * The previous implementation gated the engine on Free Fire, which is
+     * why it appeared to work only in FF. The touch device is system-wide. */
+    fprintf(stderr, "[ancore] global mode: no target PID/package required\n");
 
-        int died = 0;
-        for (int e = 0; e < RIZXBYTE_WARMUP_SECONDS; e++) {
-            alarm(RIZXBYTE_WATCHDOG_SECONDS);
-            if (!ancore_pw_is_alive(ff_pid)) { died = 1; break; }
-            sleep(1);
-        }
-        if (died) {
-            fprintf(stderr, "[ancore] died in warmup, retry\n");
-            continue;
-        }
-
+    if (ancore_capture_grab(&capture) < 0) {
+        fprintf(stderr, "[ancore] grab busy — stop other touch modules\n");
+        force_release_grabs();
         if (ancore_capture_grab(&capture) < 0) {
-            fprintf(stderr, "[ancore] grab busy — stop other modules\n");
-            force_release_grabs();
-            if (ancore_capture_grab(&capture) < 0) {
-                continue;
-            }
+            fprintf(stderr, "[ancore] unable to grab touchscreen\n");
+            ancore_reaper_stop(&reaper);
+            ancore_inject_close(&inject);
+            ancore_capture_close(&capture);
+            return 1;
         }
-        while (ancore_capture_poll(&capture)) {}
-        for (int i = 0; i < TS_MAX_SLOTS; i++) {
-            capture.slots[i].active = 0;
-            capture.slots[i].tracking_id = -1;
-        }
-        capture.cur_slot = 0;
-
-        touch_init(&engine, 1.0f, 1.0f);
-        touch_set_sensitivity_xy(&engine, sens_x, sens_y);
-        touch_set_filter_controls(&engine, cli_strength, cli_responsiveness);
-        touch_set_region(&engine, cli_area,
-            (float)capture.abs_x_min, (float)capture.abs_x_max,
-            (float)capture.abs_y_min, (float)capture.abs_y_max);
-        touch_set_tactix(&engine, cli_tactix,
-            cli_deadzone, cli_flick_speed, cli_flick_boost);
-        fprintf(stderr, "[ancore] ENGAGED %s sensX=%.2f sensY=%.2f area=%s tactix=%d dz=%.1f\n",
-                name, sens_x, sens_y, k_area[cli_area], cli_tactix, cli_deadzone);
-
-        {
-            int miss = 0;
-            const int miss_limit = 60;
-            struct timespec prev_ts;
-            clock_gettime(CLOCK_MONOTONIC, &prev_ts);
-            while (1) {
-                if (!ancore_pw_is_alive(ff_pid)) {
-                    if (++miss >= miss_limit) break;
-                } else {
-                    miss = 0;
-                }
-                alarm(RIZXBYTE_WATCHDOG_SECONDS);
-                ancore_reaper_lock(&reaper);
-                bool had_input = ancore_capture_poll(&capture);
-                struct timespec now_ts;
-                clock_gettime(CLOCK_MONOTONIC, &now_ts);
-                float frame_dt = (float)(now_ts.tv_sec - prev_ts.tv_sec)
-                        + (float)(now_ts.tv_nsec - prev_ts.tv_nsec) / 1000000000.0f;
-                prev_ts = now_ts;
-                if (frame_dt < 0.001f) frame_dt = 0.001f;
-                if (frame_dt > 0.050f) frame_dt = 0.050f;
-                if (!had_input) frame_dt = RIZXBYTE_FRAME_DT;
-                for (int slot = 0; slot < TS_MAX_SLOTS; slot++) {
-                    float ox = 0, oy = 0;
-                    int od = 0;
-                    int hw = capture.slots[slot].active;
-                    touch_slot(&engine, slot,
-                        (float)capture.slots[slot].x, (float)capture.slots[slot].y,
-                        hw, frame_dt, &ox, &oy, &od);
-                    if (hw) ancore_inject_slot(&inject, slot, (int)ox, (int)oy, 1);
-                    else if (inject.virtual_active[slot])
-                        ancore_inject_slot_release(&inject, slot);
-                }
-                ancore_inject_flush(&inject);
-                ancore_reaper_unlock(&reaper);
-                if (!had_input) usleep(1000);
-            }
-        }
-
-        fprintf(stderr, "[ancore] FF closed, disengage\n");
-        ancore_reaper_lock(&reaper);
-        disengage(&capture, &inject, &engine);
-        ancore_reaper_unlock(&reaper);
     }
+
+    while (ancore_capture_poll(&capture)) {}
+    for (int i = 0; i < TS_MAX_SLOTS; i++) {
+        capture.slots[i].active = 0;
+        capture.slots[i].tracking_id = -1;
+    }
+    capture.cur_slot = 0;
+
+    touch_init(&engine, 1.0f, 1.0f);
+    touch_set_sensitivity_xy(&engine, sens_x, sens_y);
+    touch_set_filter_controls(&engine, cli_strength, cli_responsiveness);
+    touch_set_region(&engine, cli_area,
+        (float)capture.abs_x_min, (float)capture.abs_x_max,
+        (float)capture.abs_y_min, (float)capture.abs_y_max);
+    touch_set_tactix(&engine, cli_tactix,
+        cli_deadzone, cli_flick_speed, cli_flick_boost);
+
+    fprintf(stderr,
+            "[ancore] ENGAGED GLOBAL sensX=%.2f sensY=%.2f area=%s tactix=%d dz=%.1f\n",
+            sens_x, sens_y, k_area[cli_area], cli_tactix, cli_deadzone);
+
+    struct timespec prev_ts;
+    clock_gettime(CLOCK_MONOTONIC, &prev_ts);
+
+    for (;;) {
+        alarm(RIZXBYTE_WATCHDOG_SECONDS);
+        ancore_reaper_lock(&reaper);
+
+        bool had_input = ancore_capture_poll(&capture);
+        struct timespec now_ts;
+        clock_gettime(CLOCK_MONOTONIC, &now_ts);
+        float frame_dt = (float)(now_ts.tv_sec - prev_ts.tv_sec)
+                + (float)(now_ts.tv_nsec - prev_ts.tv_nsec) / 1000000000.0f;
+        prev_ts = now_ts;
+        if (frame_dt < 0.001f) frame_dt = 0.001f;
+        if (frame_dt > 0.050f) frame_dt = 0.050f;
+        if (!had_input) frame_dt = RIZXBYTE_FRAME_DT;
+
+        for (int slot = 0; slot < TS_MAX_SLOTS; slot++) {
+            float ox = 0.0f, oy = 0.0f;
+            int od = 0;
+            int hw = capture.slots[slot].active;
+            touch_slot(&engine, slot,
+                (float)capture.slots[slot].x,
+                (float)capture.slots[slot].y,
+                hw, frame_dt, &ox, &oy, &od);
+            if (hw) {
+                ancore_inject_slot(&inject, slot, (int)ox, (int)oy, 1);
+            } else if (inject.virtual_active[slot]) {
+                ancore_inject_slot_release(&inject, slot);
+            }
+        }
+
+        ancore_inject_flush(&inject);
+        ancore_reaper_unlock(&reaper);
+        if (!had_input) usleep(1000);
+    }
+
     return 0;
 }

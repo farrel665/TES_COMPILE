@@ -57,7 +57,8 @@ public class UserService extends Binder implements IUserService {
                 int x = data.readInt();
                 int y = data.readInt();
                 int intervalMs = data.readInt();
-                boolean ok = startMacro(x, y, intervalMs);
+                int durationMs = data.readInt();
+                boolean ok = startMacro(x, y, intervalMs, durationMs);
                 reply.writeNoException();
                 reply.writeInt(ok ? 1 : 0);
                 return true;
@@ -96,7 +97,7 @@ public class UserService extends Binder implements IUserService {
 
             // Strength/responsiveness are passed as normalized 0..100 values.
             String cmd = String.format(Locale.US,
-                    "setsid %s --preset %d --sens-x %.3f --sens-y %.3f "
+                    "setsid %s --global --preset %d --sens-x %.3f --sens-y %.3f "
                     + "--area %d --tactix %d --strength %.3f --responsiveness %.3f "
                     + "--deadzone 1.5 --flick-speed 16 --flick-boost 1.30 "
                     + ">> %s 2>&1 < /dev/null &",
@@ -119,14 +120,17 @@ public class UserService extends Binder implements IUserService {
     }
 
     @Override
-    public synchronized boolean startMacro(int x, int y, int intervalMs) {
+    public synchronized boolean startMacro(int x, int y, int intervalMs, int durationMs) {
         stopMacro();
         x = Math.max(0, x);
         y = Math.max(0, y);
         intervalMs = Math.max(20, Math.min(intervalMs, 5000));
+        durationMs = Math.max(0, Math.min(durationMs, 5000));
+        String tap = durationMs > 0
+                ? String.format(Locale.US, "input swipe %d %d %d %d %d", x, y, x, y, durationMs)
+                : String.format(Locale.US, "input tap %d %d", x, y);
         String cmd = String.format(Locale.US,
-                "while true; do input tap %d %d; sleep %.3f; done",
-                x, y, intervalMs / 1000.0);
+                "while true; do %s; sleep %.3f; done", tap, intervalMs / 1000.0);
         try {
             macroProcess = Runtime.getRuntime().exec(new String[]{"sh", "-c", cmd});
             Log.i(TAG, "macro started x=" + x + " y=" + y + " interval=" + intervalMs);

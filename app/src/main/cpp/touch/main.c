@@ -115,9 +115,9 @@ int main(void) {
 
     alarm(RIZXBYTE_WATCHDOG_SECONDS * 4);
 
-    pid_t ff_pid = ancore_pw_wait_for_process(RIZXBYTE_FF_PACKAGE_GLOBAL,
-                                                RIZXBYTE_POLL_INTERVAL_MS);
-    printf("[ancore_engine] launcher detected (pid=%d).\n", ff_pid);
+    const char *ff_name = NULL;
+    pid_t ff_pid = ancore_pw_wait_for_freefire(RIZXBYTE_POLL_INTERVAL_MS, &ff_name);
+    printf("[ancore_engine] launcher detected %s (pid=%d).\n", ff_name ? ff_name : "freefire", ff_pid);
     printf("[ancore_engine] warming up %d seconds...\n", RIZXBYTE_WARMUP_SECONDS);
 
     for (int elapsed = 0; elapsed < RIZXBYTE_WARMUP_SECONDS; elapsed++) {

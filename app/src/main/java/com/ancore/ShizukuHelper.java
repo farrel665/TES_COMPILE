@@ -107,10 +107,10 @@ public final class ShizukuHelper {
         return startWorker(binaryPath, presetIdx, 2.0f, 2.0f, 1, 0, 0f, 0f);
     }
 
-    public static boolean startMacro(int x, int y, int intervalMs) {
+    public static boolean startMacro(int x, int y, int intervalMs, int durationMs) {
         synchronized (LOCK) {
             if (sService == null) return false;
-            try { return sService.startMacro(x, y, intervalMs); }
+            try { return sService.startMacro(x, y, intervalMs, durationMs); }
             catch (RemoteException e) { Log.e(TAG, "startMacro", e); return false; }
         }
     }
@@ -165,12 +165,12 @@ public final class ShizukuHelper {
             }
         }
 
-        @Override public boolean startMacro(int x, int y, int intervalMs) throws RemoteException {
+        @Override public boolean startMacro(int x, int y, int intervalMs, int durationMs) throws RemoteException {
             Parcel data = Parcel.obtain();
             Parcel reply = Parcel.obtain();
             try {
                 data.writeInterfaceToken(DESCRIPTOR);
-                data.writeInt(x); data.writeInt(y); data.writeInt(intervalMs);
+                data.writeInt(x); data.writeInt(y); data.writeInt(intervalMs); data.writeInt(durationMs);
                 remote.transact(4, data, reply, 0);
                 reply.readException();
                 return reply.readInt() != 0;
