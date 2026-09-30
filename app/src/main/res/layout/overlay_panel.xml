@@ -7,8 +7,8 @@
 
     <LinearLayout
         android:id="@+id/panel"
-        android:layout_width="360dp"
-        android:layout_height="660dp"
+        android:layout_width="330dp"
+        android:layout_height="500dp"
         android:orientation="vertical"
         android:padding="12dp"
         android:background="@drawable/bg_panel">
@@ -85,7 +85,7 @@
             android:fontFamily="@font/gf_medium" />
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="82dp"
+            android:layout_height="70dp"
             android:layout_marginTop="4dp"
             android:orientation="horizontal">
             <com.ancore.HexagonLinearLayout
@@ -98,8 +98,8 @@
                 android:padding="5dp"
                 android:background="@android:color/transparent">
                 <ImageView
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"
                     android:src="@drawable/ic_area_left" />
                 <TextView
                     android:id="@+id/area_left_text"
@@ -121,8 +121,8 @@
                 android:padding="5dp"
                 android:background="@android:color/transparent">
                 <ImageView
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"
                     android:src="@drawable/ic_area_all" />
                 <TextView
                     android:id="@+id/area_all_text"
@@ -144,8 +144,8 @@
                 android:padding="5dp"
                 android:background="@android:color/transparent">
                 <ImageView
-                    android:layout_width="34dp"
-                    android:layout_height="34dp"
+                    android:layout_width="30dp"
+                    android:layout_height="27dp"
                     android:src="@drawable/ic_area_right" />
                 <TextView
                     android:id="@+id/area_right_text"
@@ -250,8 +250,8 @@
                 android:fontFamily="@font/gf_light" />
             <com.ancore.OctagonCheckBox
                 android:id="@+id/check_tactix"
-                android:layout_width="42dp"
-                android:layout_height="42dp" />
+                android:layout_width="29dp"
+                android:layout_height="29dp" />
         </LinearLayout>
 
         <TextView

@@ -48,8 +48,8 @@ public class GamingSwitch extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int defaultWidth = (int) dpToPx(68);
-        int defaultHeight = (int) dpToPx(34);
+        int defaultWidth = (int) dpToPx(56);
+        int defaultHeight = (int) dpToPx(30);
         setMeasuredDimension(resolveSize(defaultWidth, widthMeasureSpec),
                 resolveSize(defaultHeight, heightMeasureSpec));
     }
