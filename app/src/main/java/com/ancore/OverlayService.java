@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -41,6 +43,7 @@ public class OverlayService extends Service implements TriggerView.Listener {
     private View root, panel, bubble;
     private ViewGroup pageHost;
     private WindowManager.LayoutParams bubbleLp;
+    private TextView bubbleView;
     private WindowManager.LayoutParams panelLp;
     private TriggerView triggerView;
     private WindowManager.LayoutParams triggerLp;
@@ -343,16 +346,67 @@ public class OverlayService extends Service implements TriggerView.Listener {
         macroPageOpen = false;
         stopMacro();
         if(panel!=null) panel.setVisibility(View.GONE);
+        addBubble();
     }
 
     private void showPanel(){
+        removeBubble();
         if(panel!=null) panel.setVisibility(View.VISIBLE);
         showMainPage();
+    }
+
+    /** Small always-visible button used to reopen the panel after Hide. */
+    private void addBubble(){
+        if(wm == null || bubbleView != null) return;
+        bubbleView = new TextView(this);
+        bubbleView.setText("M");
+        bubbleView.setTextColor(Color.WHITE);
+        bubbleView.setTextSize(14f);
+        bubbleView.setGravity(Gravity.CENTER);
+        bubbleView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        bubbleView.setContentDescription("Show Magic Manager");
+        bubbleView.setClickable(true);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setShape(GradientDrawable.OVAL);
+        bg.setColor(0xFF1D1D1D);
+        bg.setStroke(dp(2), 0xFFE51010);
+        bubbleView.setBackground(bg);
+        bubbleView.setOnClickListener(v -> showPanel());
+
+        int type = Build.VERSION.SDK_INT >= 26
+                ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                : WindowManager.LayoutParams.TYPE_PHONE;
+        int size = dp(46);
+        bubbleLp = new WindowManager.LayoutParams(
+                size, size, type,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                        | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
+                PixelFormat.TRANSLUCENT);
+        bubbleLp.gravity = Gravity.TOP | Gravity.END;
+        bubbleLp.x = dp(14);
+        bubbleLp.y = dp(70);
+        try {
+            wm.addView(bubbleView, bubbleLp);
+        } catch (Throwable t) {
+            Log.e(TAG, "bubble add failed", t);
+            bubbleView = null;
+            bubbleLp = null;
+        }
+    }
+
+    private void removeBubble(){
+        if(bubbleView != null && wm != null){
+            try { wm.removeView(bubbleView); } catch (Throwable ignored) {}
+            bubbleView = null;
+            bubbleLp = null;
+        }
     }
 
 
 
     private void removeOverlay(){
+        removeBubble();
         if(root!=null&&wm!=null){try{wm.removeView(root);}catch(Throwable ignored){}root=null;}
     }
     private void removeTrigger(){if(triggerView!=null&&wm!=null){try{wm.removeView(triggerView);}catch(Throwable ignored){}triggerView=null;}}
