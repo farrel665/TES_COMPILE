@@ -54,7 +54,7 @@ public class TriggerView extends View {
     }
 
     public void setDiameter(int dp) {
-        int px = dp((float)Math.max(48, Math.min(260, dp)));
+        int px = Math.round(dp(Math.max(48, Math.min(260, dp))));
         getLayoutParams().width = px;
         getLayoutParams().height = px;
         requestLayout();

@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -38,7 +39,7 @@ public class OverlayService extends Service implements TriggerView.Listener {
 
     private WindowManager wm;
     private View root, panel;
-    private View pageHost;
+    private ViewGroup pageHost;
     private WindowManager.LayoutParams panelLp;
     private TriggerView triggerView;
     private WindowManager.LayoutParams triggerLp;
