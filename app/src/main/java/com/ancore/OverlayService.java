@@ -1,420 +1,445 @@
 package com.ancore;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.PixelFormat;
-import android.os.Build;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Looper;
-import android.provider.Settings;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Path;
+import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import java.util.Locale;
+public class GamingSeekBar extends View {
 
-/** Shizuku-backed floating overlay. */
-public class OverlayService extends Service {
-    private static final String TAG = "ancore_overlay";
-    private static final String CH_ID = "ancore_overlay";
-    public static final String ACTION_SHOW = "com.ancore.OVERLAY_SHOW";
-    public static final String ACTION_HIDE = "com.ancore.OVERLAY_HIDE";
-    public static final String ACTION_STOP = "com.ancore.OVERLAY_STOP";
+    private int max = 100;
+    private int min = 0;
+    private int progress = 50;
+    private int step = 1;
 
-    private WindowManager wm;
-    private View root, panel, bubble;
-    private WindowManager.LayoutParams lp;
-    private final Handler main = new Handler(Looper.getMainLooper());
+    // =========================
+    // UKURAN BUTTON
+    // =========================
+    // Ubah angka ini untuk mengatur ukuran button - dan +
+    private float buttonSizeDp = 28f;
 
-    private int sensArea = 1;
-    private float sensX = 2.00f;
-    private float sensY = 2.00f;
-    private boolean tactix;
-    private boolean workerRunning;
-    private float strength;
-    private float responsiveness;
+    // Warna
+    private int buttonBgColor = Color.parseColor("#3B1E16");
+    private int buttonTextColor = Color.parseColor("#E5A880");
+    private int trackBgColor = Color.parseColor("#2A1210");
+    private int progressColor = Color.parseColor("#FF0015");
+    private int thumbColor = Color.parseColor("#FF0015");
 
-    private TextView statusTv, valX, valY, valStrength, valResponsiveness;
-    private LinearLayout areaLeft, areaAll, areaRight;
-    private TextView areaLeftText, areaAllText, areaRightText;
-    private GamingSwitch switchActive;
-    private GamingSeekBar seekStrength, seekResponsiveness;
-    private OctagonCheckBox checkTactix;
-    private ImageView imgResetX, imgResetY;
+    private Paint paint;
+    private RectF minusBtnRect = new RectF();
+    private RectF plusBtnRect = new RectF();
+    private RectF trackRect = new RectF();
+    private RectF progressRect = new RectF();
+    private Path buttonPath = new Path();
 
-    private int startX, startY, startTouchX, startTouchY;
-    private boolean dragging;
+    private OnProgressChangeListener listener;
 
-    @Override public void onCreate() {
-        super.onCreate();
-        wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-        startForegroundNotif();
-        if (!Settings.canDrawOverlays(this)) {
-            Log.e(TAG, "no overlay permission");
-            stopSelf();
-            return;
+    public interface OnProgressChangeListener {
+        void onProgressChanged(
+                GamingSeekBar seekBar,
+                int progress,
+                boolean fromUser
+        );
+    }
+
+    public GamingSeekBar(Context context) {
+        super(context);
+        init();
+    }
+
+    public GamingSeekBar(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public GamingSeekBar(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init();
+    }
+
+    private void init() {
+        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int defaultHeight = (int) dpToPx(40);
+        int defaultWidth = (int) dpToPx(200);
+
+        int width = resolveSize(defaultWidth, widthMeasureSpec);
+        int height = resolveSize(defaultHeight, heightMeasureSpec);
+
+        setMeasuredDimension(width, height);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+
+        int width = getWidth();
+        int height = getHeight();
+
+        if (width == 0 || height == 0) return;
+
+        // =========================
+        // UKURAN BUTTON
+        // =========================
+        float btnSize = dpToPx(buttonSizeDp);
+
+        // Jangan sampai button lebih tinggi dari GamingSeekBar
+        btnSize = Math.min(btnSize, height);
+
+        float padding = dpToPx(12);
+        float cut = Math.max(dpToPx(5), btnSize * 0.18f);
+
+        // Posisi vertikal button di tengah
+        float buttonTop = (height - btnSize) / 2f;
+        float buttonBottom = buttonTop + btnSize;
+
+        // =========================
+        // BUTTON MINUS
+        // =========================
+        minusBtnRect.set(
+                0,
+                buttonTop,
+                btnSize,
+                buttonBottom
+        );
+
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(buttonBgColor);
+
+        drawChamferedRect(
+                canvas,
+                minusBtnRect,
+                cut,
+                paint
+        );
+
+        // Simbol -
+        paint.setColor(buttonTextColor);
+        paint.setStrokeWidth(dpToPx(3));
+        paint.setStrokeCap(Paint.Cap.ROUND);
+
+        canvas.drawLine(
+                btnSize * 0.3f,
+                height / 2f,
+                btnSize * 0.7f,
+                height / 2f,
+                paint
+        );
+
+        // =========================
+        // BUTTON PLUS
+        // =========================
+        plusBtnRect.set(
+                width - btnSize,
+                buttonTop,
+                width,
+                buttonBottom
+        );
+
+        paint.setColor(buttonBgColor);
+        paint.setStyle(Paint.Style.FILL);
+
+        drawChamferedRect(
+                canvas,
+                plusBtnRect,
+                cut,
+                paint
+        );
+
+        // Simbol +
+        paint.setColor(buttonTextColor);
+        paint.setStrokeWidth(dpToPx(3));
+
+        // Horizontal
+        canvas.drawLine(
+                width - btnSize + (btnSize * 0.3f),
+                height / 2f,
+                width - (btnSize * 0.3f),
+                height / 2f,
+                paint
+        );
+
+        // Vertical
+        canvas.drawLine(
+                width - (btnSize * 0.5f),
+                buttonTop + (btnSize * 0.3f),
+                width - (btnSize * 0.5f),
+                buttonTop + (btnSize * 0.7f),
+                paint
+        );
+
+        // =========================
+        // TRACK
+        // =========================
+        float trackLeft = btnSize + padding;
+        float trackRight = width - btnSize - padding;
+
+        float trackWidth = trackRight - trackLeft;
+
+        float centerY = height / 2f;
+        float trackHeight = dpToPx(4);
+
+        trackRect.set(
+                trackLeft,
+                centerY - (trackHeight / 2f),
+                trackRight,
+                centerY + (trackHeight / 2f)
+        );
+
+        paint.setColor(trackBgColor);
+        paint.setStyle(Paint.Style.FILL);
+
+        canvas.drawRoundRect(
+                trackRect,
+                trackHeight / 2f,
+                trackHeight / 2f,
+                paint
+        );
+
+        // =========================
+        // PROGRESS
+        // =========================
+        float progressPercent;
+
+        if (max == min) {
+            progressPercent = 0f;
+        } else {
+            progressPercent =
+                    (float) (progress - min) / (max - min);
         }
-        inflateOverlay();
+
+        float currentThumbX =
+                trackLeft + (trackWidth * progressPercent);
+
+        progressRect.set(
+                trackLeft,
+                centerY - (trackHeight / 2f),
+                currentThumbX,
+                centerY + (trackHeight / 2f)
+        );
+
+        paint.setColor(progressColor);
+
+        canvas.drawRoundRect(
+                progressRect,
+                trackHeight / 2f,
+                trackHeight / 2f,
+                paint
+        );
+
+        // =========================
+        // THUMB
+        // =========================
+        float thumbWidth = dpToPx(8);
+        float thumbHeight = dpToPx(20);
+
+        RectF thumbRect = new RectF(
+                currentThumbX - (thumbWidth / 2f),
+                centerY - (thumbHeight / 2f),
+                currentThumbX + (thumbWidth / 2f),
+                centerY + (thumbHeight / 2f)
+        );
+
+        paint.setColor(thumbColor);
+
+        canvas.drawRoundRect(
+                thumbRect,
+                dpToPx(2),
+                dpToPx(2),
+                paint
+        );
     }
 
-    @Override public int onStartCommand(Intent intent, int flags, int startId) {
-        String action = intent == null ? null : intent.getAction();
-        if (ACTION_SHOW.equals(action)) showPanel();
-        else if (ACTION_HIDE.equals(action)) hideToBubble();
-        else if (ACTION_STOP.equals(action)) stopWorkerAndSelf();
-        else showPanel();
-        return START_STICKY;
+    private void drawChamferedRect(
+            Canvas canvas,
+            RectF r,
+            float cut,
+            Paint p
+    ) {
+        buttonPath.reset();
+
+        float c = Math.min(
+                cut,
+                Math.min(r.width(), r.height()) / 2f
+        );
+
+        buttonPath.moveTo(r.left + c, r.top);
+        buttonPath.lineTo(r.right - c, r.top);
+        buttonPath.lineTo(r.right, r.top + c);
+        buttonPath.lineTo(r.right, r.bottom - c);
+        buttonPath.lineTo(r.right - c, r.bottom);
+        buttonPath.lineTo(r.left + c, r.bottom);
+        buttonPath.lineTo(r.left, r.bottom - c);
+        buttonPath.lineTo(r.left, r.top + c);
+        buttonPath.close();
+
+        canvas.drawPath(buttonPath, p);
     }
 
-    @Override public IBinder onBind(Intent intent) { return null; }
+    private boolean isDragging = false;
 
-    @Override public void onDestroy() {
-        doStop();
-        removeOverlay();
-        super.onDestroy();
-    }
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
 
-    private void startForegroundNotif() {
-        if (Build.VERSION.SDK_INT >= 26) {
-            NotificationChannel ch = new NotificationChannel(CH_ID, "Magic Manager",
-                    NotificationManager.IMPORTANCE_LOW);
-            ch.setShowBadge(false);
-            NotificationManager nm = getSystemService(NotificationManager.class);
-            if (nm != null) nm.createNotificationChannel(ch);
-        }
-        Intent open = new Intent(this, OverlayService.class).setAction(ACTION_SHOW);
-        PendingIntent pi = PendingIntent.getService(this, 0, open,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        Notification.Builder b = Build.VERSION.SDK_INT >= 26
-                ? new Notification.Builder(this, CH_ID) : new Notification.Builder(this);
-        Notification n = b.setContentTitle("Magic Manager")
-                .setContentText("Free Fire • com.dts.freefireth")
-                .setSmallIcon(android.R.drawable.ic_menu_manage)
-                .setContentIntent(pi).setOngoing(true).build();
-        startForeground(42, n);
-    }
+        float x = event.getX();
+        float y = event.getY();
 
-    private void inflateOverlay() {
-        root = LayoutInflater.from(this).inflate(R.layout.overlay_panel, null);
-        panel = root.findViewById(R.id.panel);
-        if (panel instanceof HexagonLinearLayout) {
-            HexagonLinearLayout hp = (HexagonLinearLayout) panel;
-            hp.setBackgroundColor(0xF21C1C21);
-            hp.setStrokeColor(0xFF3A3A40);
-            hp.setStrokeWidth(1f);
-            hp.setCornerCut(18f);
-        }
-        bubble = root.findViewById(R.id.bubble);
-        statusTv = root.findViewById(R.id.status_text);
-        valX = root.findViewById(R.id.val_sens_x);
-        valY = root.findViewById(R.id.val_sens_y);
-        valStrength = root.findViewById(R.id.val_strength);
-        valResponsiveness = root.findViewById(R.id.val_responsiveness);
+        switch (event.getAction()) {
 
-        switchActive = root.findViewById(R.id.switch_active);
-        seekStrength = root.findViewById(R.id.seek_strength);
-        seekResponsiveness = root.findViewById(R.id.seek_responsiveness);
-        checkTactix = root.findViewById(R.id.check_tactix);
-        imgResetX = root.findViewById(R.id.img_reset_x);
-        imgResetY = root.findViewById(R.id.img_reset_y);
-
-        areaLeft = root.findViewById(R.id.area_left);
-        areaAll = root.findViewById(R.id.area_all);
-        areaRight = root.findViewById(R.id.area_right);
-        areaLeftText = root.findViewById(R.id.area_left_text);
-        areaAllText = root.findViewById(R.id.area_all_text);
-        areaRightText = root.findViewById(R.id.area_right_text);
-
-        GamingSeekBar sx = root.findViewById(R.id.seek_sens_x);
-        GamingSeekBar sy = root.findViewById(R.id.seek_sens_y);
-        configureSensitivity(sx, true);
-        configureSensitivity(sy, false);
-
-        if (imgResetX != null) imgResetX.setOnClickListener(v -> resetX(sx));
-        if (imgResetY != null) imgResetY.setOnClickListener(v -> resetY(sy));
-
-        if (checkTactix != null) {
-            checkTactix.setChecked(false);
-            checkTactix.setOnCheckedChangeListener((button, checked) -> {
-                tactix = checked;
-                restartIfRunning();
-            });
-        }
-        if (seekStrength != null) {
-            seekStrength.setMin(0); seekStrength.setMax(100); seekStrength.setStep(1);
-            seekStrength.setProgress(0);
-            seekStrength.setOnProgressChangeListener((bar, progress, fromUser) -> {
-                strength = clamp(progress, 0f, 100f);
-                setPercent(valStrength, strength);
-                if (fromUser) restartIfRunning();
-            });
-        }
-        if (seekResponsiveness != null) {
-            seekResponsiveness.setMin(0); seekResponsiveness.setMax(100); seekResponsiveness.setStep(1);
-            seekResponsiveness.setProgress(0);
-            seekResponsiveness.setOnProgressChangeListener((bar, progress, fromUser) -> {
-                responsiveness = clamp(progress, 0f, 100f);
-                setPercent(valResponsiveness, responsiveness);
-                if (fromUser) restartIfRunning();
-            });
-        }
-
-        View.OnClickListener areaListener = v -> {
-            if (v == areaLeft) sensArea = 0;
-            else if (v == areaAll) sensArea = 1;
-            else sensArea = 2;
-            refreshAreaUi();
-            restartIfRunning();
-        };
-        areaLeft.setOnClickListener(areaListener);
-        areaAll.setOnClickListener(areaListener);
-        areaRight.setOnClickListener(areaListener);
-
-        if (switchActive != null) {
-            // Explicitly force initial OFF before listener is installed.
-            switchActive.setChecked(false, false);
-            switchActive.setOnCheckedChangeListener((sw, checked) -> {
-                if (checked) doStart(); else doStop();
-            });
-        }
-
-        root.findViewById(R.id.btn_hide).setOnClickListener(v -> hideToBubble());
-        root.findViewById(R.id.btn_close).setOnClickListener(v -> stopWorkerAndSelf());
-
-        View.OnTouchListener drag = this::onDrag;
-        View header = root.findViewById(R.id.drag_handle);
-        if (header != null) header.setOnTouchListener(drag);
-        bubble.setOnTouchListener(drag);
-
-        int type = Build.VERSION.SDK_INT >= 26
-                ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                : WindowManager.LayoutParams.TYPE_PHONE;
-        lp = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                type,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                        | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
-                PixelFormat.TRANSLUCENT);
-        lp.gravity = Gravity.TOP | Gravity.START;
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        lp.x = Math.max(dp(8), (dm.widthPixels - dp(360)) / 2);
-        lp.y = dm.heightPixels / 8;
-
-        try {
-            wm.addView(root, lp);
-            refreshAreaUi();
-            showPanel();
-        } catch (Throwable t) {
-            Log.e(TAG, "addView failed", t);
-            Toast.makeText(this, "Overlay failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
-            stopSelf();
-        }
-    }
-
-    private void configureSensitivity(GamingSeekBar bar, boolean horizontal) {
-        if (bar == null) return;
-        bar.setMin(0);
-        bar.setMax(400); // 1.00 + 400/100 = 5.00
-        bar.setStep(1);
-        float value = horizontal ? sensX : sensY;
-        bar.setProgress(Math.round((value - 1.0f) * 100f));
-        bar.setOnProgressChangeListener((b, progress, fromUser) -> {
-            float v = 1.0f + clamp(progress, 0, 400) / 100f;
-            if (horizontal) {
-                sensX = v; setSensitivityText(valX, sensX);
-            } else {
-                sensY = v; setSensitivityText(valY, sensY);
-            }
-            if (fromUser) restartIfRunning();
-        });
-        if (horizontal) setSensitivityText(valX, sensX);
-        else setSensitivityText(valY, sensY);
-    }
-
-    private void resetX(GamingSeekBar bar) {
-        sensX = 2.00f;
-        if (bar != null) bar.setProgress(100);
-        setSensitivityText(valX, sensX);
-        restartIfRunning();
-    }
-
-    private void resetY(GamingSeekBar bar) {
-        sensY = 2.00f;
-        if (bar != null) bar.setProgress(100);
-        setSensitivityText(valY, sensY);
-        restartIfRunning();
-    }
-
-    private void setSensitivityText(TextView tv, float value) {
-        if (tv != null) tv.setText(String.format(Locale.US, "%.2f×", value));
-    }
-
-    private void setPercent(TextView tv, float value) {
-        if (tv != null) tv.setText(String.format(Locale.US, "%.0f%%", value));
-    }
-
-    private void restartIfRunning() {
-        if (workerRunning) doStart();
-    }
-
-    private void showPanel() {
-        if (panel != null) panel.setVisibility(View.VISIBLE);
-        if (bubble != null) bubble.setVisibility(View.GONE);
-        resizeWrap();
-    }
-
-    private void hideToBubble() {
-        if (panel != null) panel.setVisibility(View.GONE);
-        if (bubble != null) bubble.setVisibility(View.VISIBLE);
-        if (lp != null) {
-            lp.width = dp(52); lp.height = dp(52);
-            try { wm.updateViewLayout(root, lp); } catch (Throwable ignored) {}
-        }
-    }
-
-    private void resizeWrap() {
-        if (lp != null) {
-            lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
-            lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-            try { wm.updateViewLayout(root, lp); } catch (Throwable ignored) {}
-        }
-    }
-
-    private boolean onDrag(View v, MotionEvent e) {
-        switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                dragging = false;
-                startX = lp.x; startY = lp.y;
-                startTouchX = (int) e.getRawX(); startTouchY = (int) e.getRawY();
-                return true;
-            case MotionEvent.ACTION_MOVE:
-                int dx = (int) e.getRawX() - startTouchX;
-                int dy = (int) e.getRawY() - startTouchY;
-                if (Math.abs(dx) > 8 || Math.abs(dy) > 8) dragging = true;
-                lp.x = startX + dx; lp.y = startY + dy;
-                try { wm.updateViewLayout(root, lp); } catch (Throwable ignored) {}
-                return true;
-            case MotionEvent.ACTION_UP:
-                if (!dragging && v == bubble) showPanel();
-                return true;
-            default: return false;
-        }
-    }
 
-    private void doStart() {
-        if (switchActive != null && !switchActive.isChecked()) return;
-        if (statusTv != null) statusTv.setText("Starting…");
-        main.post(() -> {
-            try {
-                if (!ShizukuHelper.isReady()) {
-                    ShizukuHelper.init();
-                    main.postDelayed(() -> {
-                        if (switchActive != null && switchActive.isChecked() && !workerRunning) {
-                            if (ShizukuHelper.isReady()) doStart();
-                            else {
-                                switchActive.setChecked(false, true);
-                                if (statusTv != null) statusTv.setText("Shizuku not connected");
-                            }
-                        }
-                    }, 450);
-                    return;
-                }
-                String bin = getApplicationInfo().nativeLibraryDir + "/libancoreengine.so";
-                if (!new java.io.File(bin).exists()) bin = "/data/local/tmp/ancore_engine";
+                if (minusBtnRect.contains(x, y)) {
+                    setProgress(progress - step, true);
+                    return true;
 
-                boolean ok = ShizukuHelper.startWorker(bin, 0, sensX, sensY,
-                        sensArea, tactix ? 1 : 0, strength, responsiveness);
-                workerRunning = ok;
-                if (ok) {
-                    String[] areas = {"LEFT", "ALL", "RIGHT"};
-                    if (statusTv != null) statusTv.setText("Engaged  X="
-                            + String.format(Locale.US, "%.2f", sensX)
-                            + " Y=" + String.format(Locale.US, "%.2f", sensY)
-                            + "  " + areas[sensArea]);
+                } else if (plusBtnRect.contains(x, y)) {
+                    setProgress(progress + step, true);
+                    return true;
+
                 } else {
-                    if (switchActive != null) switchActive.setChecked(false, true);
-                    if (statusTv != null) statusTv.setText("Start failed — check Shizuku / binary");
+                    isDragging = true;
+                    updateProgressFromTouch(x);
+                    return true;
                 }
-            } catch (Throwable t) {
-                workerRunning = false;
-                if (switchActive != null) switchActive.setChecked(false, true);
-                if (statusTv != null) statusTv.setText("Error: " + t.getMessage());
-                Log.e(TAG, "doStart", t);
+
+            case MotionEvent.ACTION_MOVE:
+
+                if (isDragging) {
+                    updateProgressFromTouch(x);
+                    return true;
+                }
+
+                break;
+
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+
+                isDragging = false;
+                return true;
+        }
+
+        return super.onTouchEvent(event);
+    }
+
+    private void updateProgressFromTouch(float x) {
+
+        float btnSize = dpToPx(buttonSizeDp);
+
+        btnSize = Math.min(
+                btnSize,
+                getHeight()
+        );
+
+        float padding = dpToPx(12);
+
+        float trackLeft = btnSize + padding;
+        float trackRight = getWidth() - btnSize - padding;
+
+        float trackWidth = trackRight - trackLeft;
+
+        if (trackWidth <= 0) return;
+
+        float clampedX = Math.max(
+                trackLeft,
+                Math.min(x, trackRight)
+        );
+
+        float fraction =
+                (clampedX - trackLeft) / trackWidth;
+
+        int newProgress = Math.round(
+                min + fraction * (max - min)
+        );
+
+        setProgress(newProgress, true);
+    }
+
+    public void setProgress(int newProgress) {
+        setProgress(newProgress, false);
+    }
+
+    private void setProgress(
+            int newProgress,
+            boolean fromUser
+    ) {
+
+        int clamped = Math.max(
+                min,
+                Math.min(newProgress, max)
+        );
+
+        if (this.progress != clamped) {
+
+            this.progress = clamped;
+
+            invalidate();
+
+            if (listener != null) {
+                listener.onProgressChanged(
+                        this,
+                        this.progress,
+                        fromUser
+                );
             }
-        });
-    }
-
-    private void doStop() {
-        try { ShizukuHelper.stopWorker(); }
-        catch (Throwable t) { Log.e(TAG, "stopWorker", t); }
-        workerRunning = false;
-        if (switchActive != null && switchActive.isChecked()) switchActive.setChecked(false, true);
-        if (statusTv != null) statusTv.setText("Disengaged");
-    }
-
-    private void stopWorkerAndSelf() {
-        doStop();
-        removeOverlay();
-        stopForeground(true);
-        stopSelf();
-    }
-
-    private void removeOverlay() {
-        if (root != null && wm != null) {
-            try { wm.removeView(root); } catch (Throwable ignored) {}
-            root = null;
         }
     }
 
-    private void refreshAreaUi() {
-        if (areaLeft == null || areaAll == null || areaRight == null) return;
-        LinearLayout[] views = {areaLeft, areaAll, areaRight};
-        TextView[] labels = {areaLeftText, areaAllText, areaRightText};
-        for (int i = 0; i < views.length; i++) {
-            if (views[i] instanceof HexagonLinearLayout) {
-                HexagonLinearLayout h = (HexagonLinearLayout) views[i];
-                h.setBackgroundColor(i == sensArea ? 0xFFE51010 : 0xFF262323);
-                h.setStrokeColor(i == sensArea ? 0xFFE51010 : 0xFF363232);
-                h.setStrokeWidth(1f);
-                h.setCornerCut(10f);
-            }
-            if (labels[i] != null) {
-                labels[i].setTextColor(i == sensArea ? 0xFFFFFFFF : 0xFFB0B3BA);
-            }
-        }
+    public int getProgress() {
+        return progress;
     }
 
-    private static float clamp(float v, float min, float max) {
-        return Math.max(min, Math.min(max, v));
-    }
-    private static int clamp(int v, int min, int max) {
-        return Math.max(min, Math.min(max, v));
-    }
-    private int dp(int v) {
-        float d = getResources().getDisplayMetrics().density;
-        return (int) (v * d + 0.5f);
+    public void setMax(int max) {
+        this.max = max;
+        invalidate();
     }
 
-    public static void launch(Context ctx) {
-        Intent i = new Intent(ctx, OverlayService.class).setAction(ACTION_SHOW);
-        if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i);
-        else ctx.startService(i);
+    public int getMax() {
+        return max;
+    }
+
+    public int getMin() {
+        return min;
+    }
+
+    public void setMin(int min) {
+        this.min = min;
+        invalidate();
+    }
+
+    public void setStep(int step) {
+        this.step = step;
+    }
+
+    // =========================
+    // SET UKURAN BUTTON DARI JAVA
+    // =========================
+    public void setButtonSize(float dp) {
+        buttonSizeDp = Math.max(1f, dp);
+        invalidate();
+    }
+
+    public float getButtonSize() {
+        return buttonSizeDp;
+    }
+
+    public void setOnProgressChangeListener(
+            OnProgressChangeListener listener
+    ) {
+        this.listener = listener;
+    }
+
+    private float dpToPx(float dp) {
+        return dp *
+                getResources()
+                        .getDisplayMetrics()
+                        .density;
     }
 }

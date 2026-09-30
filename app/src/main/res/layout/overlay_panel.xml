@@ -8,7 +8,7 @@
     <LinearLayout
         android:id="@+id/panel"
         android:layout_width="310dp"
-        android:layout_height="430dp"
+        android:layout_height="425dp"
         android:orientation="vertical"
         android:padding="12dp"
         android:background="@drawable/bg_panel">
@@ -70,8 +70,8 @@
                 android:fontFamily="@font/gf_light" />
             <com.ancore.GamingSwitch
                 android:id="@+id/switch_active"
-                android:layout_width="68dp"
-                android:layout_height="34dp"
+                android:layout_width="66dp"
+                android:layout_height="32dp"
                 android:layout_marginStart="8dp" />
         </LinearLayout>
 

@@ -84,7 +84,7 @@ public class UserService extends Binder implements IUserService {
             String cmd = String.format(Locale.US,
                     "setsid %s --preset %d --sens-x %.3f --sens-y %.3f "
                     + "--area %d --tactix %d --strength %.3f --responsiveness %.3f "
-                    + "--deadzone 1.5 --flick-speed 18 --flick-boost 1.55 "
+                    + "--deadzone 1.5 --flick-speed 16 --flick-boost 1.30 "
                     + ">> %s 2>&1 < /dev/null &",
                     shellQuote(TMP_BIN), presetIdx, sensX, sensY, area, tactix,
                     strength, responsiveness, shellQuote(TMP_LOG));
