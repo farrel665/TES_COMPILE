@@ -20,6 +20,7 @@ public class UserService extends Binder implements IUserService {
     private static final String TAG = "ancore_usersvc";
     private static final String TMP_BIN = "/data/local/tmp/ancore_engine";
     private static final String TMP_LOG = "/data/local/tmp/ancore_engine.log";
+    private volatile Process macroProcess;
 
     public UserService() { attachInterface(this, DESCRIPTOR); }
     @Override public IBinder asBinder() { return this; }
@@ -51,6 +52,19 @@ public class UserService extends Binder implements IUserService {
             case 3:
                 reply.writeNoException();
                 reply.writeString(ping());
+                return true;
+            case 4: {
+                int x = data.readInt();
+                int y = data.readInt();
+                int intervalMs = data.readInt();
+                boolean ok = startMacro(x, y, intervalMs);
+                reply.writeNoException();
+                reply.writeInt(ok ? 1 : 0);
+                return true;
+            }
+            case 5:
+                stopMacro();
+                reply.writeNoException();
                 return true;
             default:
                 return super.onTransact(code, data, reply, flags);
@@ -102,6 +116,36 @@ public class UserService extends Binder implements IUserService {
     @Override public void stopWorker() {
         Log.i(TAG, "stopWorker");
         killByName("ancore_engine");
+    }
+
+    @Override
+    public synchronized boolean startMacro(int x, int y, int intervalMs) {
+        stopMacro();
+        x = Math.max(0, x);
+        y = Math.max(0, y);
+        intervalMs = Math.max(20, Math.min(intervalMs, 5000));
+        String cmd = String.format(Locale.US,
+                "while true; do input tap %d %d; sleep %.3f; done",
+                x, y, intervalMs / 1000.0);
+        try {
+            macroProcess = Runtime.getRuntime().exec(new String[]{"sh", "-c", cmd});
+            Log.i(TAG, "macro started x=" + x + " y=" + y + " interval=" + intervalMs);
+            return true;
+        } catch (Throwable t) {
+            macroProcess = null;
+            Log.e(TAG, "startMacro", t);
+            return false;
+        }
+    }
+
+    @Override
+    public synchronized void stopMacro() {
+        Process p = macroProcess;
+        macroProcess = null;
+        if (p != null) {
+            try { p.destroy(); } catch (Throwable ignored) {}
+            try { if (p.isAlive()) p.destroyForcibly(); } catch (Throwable ignored) {}
+        }
     }
 
     @Override public String ping() {

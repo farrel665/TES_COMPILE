@@ -79,6 +79,55 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:text="Macro Auto Click"
+            android:textColor="#D6D6D6"
+            android:textSize="16sp"
+            android:fontFamily="@font/gf_medium" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/macro_hold_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:background="@drawable/bg_btn_dark"
+                android:text="HOLD TO CLICK"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:fontFamily="@font/gf_bold" />
+            <TextView
+                android:id="@+id/val_macro_interval"
+                android:layout_width="58dp"
+                android:layout_height="wrap_content"
+                android:gravity="end|center_vertical"
+                android:layout_marginStart="8dp"
+                android:text="100ms"
+                android:textColor="#E51010"
+                android:textSize="13sp"
+                android:fontFamily="@font/gf_medium" />
+        </LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Tahan tombol untuk menjalankan • lepas untuk berhenti • titik tap default di tengah layar"
+            android:textColor="#777777"
+            android:textSize="10sp"
+            android:fontFamily="@font/gf_light" />
+        <com.ancore.GamingSeekBar
+            android:id="@+id/seek_macro_interval"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:text="Sensitivity Area"
             android:textColor="#D6D6D6"
             android:textSize="16sp"

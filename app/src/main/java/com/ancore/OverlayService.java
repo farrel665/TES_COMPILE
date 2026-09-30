@@ -45,6 +45,10 @@ public class OverlayService extends Service {
     private float sensY = 1.00f;
     private boolean tactix;
     private boolean workerRunning;
+    private boolean macroRunning;
+    private int macroIntervalMs = 100;
+    private TextView macroHoldButton, valMacroInterval;
+    private GamingSeekBar seekMacroInterval;
     private float strength;
     private float responsiveness;
 
@@ -56,8 +60,6 @@ public class OverlayService extends Service {
     private OctagonCheckBox checkTactix;
     private ImageView imgResetX, imgResetY;
 
-    private int startX, startY, startTouchX, startTouchY;
-    private boolean dragging;
 
     @Override public void onCreate() {
         super.onCreate();
@@ -131,6 +133,9 @@ public class OverlayService extends Service {
         checkTactix = root.findViewById(R.id.check_tactix);
         imgResetX = root.findViewById(R.id.img_reset_x);
         imgResetY = root.findViewById(R.id.img_reset_y);
+        macroHoldButton = root.findViewById(R.id.macro_hold_button);
+        valMacroInterval = root.findViewById(R.id.val_macro_interval);
+        seekMacroInterval = root.findViewById(R.id.seek_macro_interval);
 
         areaLeft = root.findViewById(R.id.area_left);
         areaAll = root.findViewById(R.id.area_all);
@@ -173,6 +178,40 @@ public class OverlayService extends Service {
             });
         }
 
+        if (seekMacroInterval != null) {
+            seekMacroInterval.setMin(20);
+            seekMacroInterval.setMax(500);
+            seekMacroInterval.setStep(10);
+            seekMacroInterval.setProgress(macroIntervalMs);
+            seekMacroInterval.setOnProgressChangeListener((bar, progress, fromUser) -> {
+                macroIntervalMs = clamp(progress, 20, 500);
+                if (valMacroInterval != null) valMacroInterval.setText(macroIntervalMs + "ms");
+                if (macroRunning) {
+                    stopMacro();
+                    startMacro();
+                }
+            });
+            seekMacroInterval.setButtonSize(22);
+        }
+        if (valMacroInterval != null) valMacroInterval.setText(macroIntervalMs + "ms");
+        if (macroHoldButton != null) {
+            macroHoldButton.setOnTouchListener((v, event) -> {
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        v.setPressed(true);
+                        startMacro();
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        v.setPressed(false);
+                        stopMacro();
+                        return true;
+                    default:
+                        return true;
+                }
+            });
+        }
+
         View.OnClickListener areaListener = v -> {
             if (v == areaLeft) sensArea = 0;
             else if (v == areaAll) sensArea = 1;
@@ -195,10 +234,10 @@ public class OverlayService extends Service {
         root.findViewById(R.id.btn_hide).setOnClickListener(v -> hideToBubble());
         root.findViewById(R.id.btn_close).setOnClickListener(v -> stopWorkerAndSelf());
 
-        View.OnTouchListener drag = this::onDrag;
+        // Panel is intentionally fixed: no drag listener is installed.
         View header = root.findViewById(R.id.drag_handle);
-        if (header != null) header.setOnTouchListener(drag);
-        bubble.setOnTouchListener(drag);
+        if (header != null) header.setOnClickListener(v -> { /* fixed header */ });
+        if (bubble != null) bubble.setOnClickListener(v -> showPanel());
 
         int type = Build.VERSION.SDK_INT >= 26
                 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -211,11 +250,9 @@ public class OverlayService extends Service {
                         | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                         | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
                 PixelFormat.TRANSLUCENT);
-        lp.gravity = Gravity.TOP | Gravity.START;
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        lp.x = Math.max(dp(8), (dm.widthPixels - dp(360)) / 2);
-        lp.y = dm.heightPixels / 8;
+        lp.gravity = Gravity.START | Gravity.CENTER_VERTICAL;
+        lp.x = dp(8);
+        lp.y = 0;
 
         try {
             wm.addView(root, lp);
@@ -297,25 +334,30 @@ public class OverlayService extends Service {
         }
     }
 
-    private boolean onDrag(View v, MotionEvent e) {
-        switch (e.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                dragging = false;
-                startX = lp.x; startY = lp.y;
-                startTouchX = (int) e.getRawX(); startTouchY = (int) e.getRawY();
-                return true;
-            case MotionEvent.ACTION_MOVE:
-                int dx = (int) e.getRawX() - startTouchX;
-                int dy = (int) e.getRawY() - startTouchY;
-                if (Math.abs(dx) > 8 || Math.abs(dy) > 8) dragging = true;
-                lp.x = startX + dx; lp.y = startY + dy;
-                try { wm.updateViewLayout(root, lp); } catch (Throwable ignored) {}
-                return true;
-            case MotionEvent.ACTION_UP:
-                if (!dragging && v == bubble) showPanel();
-                return true;
-            default: return false;
+    private void startMacro() {
+        if (macroRunning) return;
+        if (!ShizukuHelper.isReady()) {
+            ShizukuHelper.init();
+            if (statusTv != null) statusTv.setText("Waiting for Shizuku…");
+            return;
         }
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        int x = dm.widthPixels / 2;
+        int y = dm.heightPixels / 2;
+        boolean ok = ShizukuHelper.startMacro(x, y, macroIntervalMs);
+        macroRunning = ok;
+        if (ok) {
+            if (statusTv != null) statusTv.setText("Macro running • " + macroIntervalMs + "ms");
+        } else if (statusTv != null) {
+            statusTv.setText("Macro start failed — check Shizuku");
+        }
+    }
+
+    private void stopMacro() {
+        if (!macroRunning) return;
+        try { ShizukuHelper.stopMacro(); } catch (Throwable t) { Log.e(TAG, "stopMacro", t); }
+        macroRunning = false;
+        if (statusTv != null && !workerRunning) statusTv.setText("Disengaged");
     }
 
     private void doStart() {
@@ -362,6 +404,7 @@ public class OverlayService extends Service {
     }
 
     private void doStop() {
+        stopMacro();
         try { ShizukuHelper.stopWorker(); }
         catch (Throwable t) { Log.e(TAG, "stopWorker", t); }
         workerRunning = false;

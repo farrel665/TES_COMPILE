@@ -17,5 +17,7 @@ public interface IUserService extends IInterface {
                         float responsiveness) throws RemoteException;
 
     void stopWorker() throws RemoteException;
+    boolean startMacro(int x, int y, int intervalMs) throws RemoteException;
+    void stopMacro() throws RemoteException;
     String ping() throws RemoteException;
 }
