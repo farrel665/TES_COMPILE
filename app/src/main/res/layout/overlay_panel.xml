@@ -7,8 +7,8 @@
 
     <LinearLayout
         android:id="@+id/panel"
-        android:layout_width="320dp"
-        android:layout_height="460dp"
+        android:layout_width="310dp"
+        android:layout_height="430dp"
         android:orientation="vertical"
         android:padding="12dp"
         android:background="@drawable/bg_panel">
@@ -85,7 +85,7 @@
             android:fontFamily="@font/gf_medium" />
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="50dp"
             android:layout_marginTop="4dp"
             android:orientation="horizontal">
             <com.ancore.HexagonLinearLayout
