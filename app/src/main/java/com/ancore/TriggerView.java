@@ -7,11 +7,12 @@ import android.graphics.Typeface;
 import android.view.MotionEvent;
 import android.view.View;
 
-/** Floating macro trigger. It is movable only while the Macro Manager is open. */
+/** Floating macro trigger. Drag in Macro Manager; tap to run macro. */
 public class TriggerView extends View {
     public interface Listener {
         void onHoldStart();
         void onHoldStop();
+        void onTap();
         void onMove(float dx, float dy);
         boolean isMoveEnabled();
     }
@@ -34,6 +35,7 @@ public class TriggerView extends View {
         text.setTextSize(dp(16));
         text.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
         text.setTextAlign(Paint.Align.CENTER);
+        setClickable(true);
         setContentDescription("Macro Trigger");
     }
 
@@ -48,9 +50,12 @@ public class TriggerView extends View {
 
     public void setDiameter(int dp) {
         int px = Math.round(dp(Math.max(48, Math.min(260, dp))));
-        getLayoutParams().width = px;
-        getLayoutParams().height = px;
-        requestLayout();
+        android.view.ViewGroup.LayoutParams lp = getLayoutParams();
+        if (lp != null) {
+            lp.width = px;
+            lp.height = px;
+            setLayoutParams(lp);
+        }
         invalidate();
     }
 
@@ -64,37 +69,39 @@ public class TriggerView extends View {
     }
 
     @Override public boolean onTouchEvent(MotionEvent e) {
+        if (listener == null) return true;
         switch (e.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 downX = e.getRawX();
                 downY = e.getRawY();
                 moved = false;
-                // While Macro Manager is open this view is a drag handle only.
-                // Do not start the macro during repositioning.
                 return true;
+
             case MotionEvent.ACTION_MOVE:
                 float dx = e.getRawX() - downX;
                 float dy = e.getRawY() - downY;
                 if (!moved && Math.hypot(dx, dy) > dp(10)) {
                     moved = true;
-                    if (listener != null) listener.onHoldStop();
+                    listener.onHoldStop();
                 }
-                if (moved && listener != null && listener.isMoveEnabled()) {
+                if (moved && listener.isMoveEnabled()) {
                     listener.onMove(dx, dy);
                     downX = e.getRawX();
                     downY = e.getRawY();
                 }
                 return true;
+
             case MotionEvent.ACTION_UP:
-                if (!moved && listener != null && !listener.isMoveEnabled()) {
-                    listener.onHoldStart();
-                    listener.onHoldStop();
-                } else if (listener != null) {
+                if (!moved) {
+                    // A normal click toggles the macro. Dragging remains a position-only action.
+                    listener.onTap();
+                } else {
                     listener.onHoldStop();
                 }
                 return true;
+
             case MotionEvent.ACTION_CANCEL:
-                if (listener != null) listener.onHoldStop();
+                listener.onHoldStop();
                 return true;
             default:
                 return true;
@@ -102,5 +109,4 @@ public class TriggerView extends View {
     }
 
     private float dp(float value) { return value * density; }
-    private int dp(int value) { return Math.round(value * density); }
 }

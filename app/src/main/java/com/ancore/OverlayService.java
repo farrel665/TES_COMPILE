@@ -41,8 +41,6 @@ public class OverlayService extends Service implements TriggerView.Listener {
     private View root, panel, bubble;
     private ViewGroup pageHost;
     private WindowManager.LayoutParams bubbleLp;
-    private static final long PANEL_IDLE_HIDE_MS = 5000L;
-    private final Runnable hidePanelRunnable = this::hidePanel;
     private WindowManager.LayoutParams panelLp;
     private TriggerView triggerView;
     private WindowManager.LayoutParams triggerLp;
@@ -56,7 +54,6 @@ public class OverlayService extends Service implements TriggerView.Listener {
     private int triggerSizeDp = 100;
     private float triggerOpacity = .90f;
     private float strength, responsiveness;
-    private int macroMode = 1; // Repeat Tap
     private boolean macroPageOpen;
     private boolean triggerEnabled;
     private float dragStartLpX, dragStartLpY;
@@ -82,7 +79,6 @@ public class OverlayService extends Service implements TriggerView.Listener {
         inflateOverlay();
         // Trigger starts OFF. It is created only after the user enables the switch.
         triggerEnabled = false;
-        schedulePanelHide();
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
@@ -122,13 +118,17 @@ public class OverlayService extends Service implements TriggerView.Listener {
         panel = root.findViewById(R.id.panel);
         pageHost = root.findViewById(R.id.page_host);
         setupPanelWindow();
+        TextView hide = root.findViewById(R.id.btn_hide);
+        TextView close = root.findViewById(R.id.btn_close);
+        if (hide != null) hide.setOnClickListener(v -> hidePanel());
+        if (close != null) close.setOnClickListener(v -> stopWorkerAndSelf());
         showMainPage();
     }
 
     private void setupPanelWindow() {
         int type = Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
         panelLp = new WindowManager.LayoutParams(dp(300),
-                dp(360), type,
+                dp(330), type,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                         | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, PixelFormat.TRANSLUCENT);
         panelLp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
@@ -204,68 +204,92 @@ public class OverlayService extends Service implements TriggerView.Listener {
         pageHost.removeAllViews();
         View v = LayoutInflater.from(this).inflate(R.layout.page_macro, pageHost, false);
         pageHost.addView(v);
-        seekMacroInterval = v.findViewById(R.id.seek_macro_interval); seekMacroDuration = v.findViewById(R.id.seek_macro_duration);
-        valMacroInterval = v.findViewById(R.id.val_macro_interval); valMacroDuration = v.findViewById(R.id.val_macro_duration); triggerPos = v.findViewById(R.id.trigger_pos);
+
+        seekMacroInterval = v.findViewById(R.id.seek_macro_interval);
+        seekMacroDuration = v.findViewById(R.id.seek_macro_duration);
+        valMacroInterval = v.findViewById(R.id.val_macro_interval);
+        valMacroDuration = v.findViewById(R.id.val_macro_duration);
+        triggerPos = v.findViewById(R.id.trigger_pos);
+
         GamingSwitch switchTrigger = v.findViewById(R.id.switch_trigger);
         switchTrigger.setChecked(triggerEnabled, false);
         switchTrigger.setOnCheckedChangeListener((sw, checked) -> {
             triggerEnabled = checked;
             if (checked) {
                 addTriggerWindow();
-                updateTriggerPositionText();
-                updateTriggerMoveState();
             } else {
                 stopMacro();
                 removeTrigger();
-                updateTriggerPositionText();
             }
+            updateTriggerPositionText();
         });
+
         v.findViewById(R.id.btn_back_macro).setOnClickListener(x -> showMainPage());
-        v.findViewById(R.id.btn_macro_settings).setOnClickListener(x -> showMacroSettings());
-        setupMacroSeekBars();
-        updateTriggerPositionText(); updateTriggerMoveState();
+        setupMacroSeekBars(v);
+        updateTriggerPositionText();
     }
 
-    private void setupMacroSeekBars() {
-        seekMacroInterval.setMin(20); seekMacroInterval.setMax(500); seekMacroInterval.setStep(10); seekMacroInterval.setProgress(macroIntervalMs); seekMacroInterval.setButtonSize(22);
-        seekMacroInterval.setOnProgressChangeListener((b,p,user) -> { macroIntervalMs = clamp(p,20,500); valMacroInterval.setText(macroIntervalMs + " ms"); });
-        seekMacroDuration.setMin(0); seekMacroDuration.setMax(500); seekMacroDuration.setStep(10); seekMacroDuration.setProgress(macroDurationMs); seekMacroDuration.setButtonSize(22);
-        seekMacroDuration.setOnProgressChangeListener((b,p,user) -> { macroDurationMs = clamp(p,0,500); valMacroDuration.setText(macroDurationMs + " ms"); });
-        valMacroInterval.setText(macroIntervalMs + " ms"); valMacroDuration.setText(macroDurationMs + " ms");
-    }
+    private void setupMacroSeekBars(View v) {
+        seekMacroInterval.setMin(20);
+        seekMacroInterval.setMax(500);
+        seekMacroInterval.setStep(10);
+        seekMacroInterval.setProgress(macroIntervalMs);
+        seekMacroInterval.setButtonSize(22);
+        seekMacroInterval.setOnProgressChangeListener((b,p,user) -> {
+            macroIntervalMs = clamp(p,20,500);
+            valMacroInterval.setText(macroIntervalMs + " ms");
+        });
 
-    private void showMacroSettings() {
-        macroPageOpen = true;
-        pageHost.removeAllViews();
-        View v = LayoutInflater.from(this).inflate(R.layout.page_macro_settings, pageHost, false); pageHost.addView(v);
-        GamingSeekBar size = v.findViewById(R.id.seek_trigger_size), opacity = v.findViewById(R.id.seek_trigger_opacity);
-        TextView vs = v.findViewById(R.id.val_trigger_size), vo = v.findViewById(R.id.val_trigger_opacity);
-        size.setMin(48); size.setMax(200); size.setStep(4); size.setProgress(triggerSizeDp); size.setButtonSize(22);
-        size.setOnProgressChangeListener((b,p,user) -> { triggerSizeDp=clamp(p,48,200); vs.setText(triggerSizeDp+"dp"); updateTriggerSize(); });
-        opacity.setMin(20); opacity.setMax(100); opacity.setStep(5); opacity.setProgress(Math.round(triggerOpacity*100)); opacity.setButtonSize(22);
-        opacity.setOnProgressChangeListener((b,p,user) -> { triggerOpacity=clamp(p,20,100)/100f; vo.setText(Math.round(triggerOpacity*100)+"%"); if(triggerView!=null) triggerView.setOpacity(triggerOpacity); prefs.edit().putFloat("opacity",triggerOpacity).apply(); });
-        vs.setText(triggerSizeDp+"dp"); vo.setText(Math.round(triggerOpacity*100)+"%");
-        v.findViewById(R.id.btn_back_macro_settings).setOnClickListener(x -> showMacroPage());
-        TextView typeTap = v.findViewById(R.id.macro_type_tap);
-        TextView typeHold = v.findViewById(R.id.macro_type_hold);
-        typeTap.setOnClickListener(x -> { macroMode = 0; typeTap.setBackgroundResource(R.drawable.bg_btn_red); typeHold.setBackgroundResource(R.drawable.bg_btn_dark); });
-        typeHold.setOnClickListener(x -> { macroMode = 1; typeHold.setBackgroundResource(R.drawable.bg_btn_red); typeTap.setBackgroundResource(R.drawable.bg_btn_dark); });
-        updateTriggerMoveState();
-    }
+        seekMacroDuration.setMin(0);
+        seekMacroDuration.setMax(500);
+        seekMacroDuration.setStep(10);
+        seekMacroDuration.setProgress(macroDurationMs);
+        seekMacroDuration.setButtonSize(22);
+        seekMacroDuration.setOnProgressChangeListener((b,p,user) -> {
+            macroDurationMs = clamp(p,0,500);
+            valMacroDuration.setText(macroDurationMs + " ms");
+        });
 
-    private void setupMacroSeekBarsOld() {}
+        GamingSeekBar size = v.findViewById(R.id.seek_trigger_size);
+        TextView valSize = v.findViewById(R.id.val_trigger_size);
+        size.setMin(48); size.setMax(200); size.setStep(4);
+        size.setProgress(triggerSizeDp); size.setButtonSize(22);
+        size.setOnProgressChangeListener((b,p,user) -> {
+            triggerSizeDp = clamp(p,48,200);
+            valSize.setText(triggerSizeDp + "dp");
+            updateTriggerSize();
+        });
+
+        GamingSeekBar opacity = v.findViewById(R.id.seek_trigger_opacity);
+        TextView valOpacity = v.findViewById(R.id.val_trigger_opacity);
+        opacity.setMin(20); opacity.setMax(100); opacity.setStep(5);
+        opacity.setProgress(Math.round(triggerOpacity * 100f)); opacity.setButtonSize(22);
+        opacity.setOnProgressChangeListener((b,p,user) -> {
+            triggerOpacity = clamp(p,20,100) / 100f;
+            valOpacity.setText(Math.round(triggerOpacity * 100f) + "%");
+            if (triggerView != null) triggerView.setOpacity(triggerOpacity);
+            prefs.edit().putFloat("opacity", triggerOpacity).apply();
+        });
+
+        valMacroInterval.setText(macroIntervalMs + " ms");
+        valMacroDuration.setText(macroDurationMs + " ms");
+        valSize.setText(triggerSizeDp + "dp");
+        valOpacity.setText(Math.round(triggerOpacity * 100f) + "%");
+    }
 
     @Override public void onHoldStart() {
-        if (!triggerEnabled) return;
-        if (macroMode == 0) {
-            startMacroAtTrigger();
-            main.postDelayed(this::stopMacro, Math.max(40, macroDurationMs + 40));
-        } else {
-            startMacroAtTrigger();
-        }
+        if (triggerEnabled) startMacroAtTrigger();
     }
 
-    @Override public void onHoldStop() { if (triggerEnabled) stopMacro(); }
+    @Override public void onHoldStop() {
+        if (triggerEnabled) stopMacro();
+    }
+
+    @Override public void onTap() {
+        if (!triggerEnabled) return;
+        if (macroRunning) stopMacro();
+        else startMacroAtTrigger();
+    }
 
     @Override public boolean isMoveEnabled() { return macroPageOpen; }
 
@@ -304,7 +328,7 @@ public class OverlayService extends Service implements TriggerView.Listener {
     private void setSensitivityText(TextView t,float v){if(t!=null)t.setText(String.format(Locale.US,"%.2f×",v));}
     private void setPercent(TextView t,float v){if(t!=null)t.setText(String.format(Locale.US,"%.0f%%",v));}
 
-    private void doStart(){ if(switchActive!=null&&!switchActive.isChecked())return; setStatus("Starting…"); main.post(()->{try{if(!ShizukuHelper.isReady()){ShizukuHelper.init();main.postDelayed(()->{if(switchActive!=null&&switchActive.isChecked()){if(ShizukuHelper.isReady())doStart();else{switchActive.setChecked(false,true);setStatus("Shizuku not connected");}}},500);return;}String bin=getApplicationInfo().nativeLibraryDir+"/libancoreengine.so";boolean ok=ShizukuHelper.startWorker(bin,0,sensX,sensY,sensArea,tactix?1:0,strength,responsiveness);workerRunning=ok;if(ok)setStatus("Engaged");else{switchActive.setChecked(false,true);setStatus("Start failed — check Shizuku / input permission");}}catch(Throwable t){workerRunning=false;if(switchActive!=null)switchActive.setChecked(false,true);setStatus("Error: "+t.getMessage());}}); }
+    private void doStart(){ if(switchActive!=null&&!switchActive.isChecked())return; setStatus("Starting…"); main.post(()->{try{if(!ShizukuHelper.isReady()){ShizukuHelper.init();main.postDelayed(()->{if(switchActive!=null&&switchActive.isChecked()){if(ShizukuHelper.isReady())doStart();else{switchActive.setChecked(false,true);setStatus("Shizuku not connected");}}},500);return;}String bin=getApplicationInfo().nativeLibraryDir+"/libancoreengine.so";boolean ok=ShizukuHelper.startWorker(bin,0,sensY,sensX,sensArea,tactix?1:0,strength,responsiveness);workerRunning=ok;if(ok)setStatus("Engaged");else{switchActive.setChecked(false,true);setStatus("Start failed — check Shizuku / input permission");}}catch(Throwable t){workerRunning=false;if(switchActive!=null)switchActive.setChecked(false,true);setStatus("Error: "+t.getMessage());}}); }
     private void doStop(){stopMacro();try{ShizukuHelper.stopWorker();}catch(Throwable ignored){}workerRunning=false;if(switchActive!=null&&switchActive.isChecked())switchActive.setChecked(false,true);setStatus("Ready");}
     private void restartIfRunning(){if(workerRunning)doStart();}
 
@@ -316,58 +340,19 @@ public class OverlayService extends Service implements TriggerView.Listener {
     private void updateTriggerPositionText(){if(triggerPos!=null) triggerPos.setText(triggerLp==null ? "OFF" : triggerLp.x+", "+triggerLp.y);}
 
     private void hidePanel(){
-        main.removeCallbacks(hidePanelRunnable);
         macroPageOpen = false;
         stopMacro();
         if(panel!=null) panel.setVisibility(View.GONE);
-        addBubbleWindow();
     }
 
     private void showPanel(){
-        removeBubbleWindow();
         if(panel!=null) panel.setVisibility(View.VISIBLE);
         showMainPage();
-        schedulePanelHide();
     }
 
-    private void schedulePanelHide(){
-        main.removeCallbacks(hidePanelRunnable);
-        main.postDelayed(hidePanelRunnable, PANEL_IDLE_HIDE_MS);
-    }
 
-    private void addBubbleWindow(){
-        if(bubble!=null || wm==null) return;
-        TextView b = new TextView(this);
-        b.setText("M");
-        b.setTextColor(0xFFFFFFFF);
-        b.setTextSize(16);
-        b.setGravity(Gravity.CENTER);
-        b.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
-        b.setBackgroundResource(R.drawable.bg_bubble);
-        b.setContentDescription("Show Magic Manager");
-        b.setOnClickListener(v -> showPanel());
-        bubble = b;
-
-        int type = Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
-        bubbleLp = new WindowManager.LayoutParams(dp(48), dp(48), type,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                        | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, PixelFormat.TRANSLUCENT);
-        bubbleLp.gravity = Gravity.TOP | Gravity.END;
-        bubbleLp.x = dp(10); bubbleLp.y = dp(82);
-        try { wm.addView(bubble, bubbleLp); } catch(Throwable t){ bubble=null; bubbleLp=null; Log.w(TAG,"bubble add failed",t); }
-    }
-
-    private void removeBubbleWindow(){
-        main.removeCallbacks(hidePanelRunnable);
-        if(bubble!=null && wm!=null){
-            try{wm.removeView(bubble);}catch(Throwable ignored){}
-            bubble=null; bubbleLp=null;
-        }
-    }
 
     private void removeOverlay(){
-        main.removeCallbacks(hidePanelRunnable);
-        removeBubbleWindow();
         if(root!=null&&wm!=null){try{wm.removeView(root);}catch(Throwable ignored){}root=null;}
     }
     private void removeTrigger(){if(triggerView!=null&&wm!=null){try{wm.removeView(triggerView);}catch(Throwable ignored){}triggerView=null;}}

@@ -126,15 +126,20 @@ public class UserService extends Binder implements IUserService {
         y = Math.max(0, y);
         intervalMs = Math.max(30, Math.min(intervalMs, 5000));
 
-        // Use the Android shell input tap command directly. This is more reliable
-        // than a zero-length swipe for a tap-style macro.
-        String tap = String.format(Locale.US, "input tap %d %d", x, y);
+        // Execute one tap immediately, then repeat while the trigger is held.
+        // This makes a short click produce a real tap before the process is stopped.
+        String tap = String.format(Locale.US, "/system/bin/input tap %d %d", x, y);
+        long pauseMs = Math.max(0, durationMs);
+        long repeatDelayMs = Math.max(1, intervalMs - pauseMs);
         String cmd = String.format(Locale.US,
-                "while true; do %s; sleep %.3f; done", tap, intervalMs / 1000.0);
+                "%s; while true; do sleep %.3f; %s; sleep %.3f; done",
+                tap, pauseMs / 1000.0, tap, repeatDelayMs / 1000.0);
         try {
-            macroProcess = Runtime.getRuntime().exec(new String[]{"sh", "-c", cmd});
-            Log.i(TAG, "macro started x=" + x + " y=" + y + " interval=" + intervalMs);
-            return true;
+            ProcessBuilder pb = new ProcessBuilder("sh", "-c", cmd);
+            pb.redirectErrorStream(true);
+            macroProcess = pb.start();
+            Log.i(TAG, "macro started x=" + x + " y=" + y + " interval=" + intervalMs + " duration=" + durationMs);
+            return macroProcess.isAlive();
         } catch (Throwable t) {
             macroProcess = null;
             Log.e(TAG, "startMacro", t);

@@ -142,10 +142,11 @@ int main(int argc, char **argv) {
     if (cli_responsiveness > 100.f) cli_responsiveness = 100.f;
 
     static const char *k_area[3]   = { "LEFT", "ALL", "RIGHT" };
-    float factor = 0.90f;
+    /* Fixed 1:1 linear curve. No acceleration/deceleration preset is applied. */
+    float factor = 1.0f;
     float sens_x = (cli_sens_x > 0.f) ? cli_sens_x : 2.0f;
     float sens_y = (cli_sens_y > 0.f) ? cli_sens_y : 2.0f;
-    const char *name = "FLAT";
+    const char *name = "LINEAR";
 
     setvbuf(stderr, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
