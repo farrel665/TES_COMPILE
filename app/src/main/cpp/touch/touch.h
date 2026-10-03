@@ -163,6 +163,7 @@ static void touch_slot(TouchEngine *s, int slot,
                                 float dt_seconds,
                                 float *out_x, float *out_y, int *out_down) {
     if (s == NULL || slot < 0 || slot >= TS_MAX_SLOTS) return;
+    (void)dt_seconds;
 
     TS_Slot *sl = &s->slots[slot];
 
@@ -203,12 +204,6 @@ static void touch_slot(TouchEngine *s, int slot,
         return;
     }
 
-    float safe_dt = (dt_seconds > 0.0f) ? dt_seconds : (1.0f / 120.0f);
-    if (safe_dt > 0.05f) safe_dt = 0.05f;
-
-    float strength01 = ts_clamp_float(s->strength * 0.01f, 0.0f, 1.0f);
-    float response01 = ts_clamp_float(s->responsiveness * 0.01f, 0.0f, 1.0f);
-
     float rawDx = nx - sl->last_raw_x;
     float rawDy = ny - sl->last_raw_y;
     float speed = sqrtf(rawDx * rawDx + rawDy * rawDy);
@@ -224,32 +219,22 @@ static void touch_slot(TouchEngine *s, int slot,
         return;
     }
 
-    /* Linear 1:1 curve with a deliberately mild gain. 1.00x is neutral;
-       2.00x becomes 1.10x effective movement instead of a raw 2x jump,
-       avoiding the overly slippery response of the previous build. */
-    float gainX = 1.0f + (s->sens_x - 1.0f) * 0.10f;
-    float gainY = 1.0f + (s->sens_y - 1.0f) * 0.10f;
-    gainX = ts_clamp_float(gainX, 1.0f, 1.40f);
-    gainY = ts_clamp_float(gainY, 1.0f, 1.40f);
+    /* True linear sensitivity. The UI value is the actual movement multiplier:
+       1.00x = neutral, 2.00x = 2x, ... 5.00x = 5x.
+       Do not low-pass or attenuate the delta here: doing so makes the screen
+       feel heavy even when sensitivity is raised. Strength/Responsiveness are
+       kept in the IPC/UI for compatibility, but they must not reduce the
+       primary sensitivity path. */
+    float gainX = ts_clamp_float(s->sens_x, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX);
+    float gainY = ts_clamp_float(s->sens_y, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX);
 
     float finalDx = rawDx * gainX;
     float finalDy = rawDy * gainY;
     sl->last_raw_x = nx;
     sl->last_raw_y = ny;
 
-    float targetX = sl->x + finalDx;
-    float targetY = sl->y + finalDy;
-
-    /* Mild, frame-rate-independent low-pass filter. Responsiveness reduces
-       the filtering amount, while 0 strength remains completely raw. */
-    float smoothing = strength01 * (1.0f - 0.80f * response01);
-    float alpha = 1.0f - smoothing * 0.85f;
-    alpha = ts_clamp_float(alpha, 0.15f, 1.0f);
-    float frameAlpha = 1.0f - powf(1.0f - alpha, safe_dt * 120.0f);
-    frameAlpha = ts_clamp_float(frameAlpha, 0.05f, 1.0f);
-
-    sl->x += (targetX - sl->x) * frameAlpha;
-    sl->y += (targetY - sl->y) * frameAlpha;
+    sl->x += finalDx;
+    sl->y += finalDy;
 
     if (out_x) *out_x = sl->x * s->dpi_scale;
     if (out_y) *out_y = sl->y * s->dpi_scale;
