@@ -15,7 +15,6 @@
 #include <linux/input.h>
 
 #include "touch.h"
-#include "process_watcher.h"
 #include "touch_io.h"
 #include "reaper.h"
 
@@ -24,7 +23,9 @@
 #define RIZXBYTE_FRAME_DT          (1.0f / 240.0f)
 #define RIZXBYTE_WATCHDOG_SECONDS  8
 
-static void ancore_panic(int sig) { (void)sig; _exit(0); }
+static volatile sig_atomic_t g_running = 1;
+
+static void ancore_panic(int sig) { (void)sig; g_running = 0; }
 
 static void ancore_install_signals(void) {
     struct sigaction sa;
@@ -36,17 +37,6 @@ static void ancore_install_signals(void) {
     sigaction(SIGQUIT, &sa, NULL);
     sigaction(SIGALRM, &sa, NULL);
     signal(SIGPIPE, SIG_IGN);
-}
-
-static void force_release_grabs(void) {
-    char path[64];
-    for (int i = 0; i < 32; i++) {
-        snprintf(path, sizeof(path), "/dev/input/event%d", i);
-        int fd = open(path, O_RDONLY | O_NONBLOCK);
-        if (fd < 0) continue;
-        ioctl(fd, EVIOCGRAB, 0);
-        close(fd);
-    }
 }
 
 static void ancore_kill_stale(void) {
@@ -105,9 +95,9 @@ int main(int argc, char **argv) {
     float cli_sens_y = -1.f;
     int cli_area = 1;       
     int cli_tactix = 0;
-    float cli_deadzone = 1.5f;
-    float cli_flick_speed = 18.0f;
-    float cli_flick_boost = 1.55f;
+    float cli_deadzone = 0.8f;
+    float cli_flick_speed = 0.0f;
+    float cli_flick_boost = 1.0f;
     float cli_strength = 0.0f;
     float cli_responsiveness = 0.0f;
     for (int i = 1; i < argc; i++) {
@@ -160,7 +150,6 @@ int main(int argc, char **argv) {
             sens_x, sens_y, cli_strength, cli_responsiveness, factor);
 
     ancore_kill_stale();
-    force_release_grabs();
     ancore_install_signals();
 
     TouchEngine engine;
@@ -172,7 +161,7 @@ int main(int argc, char **argv) {
             name, sens_x, sens_y, cli_strength, cli_responsiveness, k_area[cli_area], cli_tactix);
 
     if (ancore_capture_open(&capture) < 0) {
-        fprintf(stderr, "[ancore] capture open failed — cannot open /dev/input/event* (permission). Shizuku shell may lack access on this ROM.\n");
+        fprintf(stderr, "[ancore] capture open failed — this ROM does not expose the touchscreen event node to the Shizuku service.\n");
         return 1;
     }
     fprintf(stderr, "[ancore] capture ready x=[%d..%d] y=[%d..%d]\n",
@@ -194,21 +183,16 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* Global touch mode: do not wait for or validate a target package/PID.
-     * The previous implementation gated the engine on Free Fire, which is
-     * why it appeared to work only in FF. The touch device is system-wide. */
+    /* Global touch mode: no package/PID filter. The selected touchscreen is
+     * processed regardless of which foreground application is visible. */
     fprintf(stderr, "[ancore] global mode: no target PID/package required\n");
 
     if (ancore_capture_grab(&capture) < 0) {
-        fprintf(stderr, "[ancore] grab busy — stop other touch modules\n");
-        force_release_grabs();
-        if (ancore_capture_grab(&capture) < 0) {
-            fprintf(stderr, "[ancore] unable to grab touchscreen\n");
-            ancore_reaper_stop(&reaper);
-            ancore_inject_close(&inject);
-            ancore_capture_close(&capture);
-            return 1;
-        }
+        fprintf(stderr, "[ancore] unable to grab touchscreen; leaving system input untouched\n");
+        ancore_reaper_stop(&reaper);
+        ancore_inject_close(&inject);
+        ancore_capture_close(&capture);
+        return 1;
     }
 
     while (ancore_capture_poll(&capture)) {}
@@ -234,7 +218,7 @@ int main(int argc, char **argv) {
     struct timespec prev_ts;
     clock_gettime(CLOCK_MONOTONIC, &prev_ts);
 
-    for (;;) {
+    while (g_running) {
         alarm(RIZXBYTE_WATCHDOG_SECONDS);
         ancore_reaper_lock(&reaper);
 
@@ -268,5 +252,20 @@ int main(int argc, char **argv) {
         if (!had_input) usleep(1000);
     }
 
+    /* Always release the physical grab and destroy the virtual device before
+       returning. This prevents the next start/stop cycle from leaving stale
+       touch state behind. */
+    ancore_reaper_lock(&reaper);
+    for (int slot = 0; slot < TS_MAX_SLOTS; slot++) {
+        if (inject.virtual_active[slot]) ancore_inject_slot_release(&inject, slot);
+        touch_force_release(&engine, slot);
+    }
+    ancore_inject_flush(&inject);
+    ancore_reaper_unlock(&reaper);
+    ancore_reaper_stop(&reaper);
+    ancore_inject_close(&inject);
+    ancore_capture_ungrab(&capture);
+    ancore_capture_close(&capture);
+    fprintf(stderr, "[ancore] stopped; system touch restored\n");
     return 0;
 }

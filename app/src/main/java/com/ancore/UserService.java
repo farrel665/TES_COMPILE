@@ -20,7 +20,6 @@ public class UserService extends Binder implements IUserService {
     private static final String TAG = "ancore_usersvc";
     private static final String TMP_BIN = "/data/local/tmp/ancore_engine";
     private static final String TMP_LOG = "/data/local/tmp/ancore_engine.log";
-    private volatile Process macroProcess;
 
     public UserService() { attachInterface(this, DESCRIPTOR); }
     @Override public IBinder asBinder() { return this; }
@@ -52,20 +51,6 @@ public class UserService extends Binder implements IUserService {
             case 3:
                 reply.writeNoException();
                 reply.writeString(ping());
-                return true;
-            case 4: {
-                int x = data.readInt();
-                int y = data.readInt();
-                int intervalMs = data.readInt();
-                int durationMs = data.readInt();
-                boolean ok = startMacro(x, y, intervalMs, durationMs);
-                reply.writeNoException();
-                reply.writeInt(ok ? 1 : 0);
-                return true;
-            }
-            case 5:
-                stopMacro();
-                reply.writeNoException();
                 return true;
             default:
                 return super.onTransact(code, data, reply, flags);
@@ -99,7 +84,7 @@ public class UserService extends Binder implements IUserService {
             String cmd = String.format(Locale.US,
                     "setsid %s --global --preset %d --sens-x %.3f --sens-y %.3f "
                     + "--area %d --tactix %d --strength %.3f --responsiveness %.3f "
-                    + "--deadzone 1.5 --flick-speed 16 --flick-boost 1.30 "
+                    + "--deadzone 0.8 --flick-speed 0 --flick-boost 1.0 "
                     + ">> %s 2>&1 < /dev/null &",
                     shellQuote(TMP_BIN), presetIdx, sensX, sensY, area, tactix,
                     strength, responsiveness, shellQuote(TMP_LOG));
@@ -117,44 +102,6 @@ public class UserService extends Binder implements IUserService {
     @Override public void stopWorker() {
         Log.i(TAG, "stopWorker");
         killByName("ancore_engine");
-    }
-
-    @Override
-    public synchronized boolean startMacro(int x, int y, int intervalMs, int durationMs) {
-        stopMacro();
-        x = Math.max(0, x);
-        y = Math.max(0, y);
-        intervalMs = Math.max(30, Math.min(intervalMs, 5000));
-
-        // Execute one tap immediately, then repeat while the trigger is held.
-        // This makes a short click produce a real tap before the process is stopped.
-        String tap = String.format(Locale.US, "/system/bin/input tap %d %d", x, y);
-        long pauseMs = Math.max(0, durationMs);
-        long repeatDelayMs = Math.max(1, intervalMs - pauseMs);
-        String cmd = String.format(Locale.US,
-                "%s; while true; do sleep %.3f; %s; sleep %.3f; done",
-                tap, pauseMs / 1000.0, tap, repeatDelayMs / 1000.0);
-        try {
-            ProcessBuilder pb = new ProcessBuilder("sh", "-c", cmd);
-            pb.redirectErrorStream(true);
-            macroProcess = pb.start();
-            Log.i(TAG, "macro started x=" + x + " y=" + y + " interval=" + intervalMs + " duration=" + durationMs);
-            return macroProcess.isAlive();
-        } catch (Throwable t) {
-            macroProcess = null;
-            Log.e(TAG, "startMacro", t);
-            return false;
-        }
-    }
-
-    @Override
-    public synchronized void stopMacro() {
-        Process p = macroProcess;
-        macroProcess = null;
-        if (p != null) {
-            try { p.destroy(); } catch (Throwable ignored) {}
-            try { if (p.isAlive()) p.destroyForcibly(); } catch (Throwable ignored) {}
-        }
     }
 
     @Override public String ping() {

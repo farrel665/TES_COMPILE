@@ -107,23 +107,6 @@ public final class ShizukuHelper {
         return startWorker(binaryPath, presetIdx, 2.0f, 2.0f, 1, 0, 0f, 0f);
     }
 
-    public static boolean startMacro(int x, int y, int intervalMs, int durationMs) {
-        synchronized (LOCK) {
-            if (sService == null) return false;
-            try { return sService.startMacro(x, y, intervalMs, durationMs); }
-            catch (RemoteException e) { Log.e(TAG, "startMacro", e); return false; }
-        }
-    }
-
-    public static void stopMacro() {
-        synchronized (LOCK) {
-            if (sService != null) {
-                try { sService.stopMacro(); }
-                catch (RemoteException e) { Log.e(TAG, "stopMacro", e); }
-            }
-        }
-    }
-
     public static void stopWorker() {
         synchronized (LOCK) {
             if (sService != null) {
@@ -163,28 +146,6 @@ public final class ShizukuHelper {
                 data.recycle();
                 reply.recycle();
             }
-        }
-
-        @Override public boolean startMacro(int x, int y, int intervalMs, int durationMs) throws RemoteException {
-            Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
-            try {
-                data.writeInterfaceToken(DESCRIPTOR);
-                data.writeInt(x); data.writeInt(y); data.writeInt(intervalMs); data.writeInt(durationMs);
-                remote.transact(4, data, reply, 0);
-                reply.readException();
-                return reply.readInt() != 0;
-            } finally { data.recycle(); reply.recycle(); }
-        }
-
-        @Override public void stopMacro() throws RemoteException {
-            Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
-            try {
-                data.writeInterfaceToken(DESCRIPTOR);
-                remote.transact(5, data, reply, 0);
-                reply.readException();
-            } finally { data.recycle(); reply.recycle(); }
         }
 
         @Override public void stopWorker() throws RemoteException {

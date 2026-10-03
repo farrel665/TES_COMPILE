@@ -8,7 +8,6 @@ project(ancore_engine C)
 add_executable(ancore_engine
     touch/worker_main.c
     touch/touch_io.c
-    touch/process_watcher.c
     touch/reaper.c
 )
 target_include_directories(ancore_engine PRIVATE touch)

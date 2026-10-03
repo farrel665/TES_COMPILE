@@ -82,9 +82,9 @@ static void touch_init(TouchEngine *s, float factor, float dpi_scale) {
     s->abs_x_min = 0.0f;
     s->abs_y_min = 0.0f;
     s->tactix = 0;
-    s->deadzone = 1.5f;
-    s->flick_speed = 18.0f;
-    s->flick_boost = 1.55f;
+    s->deadzone = 0.8f;
+    s->flick_speed = 0.0f;
+    s->flick_boost = 1.0f;
     s->initialized = 0;
 }
 
@@ -170,8 +170,8 @@ static void touch_slot(TouchEngine *s, int slot,
         sl->active = 0;
         sl->tracking_id = -1;
         sl->in_region = 0;
-        if (out_x) *out_x = sl->x;
-        if (out_y) *out_y = sl->y;
+        if (out_x) *out_x = sl->x * s->dpi_scale;
+        if (out_y) *out_y = sl->y * s->dpi_scale;
         if (out_down) *out_down = 0;
         return;
     }
@@ -180,21 +180,18 @@ static void touch_slot(TouchEngine *s, int slot,
     float ny = in_y / s->dpi_scale;
 
     if (!sl->active) {
-        
         sl->in_region = touch_in_region(s, in_x, in_y);
         sl->x = nx;
         sl->y = ny;
         sl->last_raw_x = nx;
         sl->last_raw_y = ny;
         sl->active = 1;
-
         if (out_x) *out_x = in_x;
         if (out_y) *out_y = in_y;
         if (out_down) *out_down = 1;
         return;
     }
 
-    
     if (!sl->in_region) {
         sl->x = nx;
         sl->y = ny;
@@ -207,29 +204,17 @@ static void touch_slot(TouchEngine *s, int slot,
     }
 
     float safe_dt = (dt_seconds > 0.0f) ? dt_seconds : (1.0f / 120.0f);
-    float strength01 = s->strength * 0.01f;
-    float response01 = s->responsiveness * 0.01f;
-    /*
-     * Strength controls how much filtering is applied. Responsiveness
-     * controls how much of that filtering is bypassed. At 0/0 the path is
-     * effectively raw (no added latency); at high strength the path is
-     * smoothed, and higher responsiveness brings it back toward direct.
-     */
-    float smoothing = strength01 * (1.0f - response01);
-    float smoothingFactor = 1.0f - smoothing * 0.92f;
-    smoothingFactor = ts_clamp_float(smoothingFactor, 0.08f, 1.0f);
-    if (strength01 > 0.001f && s->factor < 0.999f) {
-        smoothingFactor *= ts_clamp_float(s->factor, 0.05f, 1.0f);
-        smoothingFactor = ts_clamp_float(smoothingFactor, 0.08f, 1.0f);
-    }
-    smoothingFactor = 1.0f - powf(1.0f - smoothingFactor, safe_dt * 120.0f);
-    smoothingFactor = ts_clamp_float(smoothingFactor, 0.0f, 1.0f);
+    if (safe_dt > 0.05f) safe_dt = 0.05f;
+
+    float strength01 = ts_clamp_float(s->strength * 0.01f, 0.0f, 1.0f);
+    float response01 = ts_clamp_float(s->responsiveness * 0.01f, 0.0f, 1.0f);
 
     float rawDx = nx - sl->last_raw_x;
     float rawDy = ny - sl->last_raw_y;
     float speed = sqrtf(rawDx * rawDx + rawDy * rawDy);
 
-    
+    /* TactiX is deliberately non-accelerating: it only suppresses tiny
+       unintentional movement. No flick multiplier/acceleration is applied. */
     if (s->tactix && speed < s->deadzone) {
         sl->last_raw_x = nx;
         sl->last_raw_y = ny;
@@ -239,36 +224,32 @@ static void touch_slot(TouchEngine *s, int slot,
         return;
     }
 
-    float sx = s->sens_x;
-    float sy = s->sens_y;
+    /* Linear 1:1 curve with a deliberately mild gain. 1.00x is neutral;
+       2.00x becomes 1.10x effective movement instead of a raw 2x jump,
+       avoiding the overly slippery response of the previous build. */
+    float gainX = 1.0f + (s->sens_x - 1.0f) * 0.10f;
+    float gainY = 1.0f + (s->sens_y - 1.0f) * 0.10f;
+    gainX = ts_clamp_float(gainX, 1.0f, 1.40f);
+    gainY = ts_clamp_float(gainY, 1.0f, 1.40f);
 
-    
-    if (s->tactix && speed >= s->flick_speed) {
-        float t = ts_clamp_float((speed - s->flick_speed) / s->flick_speed, 0.0f, 1.0f);
-        float boost = 1.0f + (s->flick_boost - 1.0f) * t;
-        sx *= boost;
-        sy *= boost;
-    }
-
-    
-    float finalDx = rawDx * sx;
-    float finalDy = rawDy * sy;
-
+    float finalDx = rawDx * gainX;
+    float finalDy = rawDy * gainY;
     sl->last_raw_x = nx;
     sl->last_raw_y = ny;
 
-    float lastSmoothedX = sl->x;
-    float lastSmoothedY = sl->y;
+    float targetX = sl->x + finalDx;
+    float targetY = sl->y + finalDy;
 
-    float targetX = lastSmoothedX + finalDx;
-    float targetY = lastSmoothedY + finalDy;
+    /* Mild, frame-rate-independent low-pass filter. Responsiveness reduces
+       the filtering amount, while 0 strength remains completely raw. */
+    float smoothing = strength01 * (1.0f - 0.80f * response01);
+    float alpha = 1.0f - smoothing * 0.85f;
+    alpha = ts_clamp_float(alpha, 0.15f, 1.0f);
+    float frameAlpha = 1.0f - powf(1.0f - alpha, safe_dt * 120.0f);
+    frameAlpha = ts_clamp_float(frameAlpha, 0.05f, 1.0f);
 
-    
-    float smoothedX = lastSmoothedX + (targetX - lastSmoothedX) * smoothingFactor;
-    float smoothedY = lastSmoothedY + (targetY - lastSmoothedY) * smoothingFactor;
-
-    sl->x = smoothedX;
-    sl->y = smoothedY;
+    sl->x += (targetX - sl->x) * frameAlpha;
+    sl->y += (targetY - sl->y) * frameAlpha;
 
     if (out_x) *out_x = sl->x * s->dpi_scale;
     if (out_y) *out_y = sl->y * s->dpi_scale;
