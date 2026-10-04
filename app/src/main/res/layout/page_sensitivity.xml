@@ -1,51 +1,152 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:overScrollMode="never">
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="42dp" android:gravity="center_vertical">
-        <TextView android:id="@+id/btn_back_sens" android:layout_width="40dp" android:layout_height="match_parent" android:gravity="center" android:text="‹" android:textColor="#FFFFFF" android:textSize="30sp"/>
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Sensitivity Manager" android:textColor="#F5F5F5" android:textSize="21sp" android:fontFamily="@font/gf_bold"/>
-    </LinearLayout>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="All apps • global touch" android:textColor="#92959A" android:textSize="12sp" android:fontFamily="@font/gf_light"/>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:overScrollMode="never">
 
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Sensitivity Area" android:textColor="#F0F0F0" android:textSize="17sp" android:fontFamily="@font/gf_medium"/>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="66dp" android:layout_marginTop="5dp">
-        <com.ancore.HexagonLinearLayout android:id="@+id/area_left" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical" android:padding="4dp">
-            <ImageView android:layout_width="27dp" android:layout_height="24dp" android:src="@drawable/ic_area_left"/><TextView android:id="@+id/area_left_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Left" android:textColor="#B0B3BA" android:textSize="11sp"/>
-        </com.ancore.HexagonLinearLayout>
-        <com.ancore.HexagonLinearLayout android:id="@+id/area_all" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="5dp" android:gravity="center" android:orientation="vertical" android:padding="4dp">
-            <ImageView android:layout_width="27dp" android:layout_height="24dp" android:src="@drawable/ic_area_all"/><TextView android:id="@+id/area_all_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="All" android:textColor="#FFFFFF" android:textSize="11sp"/>
-        </com.ancore.HexagonLinearLayout>
-        <com.ancore.HexagonLinearLayout android:id="@+id/area_right" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="5dp" android:gravity="center" android:orientation="vertical" android:padding="4dp">
-            <ImageView android:layout_width="27dp" android:layout_height="24dp" android:src="@drawable/ic_area_right"/><TextView android:id="@+id/area_right_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Right" android:textColor="#B0B3BA" android:textSize="11sp"/>
-        </com.ancore.HexagonLinearLayout>
-    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="9dp" android:text="Magic Touch" android:textColor="#F0F0F0" android:textSize="18sp" android:fontFamily="@font/gf_medium"/>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="38dp" android:gravity="center_vertical">
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Enable sensitivity engine" android:textColor="#777777" android:textSize="10sp" android:fontFamily="@font/gf_light"/>
-        <com.ancore.GamingSwitch android:id="@+id/switch_active" android:layout_width="60dp" android:layout_height="30dp"/>
-    </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:gravity="center_vertical">
+            <TextView
+                android:id="@+id/btn_back_sens"
+                android:layout_width="40dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="‹"
+                android:textColor="#FFFFFF"
+                android:textSize="30sp"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Sensitivity Manager"
+                android:textColor="#F5F5F5"
+                android:textSize="21sp"
+                android:fontFamily="@font/gf_bold"/>
+        </LinearLayout>
 
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Sensitivity X (Horizontal)" android:textColor="#D6D6D6" android:textSize="14sp"/>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="40dp" android:gravity="center_vertical">
-        <TextView android:id="@+id/val_sens_x" android:layout_width="52dp" android:layout_height="wrap_content" android:text="2.00×" android:textColor="#E51010" android:textSize="14sp"/>
-        <com.ancore.GamingSeekBar android:id="@+id/seek_sens_x" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1"/>
-        <ImageView android:id="@+id/img_reset_x" android:layout_width="32dp" android:layout_height="32dp" android:padding="7dp" android:src="@drawable/ic_reset"/>
-    </LinearLayout>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Sensitivity Y (Vertical)" android:textColor="#D6D6D6" android:textSize="14sp"/>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="40dp" android:gravity="center_vertical">
-        <TextView android:id="@+id/val_sens_y" android:layout_width="52dp" android:layout_height="wrap_content" android:text="2.00×" android:textColor="#E51010" android:textSize="14sp"/>
-        <com.ancore.GamingSeekBar android:id="@+id/seek_sens_y" android:layout_width="0dp" android:layout_height="30dp" android:layout_weight="1"/>
-        <ImageView android:id="@+id/img_reset_y" android:layout_width="32dp" android:layout_height="32dp" android:padding="7dp" android:src="@drawable/ic_reset"/>
-    </LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="All apps • global touch"
+            android:textColor="#92959A"
+            android:textSize="12sp"
+            android:fontFamily="@font/gf_light"/>
 
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="TactiX" android:textColor="#F0F0F0" android:textSize="17sp"/>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="36dp" android:gravity="center_vertical">
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Steadier aim when still, no lag on flicks" android:textColor="#777777" android:textSize="10sp"/>
-        <com.ancore.OctagonCheckBox android:id="@+id/check_tactix" android:layout_width="28dp" android:layout_height="28dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Sensitivity Area"
+            android:textColor="#F0F0F0"
+            android:textSize="17sp"
+            android:fontFamily="@font/gf_medium"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="66dp"
+            android:layout_marginTop="5dp">
+            <com.ancore.HexagonLinearLayout
+                android:id="@+id/area_left"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="4dp">
+                <ImageView android:layout_width="27dp" android:layout_height="24dp" android:src="@drawable/ic_area_left"/>
+                <TextView android:id="@+id/area_left_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Left" android:textColor="#B0B3BA" android:textSize="11sp"/>
+            </com.ancore.HexagonLinearLayout>
+            <com.ancore.HexagonLinearLayout
+                android:id="@+id/area_all"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="5dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="4dp">
+                <ImageView android:layout_width="27dp" android:layout_height="24dp" android:src="@drawable/ic_area_all"/>
+                <TextView android:id="@+id/area_all_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="All" android:textColor="#FFFFFF" android:textSize="11sp"/>
+            </com.ancore.HexagonLinearLayout>
+            <com.ancore.HexagonLinearLayout
+                android:id="@+id/area_right"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginStart="5dp"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="4dp">
+                <ImageView android:layout_width="27dp" android:layout_height="24dp" android:src="@drawable/ic_area_right"/>
+                <TextView android:id="@+id/area_right_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Right" android:textColor="#B0B3BA" android:textSize="11sp"/>
+            </com.ancore.HexagonLinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:text="Magic Touch"
+            android:textColor="#F0F0F0"
+            android:textSize="18sp"
+            android:fontFamily="@font/gf_medium"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:gravity="center_vertical">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Enable sensitivity engine"
+                android:textColor="#777777"
+                android:textSize="10sp"
+                android:fontFamily="@font/gf_light"/>
+            <com.ancore.GamingSwitch
+                android:id="@+id/switch_active"
+                android:layout_width="60dp"
+                android:layout_height="30dp"/>
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:text="Sensitivity X (Horizontal)" android:textColor="#D6D6D6" android:textSize="14sp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="38dp" android:gravity="center_vertical">
+            <TextView android:id="@+id/val_sens_x" android:layout_width="52dp" android:layout_height="wrap_content" android:text="2.00×" android:textColor="#E51010" android:textSize="14sp"/>
+            <TextView android:id="@+id/btn_sens_x_minus" android:layout_width="30dp" android:layout_height="30dp" android:layout_marginStart="2dp" android:gravity="center" android:text="−" android:textColor="#E5A880" android:textSize="18sp" android:background="@drawable/bg_btn_dark"/>
+            <com.ancore.GamingSeekBar android:id="@+id/seek_sens_x" android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1" android:layout_marginStart="5dp" android:layout_marginEnd="5dp"/>
+            <TextView android:id="@+id/btn_sens_x_plus" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center" android:text="+" android:textColor="#E5A880" android:textSize="18sp" android:background="@drawable/bg_btn_dark"/>
+            <ImageView android:id="@+id/img_reset_x" android:layout_width="32dp" android:layout_height="32dp" android:padding="7dp" android:src="@drawable/ic_reset"/>
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Sensitivity Y (Vertical)" android:textColor="#D6D6D6" android:textSize="14sp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="38dp" android:gravity="center_vertical">
+            <TextView android:id="@+id/val_sens_y" android:layout_width="52dp" android:layout_height="wrap_content" android:text="2.00×" android:textColor="#E51010" android:textSize="14sp"/>
+            <TextView android:id="@+id/btn_sens_y_minus" android:layout_width="30dp" android:layout_height="30dp" android:layout_marginStart="2dp" android:gravity="center" android:text="−" android:textColor="#E5A880" android:textSize="18sp" android:background="@drawable/bg_btn_dark"/>
+            <com.ancore.GamingSeekBar android:id="@+id/seek_sens_y" android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1" android:layout_marginStart="5dp" android:layout_marginEnd="5dp"/>
+            <TextView android:id="@+id/btn_sens_y_plus" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center" android:text="+" android:textColor="#E5A880" android:textSize="18sp" android:background="@drawable/bg_btn_dark"/>
+            <ImageView android:id="@+id/img_reset_y" android:layout_width="32dp" android:layout_height="32dp" android:padding="7dp" android:src="@drawable/ic_reset"/>
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="TactiX" android:textColor="#F0F0F0" android:textSize="17sp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="36dp" android:gravity="center_vertical">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Steadier aim when still, no lag on flicks" android:textColor="#777777" android:textSize="10sp"/>
+            <com.ancore.OctagonCheckBox android:id="@+id/check_tactix" android:layout_width="28dp" android:layout_height="28dp"/>
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Smoothness" android:textColor="#D6D6D6" android:textSize="14sp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="38dp" android:gravity="center_vertical">
+            <TextView android:id="@+id/val_smoothness" android:layout_width="52dp" android:layout_height="wrap_content" android:text="70%" android:textColor="#E51010" android:textSize="13sp"/>
+            <TextView android:id="@+id/btn_smooth_minus" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center" android:text="−" android:textColor="#E5A880" android:textSize="18sp" android:background="@drawable/bg_btn_dark"/>
+            <com.ancore.GamingSeekBar android:id="@+id/seek_smoothness" android:layout_width="0dp" android:layout_height="28dp" android:layout_weight="1" android:layout_marginStart="5dp" android:layout_marginEnd="5dp"/>
+            <TextView android:id="@+id/btn_smooth_plus" android:layout_width="30dp" android:layout_height="30dp" android:gravity="center" android:text="+" android:textColor="#E5A880" android:textSize="18sp" android:background="@drawable/bg_btn_dark"/>
+        </LinearLayout>
     </LinearLayout>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Strength" android:textColor="#D6D6D6" android:textSize="14sp"/>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="35dp" android:gravity="center_vertical"><com.ancore.GamingSeekBar android:id="@+id/seek_strength" android:layout_width="0dp" android:layout_height="29dp" android:layout_weight="1"/><TextView android:id="@+id/val_strength" android:layout_width="45dp" android:layout_height="wrap_content" android:gravity="end" android:text="0%" android:textColor="#E51010" android:textSize="13sp"/></LinearLayout>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Responsiveness" android:textColor="#D6D6D6" android:textSize="14sp"/>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="35dp" android:gravity="center_vertical"><com.ancore.GamingSeekBar android:id="@+id/seek_responsiveness" android:layout_width="0dp" android:layout_height="29dp" android:layout_weight="1"/><TextView android:id="@+id/val_responsiveness" android:layout_width="45dp" android:layout_height="wrap_content" android:gravity="end" android:text="0%" android:textColor="#E51010" android:textSize="13sp"/></LinearLayout>
-</LinearLayout></ScrollView>
+</ScrollView>

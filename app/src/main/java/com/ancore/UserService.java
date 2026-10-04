@@ -135,21 +135,41 @@ public class UserService extends Binder implements IUserService {
             Process p = Runtime.getRuntime().exec(new String[]{"sh", "-c",
                     "ps -A -o PID,NAME,ARGS 2>/dev/null | grep " + name + " | grep -v grep"});
             BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            java.util.ArrayList<Integer> pids = new java.util.ArrayList<>();
             String line;
             while ((line = br.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty()) continue;
                 String[] parts = line.split("\\s+");
-                if (parts.length > 0) {
-                    try {
-                        int pid = Integer.parseInt(parts[0]);
-                        android.os.Process.killProcess(pid);
-                        execShell("kill -9 " + pid);
-                    } catch (NumberFormatException ignored) { }
-                }
+                if (parts.length == 0) continue;
+                try { pids.add(Integer.parseInt(parts[0])); }
+                catch (NumberFormatException ignored) { }
             }
             p.waitFor(2, TimeUnit.SECONDS);
-        } catch (Exception e) { Log.w(TAG, "killByName", e); }
+
+            // IMPORTANT: the native worker owns an EVIOCGRAB. A SIGKILL skips
+            // its cleanup and can leave the touchscreen feeling blocked.
+            for (Integer pid : pids) {
+                execShell("kill -TERM " + pid);
+            }
+
+            long deadline = System.currentTimeMillis() + 900L;
+            while (System.currentTimeMillis() < deadline) {
+                boolean alive = false;
+                for (Integer pid : pids) {
+                    if (execShell("kill -0 " + pid) == 0) { alive = true; break; }
+                }
+                if (!alive) return;
+                try { Thread.sleep(50L); } catch (InterruptedException ignored) { break; }
+            }
+
+            // Last-resort cleanup only if graceful SIGTERM did not work.
+            for (Integer pid : pids) {
+                execShell("kill -KILL " + pid);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "killByName", e);
+        }
     }
 
     private static boolean isProcessAlive(String name) {

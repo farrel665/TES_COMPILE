@@ -73,14 +73,14 @@ public class OverlayService extends Service {
     private boolean tactix = false;
     private boolean workerRunning = false;
 
-    private float strength = 25f;
+    private float strength = 70f;
     private float responsiveness = 70f;
+    private float smoothness = 70f;
 
     private TextView statusTv;
     private TextView valX;
     private TextView valY;
-    private TextView valStrength;
-    private TextView valResponsiveness;
+    private TextView valSmoothness;
 
     private LinearLayout areaLeft;
     private LinearLayout areaAll;
@@ -92,8 +92,7 @@ public class OverlayService extends Service {
 
     private GamingSwitch switchActive;
 
-    private GamingSeekBar seekStrength;
-    private GamingSeekBar seekResponsiveness;
+    private GamingSeekBar seekSmoothness;
 
     private OctagonCheckBox checkTactix;
 
@@ -378,15 +377,8 @@ public class OverlayService extends Service {
                         R.id.val_sens_y
                 );
 
-        valStrength =
-                v.findViewById(
-                        R.id.val_strength
-                );
-
-        valResponsiveness =
-                v.findViewById(
-                        R.id.val_responsiveness
-                );
+        valSmoothness =
+                v.findViewById(R.id.val_smoothness);
 
         switchActive =
                 v.findViewById(
@@ -408,15 +400,8 @@ public class OverlayService extends Service {
                         R.id.img_reset_y
                 );
 
-        seekStrength =
-                v.findViewById(
-                        R.id.seek_strength
-                );
-
-        seekResponsiveness =
-                v.findViewById(
-                        R.id.seek_responsiveness
-                );
+        seekSmoothness =
+                v.findViewById(R.id.seek_smoothness);
 
         areaLeft =
                 v.findViewById(
@@ -488,68 +473,29 @@ public class OverlayService extends Service {
             );
         }
 
-        if (seekStrength != null) {
+        if (seekSmoothness != null) {
 
-            seekStrength.setMin(0);
-            seekStrength.setMax(100);
+            seekSmoothness.setMin(0);
+            seekSmoothness.setMax(100);
+            seekSmoothness.setProgress(Math.round(smoothness));
+            bindExternalButtons(v, R.id.btn_smooth_minus, R.id.btn_smooth_plus, seekSmoothness);
 
-            seekStrength.setProgress(
-                    Math.round(strength)
-            );
-
-            seekStrength.setOnProgressChangeListener(
-                    (b, p, user) -> {
-
-                        strength = p;
-
-                        setPercent(
-                                valStrength,
-                                strength
-                        );
-
-                        if (user) {
-                            restartIfRunning();
-                        }
-                    }
-            );
+            seekSmoothness.setOnProgressChangeListener((b, p, user) -> {
+                smoothness = p;
+                // Keep the legacy IPC fields synchronized so older native builds
+                // still receive a consistent pair. Native uses their average.
+                strength = smoothness;
+                responsiveness = smoothness;
+                setPercent(valSmoothness, smoothness);
+                if (user) restartIfRunning();
+            });
         }
 
-        if (seekResponsiveness != null) {
-
-            seekResponsiveness.setMin(0);
-            seekResponsiveness.setMax(100);
-
-            seekResponsiveness.setProgress(
-                    Math.round(responsiveness)
-            );
-
-            seekResponsiveness
-                    .setOnProgressChangeListener(
-                            (b, p, user) -> {
-
-                                responsiveness = p;
-
-                                setPercent(
-                                        valResponsiveness,
-                                        responsiveness
-                                );
-
-                                if (user) {
-                                    restartIfRunning();
-                                }
-                            }
-                    );
-        }
-
-        setPercent(
-                valStrength,
-                strength
-        );
-
-        setPercent(
-                valResponsiveness,
-                responsiveness
-        );
+        // External +/- buttons for sensitivity controls. The buttons are separate
+        // views from GamingSeekBar and therefore never become part of its touch area.
+        bindExternalButtons(v, R.id.btn_sens_x_minus, R.id.btn_sens_x_plus, sx);
+        bindExternalButtons(v, R.id.btn_sens_y_minus, R.id.btn_sens_y_plus, sy);
+        setPercent(valSmoothness, smoothness);
 
         View.OnClickListener areaListener =
                 x -> {
@@ -600,6 +546,14 @@ public class OverlayService extends Service {
         refreshAreaUi();
     }
 
+    private void bindExternalButtons(View rootView, int minusId, int plusId, GamingSeekBar bar) {
+        if (rootView == null || bar == null) return;
+        View minus = rootView.findViewById(minusId);
+        View plus = rootView.findViewById(plusId);
+        if (minus != null) minus.setOnClickListener(v -> bar.setProgress(bar.getProgress() - 1));
+        if (plus != null) plus.setOnClickListener(v -> bar.setProgress(bar.getProgress() + 1));
+    }
+
     private void configureSensitivity(
             GamingSeekBar bar,
             boolean horizontal) {
@@ -625,8 +579,6 @@ public class OverlayService extends Service {
                         (current - 1f) * 100f
                 )
         );
-
-        bar.setButtonSize(22);
 
         bar.setOnProgressChangeListener(
                 (b, p, user) -> {
@@ -807,8 +759,8 @@ public class OverlayService extends Service {
                         ShizukuHelper.startWorker(
                                 bin,
                                 0,
-                                sensX,
                                 sensY,
+                                sensX,
                                 sensArea,
                                 tactix ? 1 : 0,
                                 strength,
@@ -1075,9 +1027,10 @@ public class OverlayService extends Service {
 
         bubbleView.setBackground(bg);
 
-        bubbleView.setOnClickListener(
-                v -> showPanel()
-        );
+        bubbleView.setOnClickListener(v -> {
+            showPanel();
+            main.post(this::showSensitivityPage);
+        });
 
         int type =
                 Build.VERSION.SDK_INT >= 26

@@ -24,7 +24,9 @@ typedef struct {
     float last_raw_y;
     int   active;
     int   tracking_id;
-    int   in_region;       
+    int   in_region;
+    float filtered_dx;
+    float filtered_dy;
 } TS_Slot;
 
 typedef struct {
@@ -68,6 +70,8 @@ static void touch_init(TouchEngine *s, float factor, float dpi_scale) {
         s->slots[i].active = 0;
         s->slots[i].tracking_id = -1;
         s->slots[i].in_region = 0;
+        s->slots[i].filtered_dx = 0.0f;
+        s->slots[i].filtered_dy = 0.0f;
     }
     s->factor = ts_clamp_float(factor, TS_FACTOR_MIN, TS_FACTOR_MAX);
     s->dpi_scale = (dpi_scale > 0.0f) ? dpi_scale : 1.0f;
@@ -171,6 +175,8 @@ static void touch_slot(TouchEngine *s, int slot,
         sl->active = 0;
         sl->tracking_id = -1;
         sl->in_region = 0;
+        sl->filtered_dx = 0.0f;
+        sl->filtered_dy = 0.0f;
         if (out_x) *out_x = sl->x * s->dpi_scale;
         if (out_y) *out_y = sl->y * s->dpi_scale;
         if (out_down) *out_down = 0;
@@ -186,6 +192,8 @@ static void touch_slot(TouchEngine *s, int slot,
         sl->y = ny;
         sl->last_raw_x = nx;
         sl->last_raw_y = ny;
+        sl->filtered_dx = 0.0f;
+        sl->filtered_dy = 0.0f;
         sl->active = 1;
         if (out_x) *out_x = in_x;
         if (out_y) *out_y = in_y;
@@ -198,6 +206,8 @@ static void touch_slot(TouchEngine *s, int slot,
         sl->y = ny;
         sl->last_raw_x = nx;
         sl->last_raw_y = ny;
+        sl->filtered_dx = 0.0f;
+        sl->filtered_dy = 0.0f;
         if (out_x) *out_x = in_x;
         if (out_y) *out_y = in_y;
         if (out_down) *out_down = 1;
@@ -206,7 +216,8 @@ static void touch_slot(TouchEngine *s, int slot,
 
     float rawDx = nx - sl->last_raw_x;
     float rawDy = ny - sl->last_raw_y;
-    float speed = sqrtf(rawDx * rawDx + rawDy * rawDy);
+    float speed = 0.0f;
+    if (s->tactix) speed = sqrtf(rawDx * rawDx + rawDy * rawDy);
 
     /* TactiX is deliberately non-accelerating: it only suppresses tiny
        unintentional movement. No flick multiplier/acceleration is applied. */
@@ -230,11 +241,20 @@ static void touch_slot(TouchEngine *s, int slot,
 
     float finalDx = rawDx * gainX;
     float finalDy = rawDy * gainY;
+
+    /* One very light one-pole filter. It is deliberately capped at 8% of the
+       delta so high sensitivity stays responsive instead of feeling heavy.
+       The single UI Smoothness value is sent as both legacy controls. */
+    float smooth01 = ts_clamp_float((s->strength + s->responsiveness) * 0.005f, 0.0f, 1.0f);
+    float carry = 0.08f * smooth01;
+    float fresh = 1.0f - carry;
+    sl->filtered_dx = sl->filtered_dx * carry + finalDx * fresh;
+    sl->filtered_dy = sl->filtered_dy * carry + finalDy * fresh;
+
     sl->last_raw_x = nx;
     sl->last_raw_y = ny;
-
-    sl->x += finalDx;
-    sl->y += finalDy;
+    sl->x += sl->filtered_dx;
+    sl->y += sl->filtered_dy;
 
     if (out_x) *out_x = sl->x * s->dpi_scale;
     if (out_y) *out_y = sl->y * s->dpi_scale;
@@ -246,6 +266,8 @@ static void touch_force_release(TouchEngine *s, int slot) {
     s->slots[slot].active = 0;
     s->slots[slot].tracking_id = -1;
     s->slots[slot].in_region = 0;
+    s->slots[slot].filtered_dx = 0.0f;
+    s->slots[slot].filtered_dy = 0.0f;
 }
 
 static int touch_slot_active(const TouchEngine *s, int slot) {

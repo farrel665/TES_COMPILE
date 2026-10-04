@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
 
         ancore_inject_flush(&inject);
         ancore_reaper_unlock(&reaper);
-        if (!had_input) usleep(1000);
+        if (!had_input) usleep(2000);
     }
 
     /* Always release the physical grab and destroy the virtual device before
