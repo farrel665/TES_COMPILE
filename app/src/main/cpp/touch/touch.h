@@ -230,24 +230,39 @@ static void touch_slot(TouchEngine *s, int slot,
         return;
     }
 
-    /* True linear sensitivity. The UI value is the actual movement multiplier:
-       1.00x = neutral, 2.00x = 2x, ... 5.00x = 5x.
-       Do not low-pass or attenuate the delta here: doing so makes the screen
-       feel heavy even when sensitivity is raised. Strength/Responsiveness are
-       kept in the IPC/UI for compatibility, but they must not reduce the
-       primary sensitivity path. */
-    float gainX = ts_clamp_float(s->sens_x, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX);
-    float gainY = ts_clamp_float(s->sens_y, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX);
+    /*
+     * Soft S sensitivity curve.
+     *
+     * End points remain exact:
+     *   1.00x -> 1.00 gain
+     *   5.00x -> 5.00 gain
+     *
+     * The middle is eased with a cubic smoothstep so small values feel
+     * controlled and the high end remains responsive without a harsh jump.
+     * This is a sensitivity curve, not speed/flick acceleration.
+     */
+    float tx = (ts_clamp_float(s->sens_x, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX) - 1.0f) / 4.0f;
+    float ty = (ts_clamp_float(s->sens_y, TS_SENSITIVITY_MIN, TS_SENSITIVITY_MAX) - 1.0f) / 4.0f;
+    tx = ts_clamp_float(tx, 0.0f, 1.0f);
+    ty = ts_clamp_float(ty, 0.0f, 1.0f);
+
+    float curveX = tx * tx * (3.0f - 2.0f * tx);
+    float curveY = ty * ty * (3.0f - 2.0f * ty);
+
+    float gainX = 1.0f + 4.0f * curveX;
+    float gainY = 1.0f + 4.0f * curveY;
 
     float finalDx = rawDx * gainX;
     float finalDy = rawDy * gainY;
 
-    /* One very light one-pole filter. It is deliberately capped at 8% of the
-       delta so high sensitivity stays responsive instead of feeling heavy.
-       The single UI Smoothness value is sent as both legacy controls. */
-    float smooth01 = ts_clamp_float((s->strength + s->responsiveness) * 0.005f, 0.0f, 1.0f);
-    float carry = 0.08f * smooth01;
-    float fresh = 1.0f - carry;
+    /*
+     * Ultra-light smoothing. Only 3% of the previous delta is carried over.
+     * Responsiveness is intentionally full (100%) and never used as a
+     * throttle. This keeps the path smooth without the heavy/laggy feeling
+     * caused by large low-pass filters.
+     */
+    const float carry = 0.03f;
+    const float fresh = 1.0f - carry;
     sl->filtered_dx = sl->filtered_dx * carry + finalDx * fresh;
     sl->filtered_dy = sl->filtered_dy * carry + finalDy * fresh;
 

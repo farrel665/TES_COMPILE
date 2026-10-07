@@ -1,16 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:app="http://schemas.android.com/apk/res-auto"
-  android:layout_width="match_parent"
-  android:layout_height="match_parent">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="#101010"
+    android:overScrollMode="never">
 
-  <TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Hello user!"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sensitivity Manager"
+            android:textColor="#F5F5F5"
+            android:textSize="24sp"
+            android:fontFamily="@font/gf_bold"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="Global touch • normal Activity"
+            android:textColor="#8D9095"
+            android:textSize="12sp"
+            android:fontFamily="@font/gf_light"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="58dp"
+            android:layout_marginTop="18dp"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sensitivity Engine"
+                    android:textColor="#F0F0F0"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/gf_medium"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="ON = enhanced touch • OFF = normal touch"
+                    android:textColor="#777777"
+                    android:textSize="10sp"
+                    android:fontFamily="@font/gf_light"/>
+            </LinearLayout>
+
+            <com.ancore.GamingSwitch
+                android:id="@+id/switch_active"
+                android:layout_width="60dp"
+                android:layout_height="30dp"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Sensitivity"
+            android:textColor="#F0F0F0"
+            android:textSize="18sp"
+            android:fontFamily="@font/gf_medium"/>
+
+        <TextView
+            android:id="@+id/val_sensitivity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="1.00×"
+            android:textColor="#E51010"
+            android:textSize="15sp"
+            android:fontFamily="@font/gf_bold"/>
+
+        <com.ancore.GamingSeekBar
+            android:id="@+id/seek_sensitivity"
+            android:layout_width="match_parent"
+            android:layout_height="34dp"
+            android:layout_marginTop="5dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:text="1.00×  —  5.00×  •  Soft S-curve"
+            android:textColor="#777777"
+            android:textSize="10sp"
+            android:fontFamily="@font/gf_light"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="20dp"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_panel"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Responsiveness"
+                android:textColor="#D6D6D6"
+                android:textSize="14sp"
+                android:fontFamily="@font/gf_medium"/>
+
+            <TextView
+                android:id="@+id/val_responsiveness"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="100%"
+                android:textColor="#E51010"
+                android:textSize="14sp"
+                android:fontFamily="@font/gf_bold"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="7dp"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_panel"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Smoothness"
+                android:textColor="#D6D6D6"
+                android:textSize="14sp"
+                android:fontFamily="@font/gf_medium"/>
+
+            <TextView
+                android:id="@+id/val_smoothness"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Optimal"
+                android:textColor="#E51010"
+                android:textSize="14sp"
+                android:fontFamily="@font/gf_bold"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/status_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:text="Ready"
+            android:textColor="#8D9095"
+            android:textSize="11sp"
+            android:fontFamily="@font/gf_light"/>
+
+    </LinearLayout>
+</ScrollView>
