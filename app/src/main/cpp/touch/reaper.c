@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define RIZXBYTE_REAPER_INTERVAL_MS 250
+#define RIZXBYTE_REAPER_INTERVAL_MS 1000
 
 static void ancore_reaper_sync(RizxbyteReaper *rp) {
     int hw_active[TS_MAX_SLOTS];

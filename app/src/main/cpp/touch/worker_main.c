@@ -218,28 +218,45 @@ int main(int argc, char **argv) {
     struct timespec prev_ts;
     clock_gettime(CLOCK_MONOTONIC, &prev_ts);
 
+    /*
+     * Event-driven processing:
+     * Do not run touch_slot()/uinput updates when there is no new hardware
+     * SYN_REPORT. Re-processing the last coordinates was causing the previous
+     * filtered delta to be replayed and could create tiny stutters/trailing.
+     */
     while (g_running) {
         alarm(RIZXBYTE_WATCHDOG_SECONDS);
-        ancore_reaper_lock(&reaper);
 
         bool had_input = ancore_capture_poll(&capture);
+        if (!had_input) {
+            /*
+             * The capture fd is non-blocking. A short sleep avoids a busy
+             * spin while keeping the next touch event latency low.
+             */
+            usleep(1000);
+            continue;
+        }
+
+        ancore_reaper_lock(&reaper);
+
         struct timespec now_ts;
         clock_gettime(CLOCK_MONOTONIC, &now_ts);
         float frame_dt = (float)(now_ts.tv_sec - prev_ts.tv_sec)
                 + (float)(now_ts.tv_nsec - prev_ts.tv_nsec) / 1000000000.0f;
         prev_ts = now_ts;
-        if (frame_dt < 0.001f) frame_dt = 0.001f;
+        if (frame_dt < 0.0001f) frame_dt = 0.0001f;
         if (frame_dt > 0.050f) frame_dt = 0.050f;
-        if (!had_input) frame_dt = RIZXBYTE_FRAME_DT;
 
         for (int slot = 0; slot < TS_MAX_SLOTS; slot++) {
             float ox = 0.0f, oy = 0.0f;
             int od = 0;
             int hw = capture.slots[slot].active;
+
             touch_slot(&engine, slot,
                 (float)capture.slots[slot].x,
                 (float)capture.slots[slot].y,
                 hw, frame_dt, &ox, &oy, &od);
+
             if (hw) {
                 ancore_inject_slot(&inject, slot, (int)ox, (int)oy, 1);
             } else if (inject.virtual_active[slot]) {
@@ -249,7 +266,6 @@ int main(int argc, char **argv) {
 
         ancore_inject_flush(&inject);
         ancore_reaper_unlock(&reaper);
-        if (!had_input) usleep(2000);
     }
 
     /* Always release the physical grab and destroy the virtual device before
